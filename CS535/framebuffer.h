@@ -15,8 +15,13 @@ public:
 	void KeyboardHandle();
 	int handle(int guievent);
 	void SetBGR(unsigned int bgr);
-	void Set(int u, int v, int color);
 	void SetGuarded(int u, int v, int color);
 	void LoadTiff(char* fname);
 	void SaveAsTiff(char* fname);
+
+	// Draw something
+	void DrawRectangle(int u0, int v0, int u1, int v1, unsigned int color);
+	void DrawCircle(int u0, int v0, int r, unsigned int color);
+private:
+	void Set(int u, int v, int color);
 };
