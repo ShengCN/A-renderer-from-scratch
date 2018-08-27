@@ -58,19 +58,6 @@ void FrameBuffer::SetBGR(unsigned int bgr)
 		pix[uv] = bgr;
 }
 
-void FrameBuffer::DrawCircle(int u0, int v0, int r, unsigned int color)
-{
-	// bounding box, then iterate the bounding box area
-	int u1 = u0 - r, v1 = v0 - r, u2 = u0 + r, v2 = v0 + r;
-	for (int u = u1; u <= u2; ++u)
-	{
-		for (int v = v1; v <= v2; ++v)
-		{
-			SetGuarded(u, v, color);
-		}
-	}
-}
-
 void FrameBuffer::Set(int u, int v, int color)
 {
 	//todo
@@ -157,3 +144,16 @@ void FrameBuffer::DrawRectangle(int u0, int v0, int u1, int v1, unsigned color)
 	}
 }
 
+void FrameBuffer::DrawCircle(int u0, int v0, int r, unsigned int color)
+{
+	// bounding box, then iterate the bounding box area
+	int u1 = u0 - r, v1 = v0 - r, u2 = u0 + r, v2 = v0 + r;
+	for (int u = u1; u <= u2; ++u)
+	{
+		for (int v = v1; v <= v2; ++v)
+		{
+			if((u-u0)*(u - u0) + (v-v0)*(v-v0)<=r*r)
+				SetGuarded(u, v, color);
+		}
+	}
+}
