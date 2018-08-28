@@ -6,6 +6,7 @@
 #include <iostream>
 
 #include "tiffio.h"
+#include <algorithm>
 
 FrameBuffer::FrameBuffer(int u0, int v0, int _w, int _h)
 	: Fl_Gl_Window(u0, v0, _w, _h, nullptr)
@@ -62,7 +63,7 @@ void FrameBuffer::Set(int u, int v, int color)
 {
 	//todo
 	// pix[u*w + v] = color;
-	pix[(h - 1 - u) * w + v] = color;
+	pix[(h - 1 - v) * w + u] = color;
 }
 
 void FrameBuffer::SetGuarded(int u, int v, int color)
@@ -133,8 +134,24 @@ void FrameBuffer::SaveAsTiff(char* fname)
 	TIFFClose(out);
 }
 
+int FrameBuffer::ClipToScreen(int& u0, int& v0, int& u1, int& v1)
+{
+	// Out of screen 
+	if (u0 > w || v0 > h || u1 < 0 || v1 < 0)
+		return 0;
+
+	u0 = std::max(0, u0);
+	v0 = std::max(0, v0);
+	u1 = std::min(u1, w);
+	v1 = std::min(v1, h);
+	return 1;
+}
+
 void FrameBuffer::DrawRectangle(int u0, int v0, int u1, int v1, unsigned color)
 {
+	if (!ClipToScreen(u0, v0, u1, v1))
+		return;
+
 	for (int i = u0; i < u1; ++i)
 	{
 		for (int j = v0; j < v1; ++j)
@@ -148,6 +165,9 @@ void FrameBuffer::DrawCircle(int u0, int v0, int r, unsigned int color)
 {
 	// bounding box, then iterate the bounding box area
 	int u1 = u0 - r, v1 = v0 - r, u2 = u0 + r, v2 = v0 + r;
+	if (!ClipToScreen(u1, v1, u2, v2))
+		return;
+
 	for (int u = u1; u <= u2; ++u)
 	{
 		for (int v = v1; v <= v2; ++v)

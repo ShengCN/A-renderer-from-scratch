@@ -18,6 +18,7 @@ public:
 	void SetGuarded(int u, int v, int color);
 	void LoadTiff(char* fname);
 	void SaveAsTiff(char* fname);
+	int ClipToScreen(int& u0, int& v0, int& u1, int& v1);
 
 	// Draw something
 	void DrawRectangle(int u0, int v0, int u1, int v1, unsigned int color);

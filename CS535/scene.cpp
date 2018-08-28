@@ -40,9 +40,18 @@ void Scene::Render()
 bool Scene::DBGFramebuffer()
 {
 	int u0 = 50, v0 = 50, u1 = 300, v1 = 300;
-	fb->DrawRectangle(u0, v0, u1, v1,0xFF00FFFF);
 	int r = 30;
-	fb->DrawCircle(u0, v0, r, 0xFFFF0000);
+	int stepN = 100;
+
+	for (int stepi = 0; stepi < stepN; ++stepi)
+	{
+		fb->SetBGR(0xFFFFFFFF);
+		fb->DrawRectangle(u0 + stepi, v0, u1+stepi, v1, 0xFF00FFFF);
+		fb->DrawCircle(u0+stepi, v0, r, 0xFFFF0000);
+		fb->redraw();
+		Fl::check();
+	}
+
 	std::cerr << "DBGFramebuffer passed!\n";
 	return true;
 }
