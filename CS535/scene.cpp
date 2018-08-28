@@ -58,11 +58,48 @@ bool Scene::DBGFramebuffer()
 
 bool Scene::DBGV3()
 {
+	auto FloatEqual = [&](float a, float b)
+	{
+		return std::abs(a - b) < 1e-7;
+	};
+
+	V3 v1(1.0f), v2(0.5f);
+	v1[0] = 0.0f;
+	if (!FloatEqual(v1[0], 0.0f)
+		|| !FloatEqual(v1[2], 1.0)
+		|| !FloatEqual(v1*v2, 1.0f)
+		|| !FloatEqual((v1-v2)[1],0.5f))
+	{
+		cerr << "DBGV3 error\n";
+		return false;
+	}
+
+	cerr << v1 << v1 * v2 << endl << v1 - v2;
+	cerr << "DBGV3 passed\n";
 	return true;
 }
 
 bool Scene::DBGM3()
 {
+	M33 m0,m1;
+	m0[0] = V3(1.0f, 0.0f, 0.0f);
+	m0[1] = V3(0.0f, 1.0f, 0.0f);
+	m0[2] = V3(0.0f, 0.0f, 1.0f);
+	V3 v(0.5f);
+	m1[0] = V3(0.5f, 0.0f, 0.0f);
+	m1[1] = V3(0.0f, 0.5f, 0.0f);
+	m1[2] = V3(0.0f, 0.0f, 0.5f);
+
+
+	if(m0[0] != V3(1.0f, 0.0f, 0.0f) 
+		|| m0*v !=v
+		|| m0*m1 != m1)
+	{
+		cerr << "DBGM3 error\n";
+	}
+
+	cerr << m0 << m0 * v << m0 * m1;
+	cerr << "DBGM3 passed \n";
 	return true;
 }
 
@@ -70,7 +107,7 @@ void Scene::DBG() {
 	
 	// cerr << "INFO: pressed DBG" << endl;
 	cerr << "Begin DBG\n";
-	if (DBGFramebuffer() && DBGV3() && DBGM3())
+	if (DBGV3() && DBGM3() && DBGFramebuffer())
 		cerr << "All pased! \n";
 	else
 		cerr << "Not pass!\n";
