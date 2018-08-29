@@ -147,6 +147,29 @@ int FrameBuffer::ClipToScreen(int& u0, int& v0, int& u1, int& v1)
 	return 1;
 }
 
+void FrameBuffer::DrawSegment(V3 v1, V3 v2, unsigned color)
+{
+	V3 v2v1 = v2 - v1;
+	int steps;
+	if(v2v1[0]>v2v1[1])
+	{
+		steps = static_cast<int>(v2v1[0]);
+	}
+	else
+	{
+		steps = static_cast<int>(v2v1[1]);
+	}
+
+	int u = static_cast<int>(v1[0]);
+	int v = static_cast<int>(v1[1]);
+	for(int stepi = 0 ; stepi < steps; ++stepi)
+	{
+		SetGuarded(u + stepi * static_cast<int>(v2v1[0] / (steps - 1)),
+			v + stepi * static_cast<int>(v2v1[1] / (steps - 1)),
+			color);
+	}
+}
+
 void FrameBuffer::DrawRectangle(int u0, int v0, int u1, int v1, unsigned color)
 {
 	if (!ClipToScreen(u0, v0, u1, v1))

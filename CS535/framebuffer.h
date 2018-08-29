@@ -21,6 +21,7 @@ public:
 	int ClipToScreen(int& u0, int& v0, int& u1, int& v1);
 
 	// Draw something
+	void DrawSegment(V3 v1, V3 v2, unsigned int color);
 	void DrawRectangle(int u0, int v0, int u1, int v1, unsigned int color);
 	void DrawCircle(int u0, int v0, int r, unsigned int color);
 private:

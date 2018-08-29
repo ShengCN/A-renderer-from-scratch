@@ -13,6 +13,42 @@ void M33::SetColumn(int c, V3 v)
 	rows[2][c] = v[2];
 }
 
+float M33::Det()
+{
+	M33 m = *this;
+	return m[0][0] * (m[1][1] * m[2][2] - m[1][2] * m[2][1]) -
+		m[0][1] * (m[1][0] * m[2][2] - m[1][2] * m[2][0]) +
+		m[0][2] * (m[1][0] * m[2][1] - m[1][1] * m[2][0]);
+}
+
+M33 M33::Inverse()
+{
+	M33 m0 = *this;
+	M33 m1 = M33();
+	m1[0] = V3(m0[1][1] * m0[2][2] - m0[1][2] * m0[2][1],
+		m0[0][2] * m0[2][1] - m0[0][1] * m0[2][2],
+		m0[0][1] * m0[1][2] - m0[0][2] * m0[1][1]);
+
+	m1[1] = V3(m0[1][2] * m0[2][0] - m0[1][0] * m0[2][2],
+		m0[0][0] * m0[2][2] - m0[0][2] * m0[2][0],
+		m0[0][2] * m0[1][0] - m0[0][0] * m0[1][2]);
+	
+	m1[2] = V3(m0[1][0] * m0[2][1] - m0[1][1] * m0[2][0],
+		m0[0][1] * m0[2][0] - m0[0][0] * m0[2][1],
+		m0[0][0] * m0[1][1] - m0[0][1] * m0[1][0]);
+
+	return m1 / Det();
+}
+
+M33 M33::Transpose()
+{
+	M33 m = *this, res;
+	res[0] = m.GetColumn(0);
+	res[1] = m.GetColumn(1);
+	res[2] = m.GetColumn(2);
+	return res;
+}
+
 V3& M33::operator[](int r)
 {
 	return rows[r];
@@ -37,6 +73,24 @@ M33 M33::operator*(M33 m1)
 	res.SetColumn(2, m0*c2);
 
 	return res;
+}
+
+M33 M33::operator*(float scf)
+{
+	M33 m = *this;
+	m[0] = m[0] * scf;
+	m[1] = m[1] * scf;
+	m[2] = m[2] * scf;
+	return m;
+}
+
+M33 M33::operator/(float scf)
+{
+	M33 m = *this;
+	m[0] = m[0] / scf;
+	m[1] = m[1] / scf;
+	m[2] = m[2] / scf;
+	return m;
 }
 
 bool M33::operator==(M33 m1)

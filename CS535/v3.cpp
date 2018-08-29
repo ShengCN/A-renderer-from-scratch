@@ -15,6 +15,27 @@ V3::V3(float x, float y, float z) {
 
 }
 
+V3 V3::Normalize()
+{
+	V3 v = *this;
+	return v / Length();
+}
+
+float V3::Length()
+{
+	V3 v = *this;
+	return std::sqrt(v*v);
+}
+
+V3 V3::cross(V3 v1)
+{
+	V3 v0 = *this;
+	return V3(
+		v0[1] * v1[2] - v0[2] * v1[1],
+		v0[2] * v1[0] - v0[0] * v1[2],
+		v0[0] * v1[1] - v0[1] * v1[0]);
+}
+
 float& V3::operator[](int i)
 {
 	return xyz[i];
@@ -24,6 +45,18 @@ float V3::operator*(V3 v1)
 {
 	V3 v0 = *this;
 	return v0[0] * v1[0] + v0[1] * v1[1] + v0[2] * v1[2];
+}
+
+V3 V3::operator*(float scf)
+{
+	V3 v = *this;
+	return V3(v[0] * scf, v[1] * scf, v[2] * scf);
+}
+
+V3 V3::operator/(float scf)
+{
+	V3 v = *this;
+	return V3(v[0] / scf, v[1] / scf, v[2] / scf);
 }
 
 V3 V3::operator-(V3 v1)

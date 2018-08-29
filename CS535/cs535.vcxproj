@@ -97,6 +97,7 @@
     <ClInclude Include="glext.h" />
     <ClInclude Include="gui.h" />
     <ClInclude Include="m33.h" />
+    <ClInclude Include="MathTool.h" />
     <ClInclude Include="scene.h" />
     <ClInclude Include="v3.h" />
   </ItemGroup>
