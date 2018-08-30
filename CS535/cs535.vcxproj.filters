@@ -56,6 +56,9 @@
     <ClCompile Include="m33.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="MathTool.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="gui.fl">

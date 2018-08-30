@@ -61,11 +61,18 @@ bool Scene::DBGFramebuffer()
 
 bool Scene::DBGV3()
 {
-	V3 v1(1.0f), v2(0.5f),v3(3.0f,0.0f,0.0f);
+	V3 v1(1.0f), v2(0.5f),v3(3.0f,0.0f,0.0f), v4;
 	v1[0] = 0.0f;
 
 	cerr << v1 << v1 * v2 << endl << v1 - v2 << v1.cross(v2)<<v1*3.0f<<(v1*3.0f)/3.0f;
 	cerr << v1.Length() << endl << v3.Normalize();
+	cerr << v1 << "x Rotate 90 degree:\n " << v1.Rotate(V3(1.0f,0.0f,0.0f),90.0f);
+	cerr << v1 << "y Rotate 90 degree:\n " << v1.Rotate(V3(0.0f, 1.0f, 0.0f), 90.0f);
+	cerr << v1 << "z Rotate 90 degree:\n " << v1.Rotate(V3(0.0f, 0.0f, 1.0f), 90.0f);
+	cerr << "Please input a V3: " << endl;
+	cin >> v4;
+	cerr << "Your V3: "<<v4;
+
 	if (!FloatEqual(v1[0], 0.0f)
 		|| !FloatEqual(v1[2], 1.0)
 		|| !FloatEqual(v1*v2, 1.0f)
@@ -74,7 +81,10 @@ bool Scene::DBGV3()
 		|| v1*3.0f != V3(0.0f,3.0f,3.0f)
 		|| (v1*3.0f) / 3.0f != v1
 		|| v3.Normalize() != V3(1.0f,0.0f,0.0f)
-		|| v3.Normalize().Length() != 1.0f)
+		|| v3.Normalize().Length() != 1.0f
+		|| v1.Rotate(V3(1.0f, 0.0f, 0.0f), 90.0f) != V3(0.0f,-1.0f,1.0f)
+		|| v1.Rotate(V3(0.0f, 1.0f, 0.0f), 90.0f) != V3(1.0f, 1.0f, 0.0f)
+		|| v1.Rotate(V3(0.0f, 0.0f, 1.0f), 90.0f) != V3(-1.0f, 0.0f, 1.0f))
 	{
 		cerr << "DBGV3 error\n";
 		return false;
@@ -86,7 +96,7 @@ bool Scene::DBGV3()
 
 bool Scene::DBGM3()
 {
-	M33 m0, m1, m2, m3;
+	M33 m0, m1, m2, m3, m4;
 	m0[0] = V3(1.0f, 0.0f, 0.0f);
 	m0[1] = V3(0.0f, 1.0f, 0.0f);
 	m0[2] = V3(0.0f, 0.0f, 1.0f);
@@ -105,7 +115,9 @@ bool Scene::DBGM3()
 
 	cerr << m0 << m0 * v << m0 * m1 << m0.Det() << endl;
 	cerr << m0 / 2.0f << m1.Inverse() << m2 << m2.Transpose();
-
+	cerr << "Please input a M3: " << endl;
+	cin >> m4;
+	cerr << "Your M3: " << m4;
 	if(m0[0] != V3(1.0f, 0.0f, 0.0f) 
 		|| m0*v !=v
 		|| m0*m1 != m1

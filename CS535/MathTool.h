@@ -1,7 +1,9 @@
 #pragma once
 #include <algorithm>
 
-bool FloatEqual(float a, float b)
-{
-	return std::abs(a - b) < 1e-7;
-};
+const float PI = 3.1415926f;
+
+bool FloatEqual(float a, float b);
+float Deg2Rad(float deg);
+float Rad2Deg(float rad);
+

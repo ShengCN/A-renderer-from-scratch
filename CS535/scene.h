@@ -15,7 +15,7 @@ public:
 	Scene();
 	void DBG();
 	void Render();
-
+	
 private:
 	bool DBGFramebuffer();
 	bool DBGV3();

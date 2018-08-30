@@ -14,6 +14,7 @@ public:
 	V3 Normalize();
 	float Length();
 	V3 cross(V3 v1);
+	V3 Rotate(V3 a, float angle); 
 	float& operator[](int i);
 	float operator*(V3 v1);
 	V3 operator*(float scf);
@@ -21,5 +22,6 @@ public:
 	V3 operator-(V3 v1);
 	bool operator==(V3 v1);
 	bool operator!=(V3 v1);
+	friend istream& operator>>(istream& ist, V3 &v);
 	friend ostream& operator<<(ostream& ost, V3 v);
 };
