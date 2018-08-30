@@ -5,14 +5,14 @@
 #include <algorithm>
 #include "MathTool.h"
 
-Scene *scene;
+Scene* scene;
 
 #include <fstream>
 
 #include <iostream>
 
-Scene::Scene() {
-
+Scene::Scene()
+{
 	gui = new GUI();
 	gui->show();
 
@@ -29,10 +29,9 @@ Scene::Scene() {
 	gui->uiw->position(u0, v0 + fb->h + 60);
 
 	Render();
-
 }
 
-void Scene::Render() 
+void Scene::Render()
 {
 	fb->SetBGR(0xFFFFFFFF);
 	fb->redraw();
@@ -41,8 +40,9 @@ void Scene::Render()
 bool Scene::DBGFramebuffer()
 {
 	int u0 = 50, v0 = 50, u1 = 300, v1 = 300;
+
 	int r = 30;
-	int stepN = 100;
+	int stepN = 360;
 
 	// for (int stepi = 0; stepi < stepN; ++stepi)
 	// {
@@ -53,7 +53,22 @@ bool Scene::DBGFramebuffer()
 	// 	Fl::check();
 	// }
 
-	fb->DrawSegment(V3(50.0f, 50.0f, 0.0f), V3(300.0f, 300.0f, 0.0f),0xFF0000FF);
+	// fb->DrawSegment(V3(50.0f, 50.0f, 0.0f), V3(300.0f, 300.0f, 0.0f),0xFF0000FF);
+
+	// Demonstration
+	// stepN = 360;
+	V3 point(30, 30, 0.0f), axis(1.0f,0.0f,1.0f);
+	float deg = 0.0f;
+	for (int stepi = 0; stepi < stepN; ++stepi)
+	{
+		// fb->SetBGR(0XFFFFFFFF);
+		fb->DrawCircle(point.Rotate(axis, deg + static_cast<float>(stepi))[0] + static_cast<int>(fb->w / 2),
+			point.Rotate(axis, deg + static_cast<float>(stepi))[1] + static_cast<int>(fb->h / 2),
+			5, 0xFF0000FF);
+		cerr << "Current stepi: "<< stepi <<"\n" << point.Rotate(V3(1.0f, 0.0f, 1.0f), deg + static_cast<float>(stepi));
+		fb->redraw();
+		Fl::check();
+	}
 
 	std::cerr << "DBGFramebuffer passed!\n";
 	return true;
@@ -61,28 +76,28 @@ bool Scene::DBGFramebuffer()
 
 bool Scene::DBGV3()
 {
-	V3 v1(1.0f), v2(0.5f),v3(3.0f,0.0f,0.0f), v4;
+	V3 v1(1.0f), v2(0.5f), v3(3.0f, 0.0f, 0.0f), v4;
 	v1[0] = 0.0f;
 
-	cerr << v1 << v1 * v2 << endl << v1 - v2 << v1.cross(v2)<<v1*3.0f<<(v1*3.0f)/3.0f;
+	cerr << v1 << v1 * v2 << endl << v1 - v2 << v1.cross(v2) << v1 * 3.0f << (v1 * 3.0f) / 3.0f;
 	cerr << v1.Length() << endl << v3.Normalize();
-	cerr << v1 << "x Rotate 90 degree:\n " << v1.Rotate(V3(1.0f,0.0f,0.0f),90.0f);
+	cerr << v1 << "x Rotate 90 degree:\n " << v1.Rotate(V3(1.0f, 0.0f, 0.0f), 90.0f);
 	cerr << v1 << "y Rotate 90 degree:\n " << v1.Rotate(V3(0.0f, 1.0f, 0.0f), 90.0f);
 	cerr << v1 << "z Rotate 90 degree:\n " << v1.Rotate(V3(0.0f, 0.0f, 1.0f), 90.0f);
-	cerr << "Please input a V3: " << endl;
-	cin >> v4;
-	cerr << "Your V3: "<<v4;
+	// cerr << "Please input a V3: " << endl;
+	// cin >> v4;
+	// cerr << "Your V3: "<<v4;
 
 	if (!FloatEqual(v1[0], 0.0f)
 		|| !FloatEqual(v1[2], 1.0)
-		|| !FloatEqual(v1*v2, 1.0f)
-		|| !FloatEqual((v1-v2)[1],0.5f)
-		|| v1.cross(v2)!=V3(0.0f,0.5f,-0.5f)
-		|| v1*3.0f != V3(0.0f,3.0f,3.0f)
-		|| (v1*3.0f) / 3.0f != v1
-		|| v3.Normalize() != V3(1.0f,0.0f,0.0f)
+		|| !FloatEqual(v1 * v2, 1.0f)
+		|| !FloatEqual((v1 - v2)[1], 0.5f)
+		|| v1.cross(v2) != V3(0.0f, 0.5f, -0.5f)
+		|| v1 * 3.0f != V3(0.0f, 3.0f, 3.0f)
+		|| (v1 * 3.0f) / 3.0f != v1
+		|| v3.Normalize() != V3(1.0f, 0.0f, 0.0f)
 		|| v3.Normalize().Length() != 1.0f
-		|| v1.Rotate(V3(1.0f, 0.0f, 0.0f), 90.0f) != V3(0.0f,-1.0f,1.0f)
+		|| v1.Rotate(V3(1.0f, 0.0f, 0.0f), 90.0f) != V3(0.0f, -1.0f, 1.0f)
 		|| v1.Rotate(V3(0.0f, 1.0f, 0.0f), 90.0f) != V3(1.0f, 1.0f, 0.0f)
 		|| v1.Rotate(V3(0.0f, 0.0f, 1.0f), 90.0f) != V3(-1.0f, 0.0f, 1.0f))
 	{
@@ -115,16 +130,16 @@ bool Scene::DBGM3()
 
 	cerr << m0 << m0 * v << m0 * m1 << m0.Det() << endl;
 	cerr << m0 / 2.0f << m1.Inverse() << m2 << m2.Transpose();
-	cerr << "Please input a M3: " << endl;
-	cin >> m4;
-	cerr << "Your M3: " << m4;
-	if(m0[0] != V3(1.0f, 0.0f, 0.0f) 
-		|| m0*v !=v
-		|| m0*m1 != m1
+	// cerr << "Please input a M3: " << endl;
+	// cin >> m4;
+	// cerr << "Your M3: " << m4;
+	if (m0[0] != V3(1.0f, 0.0f, 0.0f)
+		|| m0 * v != v
+		|| m0 * m1 != m1
 		|| !FloatEqual(m0.Det(), 1.0f)
 		|| m0 / 2.0f != m1
 		|| m0.Inverse() != m0
-		|| m1.Inverse() != m1*4.0f
+		|| m1.Inverse() != m1 * 4.0f
 		|| m2.Transpose() != m3
 		|| m0.Inverse() != m0)
 	{
@@ -136,14 +151,14 @@ bool Scene::DBGM3()
 	return true;
 }
 
-void Scene::DBG() {
-	
+void Scene::DBG()
+{
 	// cerr << "INFO: pressed DBG" << endl;
 	cerr << "Begin DBG\n";
 	if (DBGV3() && DBGM3() && DBGFramebuffer())
 		cerr << "All pased! \n";
 	else
 		cerr << "Not pass!\n";
-	
+
 	fb->redraw();
 }

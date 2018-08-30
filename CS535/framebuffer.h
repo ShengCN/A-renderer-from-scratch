@@ -24,6 +24,8 @@ public:
 	void DrawSegment(V3 v1, V3 v2, unsigned int color);
 	void DrawRectangle(int u0, int v0, int u1, int v1, unsigned int color);
 	void DrawCircle(int u0, int v0, int r, unsigned int color);
+	void DrawEllipse(int u0, int v0, float r0, float r1, unsigned int color);
+	void DrawPoint(int u, int v, unsigned int color);
 private:
 	void Set(int u, int v, int color);
 };

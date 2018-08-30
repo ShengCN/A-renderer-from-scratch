@@ -142,8 +142,8 @@ int FrameBuffer::ClipToScreen(int& u0, int& v0, int& u1, int& v1)
 
 	u0 = std::max(0, u0);
 	v0 = std::max(0, v0);
-	u1 = std::min(u1, w);
-	v1 = std::min(v1, h);
+	u1 = std::min(u1, w-1);
+	v1 = std::min(v1, h-1);
 	return 1;
 }
 
@@ -199,4 +199,27 @@ void FrameBuffer::DrawCircle(int u0, int v0, int r, unsigned int color)
 				SetGuarded(u, v, color);
 		}
 	}
+}
+
+void FrameBuffer::DrawEllipse(int u0, int v0, float r0, float r1, unsigned color)
+{
+	int u1 = u0 - r0, v1 = v0 - r1, u2 = u0 + r0, v2 = u0 + r1;
+	if (!ClipToScreen(u1, v1, u2, v2))
+		return;
+
+	for (int u = u1; u <= u2; ++u)
+	{
+		for (int v = v1; v <= v2; ++v)
+		{
+			if ((u - u0)*(u - u0)/(r0*r0) + (v - v0)*(v - v0)/(r1*r1) <= 1.0f)
+			{
+				SetGuarded(u, v, color);
+			}
+		}
+	}
+}
+
+void FrameBuffer::DrawPoint(int u, int v, unsigned color)
+{
+	SetGuarded(u, v, color);
 }
