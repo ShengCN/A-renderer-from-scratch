@@ -28,6 +28,31 @@ float V3::Length()
 	return std::sqrt(v*v);
 }
 
+void V3::SetColor(unsigned int color)
+{
+	V3 v = *this;
+	unsigned char*rgba = (unsigned char*)&color;
+	v[0] = rgba[0] / 255.0f;
+	v[1] = rgba[1] / 255.0f;
+	v[2] = rgba[2] / 255.0f;
+}
+
+unsigned int V3::GetColor()
+{
+	// clip to (0.0f,1.0f)
+	V3& v = *this;
+	unsigned int ret = 0xFF000000;
+	unsigned char *rgba = (unsigned char*)&ret;
+	for(int i = 0; i < 3; ++i)
+	{
+		int ichan = (int)v[i] * 255.0f;
+		ichan = std::max(0, ichan);
+		ichan = std::min(ichan, 255);
+		rgba[i] = ichan;
+	}
+	return ret;
+}
+
 V3 V3::cross(V3 v1)
 {
 	V3 v0 = *this;

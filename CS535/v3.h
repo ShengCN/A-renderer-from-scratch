@@ -13,6 +13,8 @@ public:
 	V3(float x, float y, float z);
 	V3 Normalize();
 	float Length();
+	void SetColor(unsigned int color);
+	unsigned int GetColor();
 	V3 cross(V3 v1);
 	V3 Rotate(V3 a, float angle); 
 	float& operator[](int i);

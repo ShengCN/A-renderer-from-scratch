@@ -53,23 +53,25 @@ bool Scene::DBGFramebuffer()
 	// 	Fl::check();
 	// }
 
-	// fb->DrawSegment(V3(50.0f, 50.0f, 0.0f), V3(300.0f, 300.0f, 0.0f),0xFF0000FF);
-
-	// Demonstration
-	// stepN = 360;
-	V3 point(30, 30, 0.0f), axis(1.0f,0.0f,1.0f);
-	float deg = 0.0f;
-	for (int stepi = 0; stepi < stepN; ++stepi)
-	{
-		// fb->SetBGR(0XFFFFFFFF);
-		fb->DrawCircle(point.Rotate(axis, deg + static_cast<float>(stepi))[0] + static_cast<int>(fb->w / 2),
-			point.Rotate(axis, deg + static_cast<float>(stepi))[1] + static_cast<int>(fb->h / 2),
-			5, 0xFF0000FF);
-		cerr << "Current stepi: "<< stepi <<"\n" << point.Rotate(V3(1.0f, 0.0f, 1.0f), deg + static_cast<float>(stepi));
-		fb->redraw();
-		Fl::check();
-	}
-
+	fb->DrawSegment(V3(50.0f, 50.0f, 0.0f), 0xFF0000FF,V3(300.0f, 300.0f, 0.0f),0xFFFF00FF);
+	
+	
+//	{
+//	// Demonstration
+//	// stepN = 360;
+//	V3 point(100, 100, 0.0f), axis(1.0f, 0.0f, 1.0f);
+//	float deg = 0.0f;
+//	for (int stepi = 0; stepi < stepN; ++stepi)
+//	{
+//		// fb->SetBGR(0XFFFFFFFF);
+//		fb->DrawCircle(point.Rotate(axis, deg + static_cast<float>(stepi))[0] + static_cast<int>(fb->w / 2),
+//			point.Rotate(axis, deg + static_cast<float>(stepi))[1] + static_cast<int>(fb->h / 2),
+//			5, 0xFF0000FF);
+//		cerr << "Current stepi: " << stepi << "\n" << point.Rotate(V3(1.0f, 0.0f, 1.0f), deg + static_cast<float>(stepi));
+//		fb->redraw();
+//		Fl::check();
+//	}
+//	}
 	std::cerr << "DBGFramebuffer passed!\n";
 	return true;
 }

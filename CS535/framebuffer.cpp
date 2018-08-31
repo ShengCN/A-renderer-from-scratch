@@ -147,7 +147,7 @@ int FrameBuffer::ClipToScreen(int& u0, int& v0, int& u1, int& v1)
 	return 1;
 }
 
-void FrameBuffer::DrawSegment(V3 v1, V3 v2, unsigned color)
+void FrameBuffer::DrawSegment(V3 v1, unsigned int c1, V3 v2, unsigned int c2)
 {
 	V3 v2v1 = v2 - v1;
 	int steps;
@@ -164,9 +164,10 @@ void FrameBuffer::DrawSegment(V3 v1, V3 v2, unsigned color)
 	int v = static_cast<int>(v1[1]);
 	for(int stepi = 0 ; stepi < steps; ++stepi)
 	{
+		float ratio = static_cast<float>(stepi) / static_cast<float>(steps - 1);
 		SetGuarded(u + stepi * static_cast<int>(v2v1[0] / (steps - 1)),
 			v + stepi * static_cast<int>(v2v1[1] / (steps - 1)),
-			color);
+			c1*(1.0f - ratio) + c2 * ratio);
 	}
 }
 
