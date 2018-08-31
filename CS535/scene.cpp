@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <algorithm>
 #include "MathTool.h"
+#include "AABB.h"
 
 Scene* scene;
 
@@ -53,7 +54,10 @@ bool Scene::DBGFramebuffer()
 	// 	Fl::check();
 	// }
 
-	fb->DrawSegment(V3(50.0f, 50.0f, 0.0f), 0xFF0000FF,V3(300.0f, 300.0f, 0.0f),0xFFFF00FF);
+	V3 c1, c2;
+	c1.SetColor(0xFF0000FF);
+	c2.SetColor(0xFFFF0000);
+	fb->DrawSegment(V3(50.0f, 50.0f, 0.0f), V3(300.0f, 300.0f, 0.0f),c1,c2);
 	
 	
 //	{
@@ -89,7 +93,9 @@ bool Scene::DBGV3()
 	// cerr << "Please input a V3: " << endl;
 	// cin >> v4;
 	// cerr << "Your V3: "<<v4;
-
+	
+	v4.SetColor(0xFFFFFFFF);
+	cerr << v4.GetColor() << endl;
 	if (!FloatEqual(v1[0], 0.0f)
 		|| !FloatEqual(v1[2], 1.0)
 		|| !FloatEqual(v1 * v2, 1.0f)
@@ -153,11 +159,30 @@ bool Scene::DBGM3()
 	return true;
 }
 
+bool Scene::DBGAABB()
+{
+	V3 p0(-1.0f, 0.0f, 0.0f), p1(5.0f, 5.0, 5.0),p2(-5.5f,0.5f,0.5f);
+	AABB bbox(p0);
+	bbox.AddPoint(p1);
+	bbox.AddPoint(p2);
+	cerr << bbox;
+
+	if(bbox.corners[0]!=V3(-5.5f,0.0f,0.0f) || bbox.corners[1]!=p1)
+	{
+		cerr << "AABB not passed \n";
+		return false;
+	}
+
+
+	cerr << "AABB passed \n";
+	return true;
+}
+
 void Scene::DBG()
 {
 	// cerr << "INFO: pressed DBG" << endl;
 	cerr << "Begin DBG\n";
-	if (DBGV3() && DBGM3() && DBGFramebuffer())
+	if (DBGV3() && DBGM3() && DBGFramebuffer()&&DBGAABB())
 		cerr << "All pased! \n";
 	else
 		cerr << "Not pass!\n";

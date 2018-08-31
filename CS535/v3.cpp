@@ -30,22 +30,22 @@ float V3::Length()
 
 void V3::SetColor(unsigned int color)
 {
-	V3 v = *this;
+	V3 &v = *this;
 	unsigned char*rgba = (unsigned char*)&color;
-	v[0] = rgba[0] / 255.0f;
-	v[1] = rgba[1] / 255.0f;
-	v[2] = rgba[2] / 255.0f;
+	v[0] = static_cast<float>(rgba[0]) / 255.0f;
+	v[1] = static_cast<float>(rgba[1]) / 255.0f;
+	v[2] = static_cast<float>(rgba[2]) / 255.0f;
 }
 
 unsigned int V3::GetColor()
 {
 	// clip to (0.0f,1.0f)
-	V3& v = *this;
+	V3 v = *this;
 	unsigned int ret = 0xFF000000;
 	unsigned char *rgba = (unsigned char*)&ret;
 	for(int i = 0; i < 3; ++i)
 	{
-		int ichan = (int)v[i] * 255.0f;
+		int ichan = static_cast<int>(v[i] * 255.0f);
 		ichan = std::max(0, ichan);
 		ichan = std::min(ichan, 255);
 		rgba[i] = ichan;
@@ -116,6 +116,15 @@ V3 V3::operator/(float scf)
 {
 	V3 v = *this;
 	return V3(v[0] / scf, v[1] / scf, v[2] / scf);
+}
+
+V3 V3::operator+(V3 v1)
+{
+	V3 v0 = *this, ret;
+	ret[0] = v0[0] + v1[0];
+	ret[1] = v0[1] + v1[1];
+	ret[2] = v0[2] + v1[2];
+	return ret;
 }
 
 V3 V3::operator-(V3 v1)

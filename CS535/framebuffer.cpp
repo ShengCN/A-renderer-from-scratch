@@ -66,7 +66,7 @@ void FrameBuffer::Set(int u, int v, int color)
 	pix[(h - 1 - v) * w + u] = color;
 }
 
-void FrameBuffer::SetGuarded(int u, int v, int color)
+void FrameBuffer::SetGuarded(int u, int v, unsigned int color)
 {
 	// clip to window 
 	if (u < 0 || v < 0 || u > h - 1 || v > w - 1)
@@ -147,9 +147,9 @@ int FrameBuffer::ClipToScreen(int& u0, int& v0, int& u1, int& v1)
 	return 1;
 }
 
-void FrameBuffer::DrawSegment(V3 v1, unsigned int c1, V3 v2, unsigned int c2)
+void FrameBuffer::DrawSegment(V3 p1, V3 p2, V3 c1, V3 c2)
 {
-	V3 v2v1 = v2 - v1;
+	V3 v2v1 = p2 - p1;
 	int steps;
 	if(v2v1[0]>v2v1[1])
 	{
@@ -160,14 +160,16 @@ void FrameBuffer::DrawSegment(V3 v1, unsigned int c1, V3 v2, unsigned int c2)
 		steps = static_cast<int>(v2v1[1]);
 	}
 
-	int u = static_cast<int>(v1[0]);
-	int v = static_cast<int>(v1[1]);
+	int u = static_cast<int>(p1[0]);
+	int v = static_cast<int>(p1[1]);
 	for(int stepi = 0 ; stepi < steps; ++stepi)
 	{
 		float ratio = static_cast<float>(stepi) / static_cast<float>(steps - 1);
+		V3 color = c1 * (1.0f - ratio) + c2 * ratio;
+
 		SetGuarded(u + stepi * static_cast<int>(v2v1[0] / (steps - 1)),
 			v + stepi * static_cast<int>(v2v1[1] / (steps - 1)),
-			c1*(1.0f - ratio) + c2 * ratio);
+			color.GetColor());
 	}
 }
 

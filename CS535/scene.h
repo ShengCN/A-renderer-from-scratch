@@ -20,6 +20,7 @@ private:
 	bool DBGFramebuffer();
 	bool DBGV3();
 	bool DBGM3();
+	bool DBGAABB();
 };
 
 extern Scene* scene;

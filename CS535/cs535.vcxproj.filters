@@ -39,6 +39,9 @@
     <ClInclude Include="MathTool.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="aabb.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="scene.cpp">
@@ -57,6 +60,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="MathTool.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="aabb.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
