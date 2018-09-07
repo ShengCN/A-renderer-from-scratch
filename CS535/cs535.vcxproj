@@ -99,6 +99,7 @@
     <ClInclude Include="gui.h" />
     <ClInclude Include="m33.h" />
     <ClInclude Include="MathTool.h" />
+    <ClInclude Include="ppc.h" />
     <ClInclude Include="scene.h" />
     <ClInclude Include="v3.h" />
   </ItemGroup>
@@ -108,6 +109,7 @@
     <ClCompile Include="gui.cxx" />
     <ClCompile Include="m33.cpp" />
     <ClCompile Include="MathTool.cpp" />
+    <ClCompile Include="ppc.cpp" />
     <ClCompile Include="scene.cpp" />
     <ClCompile Include="v3.cpp" />
   </ItemGroup>

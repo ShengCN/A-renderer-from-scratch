@@ -4,6 +4,7 @@
 #include <FL/Fl_Gl_Window.H>
 #include <GL/glut.h>
 
+#include "ppc.h"
 #include "v3.h"
 
 class FrameBuffer : public Fl_Gl_Window {
@@ -26,6 +27,7 @@ public:
 	void DrawCircle(int u0, int v0, int r, unsigned int color);
 	void DrawEllipse(int u0, int v0, float r0, float r1, unsigned int color);
 	void DrawPoint(int u, int v, unsigned int color);
+	void Draw3DPoint(PPC* camera, V3 p, unsigned int color, int pointSize);
 private:
 	void Set(int u, int v, int color);
 };

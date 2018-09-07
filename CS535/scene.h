@@ -2,8 +2,7 @@
 
 #include "gui.h"
 #include "framebuffer.h"
-#include <vector>
-#include <functional>
+#include "ppc.h"
 
 class Scene
 {
@@ -12,6 +11,7 @@ public:
 
 	GUI* gui;
 	FrameBuffer* fb;
+	PPC* ppc;
 	Scene();
 	void DBG();
 	void Render();

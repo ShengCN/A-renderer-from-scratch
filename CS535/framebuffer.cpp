@@ -226,3 +226,15 @@ void FrameBuffer::DrawPoint(int u, int v, unsigned color)
 {
 	SetGuarded(u, v, color);
 }
+
+void FrameBuffer::Draw3DPoint(PPC* camera, V3 p, unsigned color, int pointSize)
+{
+	V3 pp;
+	if (!camera->Project(p, pp) || pp[0] < 0 || pp[1] < 0 || pp[0] >= w || pp[1] >= h)
+		return;
+
+	int u = static_cast<int>(pp[0]);
+	int v = static_cast<int>(pp[1]);
+	int halfPointSize = pointSize / 2;
+	DrawRectangle(u - halfPointSize, v - halfPointSize, u + halfPointSize, v + halfPointSize, color);
+}

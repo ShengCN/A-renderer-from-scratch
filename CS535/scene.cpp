@@ -21,7 +21,9 @@ Scene::Scene()
 	int v0 = 20;
 	int w = 640;
 	int h = 480;
+	int fovf = 55.0f;
 
+	ppc = new PPC(w, h, fovf);
 	fb = new FrameBuffer(u0, v0, w, h);
 	fb->label("SW Framebuffer");
 	fb->show();
@@ -45,6 +47,17 @@ bool Scene::DBGFramebuffer()
 	int r = 30;
 	int stepN = 360;
 
+	// Draw 3D point
+	{
+		V3 p(-100.0f, 0.0f, -100.0f);
+		for (int stepi = 0; stepi < stepN; ++stepi)
+		{
+			fb->SetBGR(0xFFFFFFFF);
+			fb->Draw3DPoint(ppc, p - V3(0.0f,0.0f,stepi), 0xFFFF0000, 7);
+				fb->redraw();
+			Fl::check();
+		}
+	}
 	// for (int stepi = 0; stepi < stepN; ++stepi)
 	// {
 	// 	fb->SetBGR(0xFFFFFFFF);
@@ -54,11 +67,13 @@ bool Scene::DBGFramebuffer()
 	// 	Fl::check();
 	// }
 
-	V3 c1, c2;
-	c1.SetColor(0xFF0000FF);
-	c2.SetColor(0xFFFF0000);
-	fb->DrawSegment(V3(50.0f, 50.0f, 0.0f), V3(300.0f, 300.0f, 0.0f),c1,c2);
-	
+	// Draw intepolation line segment
+	// {
+	// 	V3 c1, c2;
+	// 	c1.SetColor(0xFF0000FF);
+	// 	c2.SetColor(0xFFFF0000);
+	// 	fb->DrawSegment(V3(50.0f, 50.0f, 0.0f), V3(300.0f, 300.0f, 0.0f), c1, c2);
+	// }
 	
 //	{
 //	// Demonstration
