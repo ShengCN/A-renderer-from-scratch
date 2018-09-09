@@ -20,6 +20,7 @@ public:
 	void LoadTiff(char* fname);
 	void SaveAsTiff(char* fname);
 	int ClipToScreen(int& u0, int& v0, int& u1, int& v1);
+	int ClipToScreen(float& u0, float& v0, float& u1, float& v1);
 
 	// Draw something
 	void DrawSegment(V3 p1, V3 p2, V3 c1, V3 c2);
@@ -28,6 +29,7 @@ public:
 	void DrawEllipse(int u0, int v0, float r0, float r1, unsigned int color);
 	void DrawPoint(int u, int v, unsigned int color);
 	void Draw3DPoint(PPC* camera, V3 p, unsigned int color, int pointSize);
+	void DrawTriangle(PPC* camera, V3 p1, V3 p2, V3 p3, unsigned int color);
 private:
 	void Set(int u, int v, int color);
 };

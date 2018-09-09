@@ -48,16 +48,16 @@ bool Scene::DBGFramebuffer()
 	int stepN = 360;
 
 	// Draw 3D point
-	{
-		V3 p(-100.0f, 0.0f, -100.0f);
-		for (int stepi = 0; stepi < stepN; ++stepi)
-		{
-			fb->SetBGR(0xFFFFFFFF);
-			fb->Draw3DPoint(ppc, p - V3(0.0f,0.0f,stepi), 0xFFFF0000, 7);
-				fb->redraw();
-			Fl::check();
-		}
-	}
+//	{
+//		V3 p(-100.0f, 0.0f, -100.0f);
+//		for (int stepi = 0; stepi < stepN; ++stepi)
+//		{
+//			fb->SetBGR(0xFFFFFFFF);
+//			fb->Draw3DPoint(ppc, p - V3(0.0f,0.0f,stepi), 0xFFFF0000, 7);
+//				fb->redraw();
+//			Fl::check();
+//		}
+//	}
 	// for (int stepi = 0; stepi < stepN; ++stepi)
 	// {
 	// 	fb->SetBGR(0xFFFFFFFF);
@@ -67,14 +67,21 @@ bool Scene::DBGFramebuffer()
 	// 	Fl::check();
 	// }
 
-	// Draw intepolation line segment
-	// {
-	// 	V3 c1, c2;
-	// 	c1.SetColor(0xFF0000FF);
-	// 	c2.SetColor(0xFFFF0000);
-	// 	fb->DrawSegment(V3(50.0f, 50.0f, 0.0f), V3(300.0f, 300.0f, 0.0f), c1, c2);
-	// }
-	
+	// Draw Triangles
+	 {
+	 	V3 p1(-30.f,0.0f,-30.0f), p2(0.0f, 30.0f, -30.0f), p3(10.f, 0.0f, -30.0f);
+	 	
+		fb->Draw3DPoint(ppc,p1, 0xFF0000FF,7);
+		fb->Draw3DPoint(ppc,p2, 0xFF00FF00,7);
+		fb->Draw3DPoint(ppc,p3, 0xFFFF0000,7);
+		V3 p1r, p2r, p3r;
+		ppc->Project(p1, p1r);
+		ppc->Project(p2, p2r);
+		ppc->Project(p3, p3r);
+		cerr << p1r << p2r << p3r;
+		fb->DrawTriangle(ppc, p1, p2, p3, 0xFF999999);
+	 }
+
 //	{
 //	// Demonstration
 //	// stepN = 360;
@@ -82,15 +89,17 @@ bool Scene::DBGFramebuffer()
 //	float deg = 0.0f;
 //	for (int stepi = 0; stepi < stepN; ++stepi)
 //	{
-//		// fb->SetBGR(0XFFFFFFFF);
+//		fb->SetBGR(0XFFFFFFFF);
 //		fb->DrawCircle(point.Rotate(axis, deg + static_cast<float>(stepi))[0] + static_cast<int>(fb->w / 2),
 //			point.Rotate(axis, deg + static_cast<float>(stepi))[1] + static_cast<int>(fb->h / 2),
 //			5, 0xFF0000FF);
-//		cerr << "Current stepi: " << stepi << "\n" << point.Rotate(V3(1.0f, 0.0f, 1.0f), deg + static_cast<float>(stepi));
+//		// cerr << "Current stepi: " << stepi << "\n" << point.Rotate(V3(1.0f, 0.0f, 1.0f), deg + static_cast<float>(stepi));
 //		fb->redraw();
-//		Fl::check();
+//		Fl::wait(4.0);
+//		// Fl::check();
 //	}
 //	}
+
 	std::cerr << "DBGFramebuffer passed!\n";
 	return true;
 }
@@ -180,7 +189,6 @@ bool Scene::DBGAABB()
 	AABB bbox(p0);
 	bbox.AddPoint(p1);
 	bbox.AddPoint(p2);
-	cerr << bbox;
 
 	if(bbox.corners[0]!=V3(-5.5f,0.0f,0.0f) || bbox.corners[1]!=p1)
 	{

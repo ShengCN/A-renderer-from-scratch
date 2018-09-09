@@ -7,15 +7,13 @@
 class Scene
 {
 public:
-
-
 	GUI* gui;
 	FrameBuffer* fb;
 	PPC* ppc;
 	Scene();
 	void DBG();
 	void Render();
-	
+
 private:
 	bool DBGFramebuffer();
 	bool DBGV3();

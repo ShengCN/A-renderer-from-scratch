@@ -2,7 +2,7 @@
 
 bool FloatEqual(float a, float b)
 {
-	return std::abs(a - b) < 1e-7;
+	return std::abs(a - b) < 1e-3;
 };
 
 float Deg2Rad(float deg)

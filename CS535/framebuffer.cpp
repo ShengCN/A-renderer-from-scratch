@@ -7,6 +7,8 @@
 
 #include "tiffio.h"
 #include <algorithm>
+#include "AABB.h"
+#include "MathTool.h"
 
 FrameBuffer::FrameBuffer(int u0, int v0, int _w, int _h)
 	: Fl_Gl_Window(u0, v0, _w, _h, nullptr)
@@ -147,6 +149,19 @@ int FrameBuffer::ClipToScreen(int& u0, int& v0, int& u1, int& v1)
 	return 1;
 }
 
+int FrameBuffer::ClipToScreen(float& u0, float& v0, float& u1, float& v1)
+{
+	// Out of screen 
+	if (u0 > w || v0 > h || u1 < 0 || v1 < 0)
+		return 0;
+
+	u0 = std::max(0.0f, u0);
+	v0 = std::max(0.0f, v0);
+	u1 = std::min(u1, static_cast<float>(w - 1));
+	v1 = std::min(v1, static_cast<float>(h - 1));
+	return 1;
+}
+
 void FrameBuffer::DrawSegment(V3 p1, V3 p2, V3 c1, V3 c2)
 {
 	V3 v2v1 = p2 - p1;
@@ -237,4 +252,56 @@ void FrameBuffer::Draw3DPoint(PPC* camera, V3 p, unsigned color, int pointSize)
 	int v = static_cast<int>(pp[1]);
 	int halfPointSize = pointSize / 2;
 	DrawRectangle(u - halfPointSize, v - halfPointSize, u + halfPointSize, v + halfPointSize, color);
+}
+
+void FrameBuffer::DrawTriangle(PPC* camera,V3 p1, V3 p2, V3 p3, unsigned color)
+{
+	V3 pp1, pp2, pp3;  // image space point coordinate
+	if (!camera->Project(p1, pp1) || !camera->Project(p2, pp2) || !camera->Project(p3, pp3))
+		return;
+
+	auto DetectInside = [&](V3 p, V3 t1, V3 t2, V3 t3)
+	{
+		float x[3], y[3];
+		x[1] = t1[0];
+		x[2] = t2[0];
+		y[1] = t1[1];
+		y[2] = t2[1];
+
+		float xCo = y[2] - y[1];
+		float yCo = x[2] - x[1];
+		float x1y2 = x[1]*y[2];
+		float y1x2 = y[1]*x[2];
+		float res1 = p[0] * xCo - p[1] * yCo - x1y2 + y1x2;
+		float res2 = t3[0] * xCo - t3[1] * yCo - x1y2 + y1x2;
+
+		return res1 * res2 >= 0.0f ? true : false;
+	};
+
+	AABB bbTri(pp1);
+	bbTri.AddPoint(pp2);
+	bbTri.AddPoint(pp3);
+	cerr << "Before Clip " << bbTri.corners[0] << bbTri.corners[1];
+	ClipToScreen(bbTri.corners[0][0], bbTri.corners[0][1], bbTri.corners[1][0], bbTri.corners[1][1]);
+	cerr << "After " << bbTri.corners[0] << bbTri.corners[1];
+	// Rasterize bbox 
+	int left = static_cast<int>(bbTri.corners[0][0] + 0.5f), right = static_cast<int>(bbTri.corners[1][0] - 0.5f);
+	int top = static_cast<int>(bbTri.corners[0][1] + 0.5f), bottom = static_cast<int>(bbTri.corners[1][1] - 0.5f);
+
+	cerr << "Left, Right, Top, Bottom" << left << endl << right << endl << top << endl << bottom;
+	for(int i = top; i <= bottom; ++i)
+	{
+		for(int j = left; j <= right; ++j)
+		{
+			V3 p(j,i, 0.0f);
+			bool s1 = DetectInside(p, pp1, pp2,pp3);
+			bool s2 = DetectInside(p, pp2, pp3,pp1);
+			bool s3 = DetectInside(p, pp3, pp1,pp2);
+			if (s1 == true && s2 == true && s3 == true)
+			{
+				// cerr << "Find it" << endl;
+				DrawPoint(j, i, color);
+			}
+		}
+	}
 }

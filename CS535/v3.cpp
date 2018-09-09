@@ -75,6 +75,7 @@ V3 V3::Rotate(V3 a, float angle)
 		// from origin to new coord
 		auto rad = Deg2Rad(angle);
 		M33 ao(a, b, c);
+		cerr << "New matrix: " << ao;
 		M33 rot;
 		rot.SetRotate(0, angle);
 		M33 iao = ao.Inverse();
@@ -88,6 +89,7 @@ V3 V3::Rotate(V3 a, float angle)
 		// from origin to new coord
 		auto rad = Deg2Rad(angle);
 		M33 ao(b, a, c);
+		cerr << "New matrix: " << ao;
 		M33 rot;
 		rot.SetRotate(1, angle);
 		M33 iao = ao.Inverse();
