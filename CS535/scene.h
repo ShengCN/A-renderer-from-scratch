@@ -19,6 +19,7 @@ private:
 	bool DBGV3();
 	bool DBGM3();
 	bool DBGAABB();
+	bool DBGPPC();
 };
 
 extern Scene* scene;

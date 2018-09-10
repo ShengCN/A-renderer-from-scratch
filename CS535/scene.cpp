@@ -78,7 +78,6 @@ bool Scene::DBGFramebuffer()
 		ppc->Project(p1, p1r);
 		ppc->Project(p2, p2r);
 		ppc->Project(p3, p3r);
-		cerr << p1r << p2r << p3r;
 		fb->DrawTriangle(ppc, p1, p2, p3, 0xFF999999);
 	 }
 
@@ -201,11 +200,25 @@ bool Scene::DBGAABB()
 	return true;
 }
 
+bool Scene::DBGPPC()
+{
+	float hfov = ppc->GetHorizontalFOV();
+	cerr <<"Fov: "<< hfov << endl;
+	if(!FloatEqual(hfov,55.0f))
+	{
+		cerr << "PPC not pass!\n";
+		return false;
+	}
+
+	cerr << "PPC passed \n";
+	return true;
+}
+
 void Scene::DBG()
 {
 	// cerr << "INFO: pressed DBG" << endl;
 	cerr << "Begin DBG\n";
-	if (DBGV3() && DBGM3() && DBGFramebuffer()&&DBGAABB())
+	if (DBGV3() && DBGM3() && DBGFramebuffer()&&DBGAABB() && DBGPPC())
 		cerr << "All pased! \n";
 	else
 		cerr << "Not pass!\n";

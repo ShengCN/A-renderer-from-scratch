@@ -23,6 +23,7 @@ public:
 	V3 operator/(float scf);
 	V3 operator+(V3 v1);
 	V3 operator-(V3 v1);
+	V3 operator^(V3 v1);
 	bool operator==(V3 v1);
 	bool operator!=(V3 v1);
 	friend istream& operator>>(istream& ist, V3 &v);

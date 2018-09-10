@@ -281,14 +281,12 @@ void FrameBuffer::DrawTriangle(PPC* camera,V3 p1, V3 p2, V3 p3, unsigned color)
 	AABB bbTri(pp1);
 	bbTri.AddPoint(pp2);
 	bbTri.AddPoint(pp3);
-	cerr << "Before Clip " << bbTri.corners[0] << bbTri.corners[1];
 	ClipToScreen(bbTri.corners[0][0], bbTri.corners[0][1], bbTri.corners[1][0], bbTri.corners[1][1]);
-	cerr << "After " << bbTri.corners[0] << bbTri.corners[1];
+	
 	// Rasterize bbox 
 	int left = static_cast<int>(bbTri.corners[0][0] + 0.5f), right = static_cast<int>(bbTri.corners[1][0] - 0.5f);
 	int top = static_cast<int>(bbTri.corners[0][1] + 0.5f), bottom = static_cast<int>(bbTri.corners[1][1] - 0.5f);
 
-	cerr << "Left, Right, Top, Bottom" << left << endl << right << endl << top << endl << bottom;
 	for(int i = top; i <= bottom; ++i)
 	{
 		for(int j = left; j <= right; ++j)
@@ -299,7 +297,6 @@ void FrameBuffer::DrawTriangle(PPC* camera,V3 p1, V3 p2, V3 p3, unsigned color)
 			bool s3 = DetectInside(p, pp3, pp1,pp2);
 			if (s1 == true && s2 == true && s3 == true)
 			{
-				// cerr << "Find it" << endl;
 				DrawPoint(j, i, color);
 			}
 		}
