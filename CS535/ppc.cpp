@@ -115,3 +115,4 @@ void PPC::RevolveV(V3 p, float theta)
 	c = vd - a * static_cast<float>(w) / 2.0f - b * static_cast<float>(h) / 2.0f;
 	C = p + vd * focal;
 }
+

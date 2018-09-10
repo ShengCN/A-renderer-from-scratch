@@ -204,7 +204,19 @@ bool Scene::DBGPPC()
 {
 	float hfov = ppc->GetHorizontalFOV();
 	cerr <<"Fov: "<< hfov << endl;
-	if(!FloatEqual(hfov,55.0f))
+
+	int stepN = 30;
+	V3 p1(-30.f, 0.0f, -30.0f), p2(0.0f, 30.0f, -30.0f), p3(10.f, 0.0f, -30.0f);
+	for(int stepi = 0; stepi < stepN; ++stepi)
+	{
+		fb->SetBGR(0XFFFFFFFF);
+		ppc->Tilt(1.0f);
+		fb->DrawTriangle(ppc, p1, p2, p3, 0xFFAAAAAA);
+		fb->redraw();
+		Fl::check();
+	}
+
+	if(!FloatEqual(hfov/2.0f,55.0f))
 	{
 		cerr << "PPC not pass!\n";
 		return false;
