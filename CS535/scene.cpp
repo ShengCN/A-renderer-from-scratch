@@ -167,7 +167,7 @@ bool Scene::DBGPPC()
 bool Scene::DBGTM()
 {
 	TM tri;
-	tri.SetRectangle(V3(0.0f, 0.0f, -100.0f), 45.0f, 20.0f);
+	tri.SetRectangle(V3(0.0f, 0.0f, -50.0f), 45.0f, 20.0f);
 	// tri.RenderPoints(ppc, fb);
 	tri.RenderWireFrame(ppc, fb);
 

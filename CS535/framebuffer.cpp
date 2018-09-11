@@ -162,27 +162,29 @@ int FrameBuffer::ClipToScreen(float& u0, float& v0, float& u1, float& v1)
 	return 1;
 }
 
-void FrameBuffer::DrawSegment(V3 p1, V3 c1, V3 p2, V3 c2)
+void FrameBuffer::DrawSegment(V3 p0, V3 c0, V3 p1, V3 c1)
 {
-	V3 v2v1 = p2 - p1;
-	V3 c2c1 = c2 - c1;
+	V3 v2v1 = p1 - p0;
+	V3 c2c1 = c1 - c0;
 	int pixelN;
 	if(fabsf(v2v1[0])> fabsf(v2v1[1]))
 	{
-		pixelN = static_cast<int>(fabs(v2v1[0]) + 1);
+		// Horizontal
+		 pixelN = static_cast<int>(fabs(v2v1[0]) + 1);
 	}
 	else
 	{
-		pixelN = static_cast<int>(fabs(v2v1[1]) + 1);
+		// Vertical
+		 pixelN = static_cast<int>(fabs(v2v1[1]) + 1);
 	}
 
-	int u = static_cast<int>(p1[0]);
-	int v = static_cast<int>(p1[1]);
-	for(int stepi = 0 ; stepi < pixelN + 1; ++stepi)
+	int u = static_cast<int>(p0[0]);
+	int v = static_cast<int>(p0[1]);
+	for(int stepi = 0 ; stepi < pixelN; ++stepi)
 	{
-		float fract = static_cast<float>(stepi) / static_cast<float>(pixelN);
-		V3 point = p1 + v2v1 * fract;
-		V3 color = c1 + c2c1 * fract;
+		float fract = static_cast<float>(stepi) / static_cast<float>(pixelN-1);
+		V3 point = p0 + v2v1 * fract;
+		V3 color = c0 + c2c1 * fract;
 		int u = static_cast<int>(point[0]);
 		int v = static_cast<int>(point[1]);
 
