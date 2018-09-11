@@ -23,7 +23,8 @@ public:
 	int ClipToScreen(float& u0, float& v0, float& u1, float& v1);
 
 	// Draw something
-	void DrawSegment(V3 p1, V3 p2, V3 c1, V3 c2);
+	void DrawSegment(V3 p1, V3 c1, V3 p2, V3 c2);
+	void Draw3DSegment(PPC *ppc, V3 p1, V3 c1, V3 p2, V3 c2);
 	void DrawRectangle(int u0, int v0, int u1, int v1, unsigned int color);
 	void DrawCircle(int u0, int v0, int r, unsigned int color);
 	void DrawEllipse(int u0, int v0, float r0, float r1, unsigned int color);

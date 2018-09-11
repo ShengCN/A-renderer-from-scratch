@@ -162,30 +162,43 @@ int FrameBuffer::ClipToScreen(float& u0, float& v0, float& u1, float& v1)
 	return 1;
 }
 
-void FrameBuffer::DrawSegment(V3 p1, V3 p2, V3 c1, V3 c2)
+void FrameBuffer::DrawSegment(V3 p1, V3 c1, V3 p2, V3 c2)
 {
 	V3 v2v1 = p2 - p1;
-	int steps;
-	if(v2v1[0]>v2v1[1])
+	V3 c2c1 = c2 - c1;
+	int pixelN;
+	if(fabsf(v2v1[0])> fabsf(v2v1[1]))
 	{
-		steps = static_cast<int>(v2v1[0]);
+		pixelN = static_cast<int>(fabs(v2v1[0]) + 1);
 	}
 	else
 	{
-		steps = static_cast<int>(v2v1[1]);
+		pixelN = static_cast<int>(fabs(v2v1[1]) + 1);
 	}
 
 	int u = static_cast<int>(p1[0]);
 	int v = static_cast<int>(p1[1]);
-	for(int stepi = 0 ; stepi < steps; ++stepi)
+	for(int stepi = 0 ; stepi < pixelN + 1; ++stepi)
 	{
-		float ratio = static_cast<float>(stepi) / static_cast<float>(steps - 1);
-		V3 color = c1 * (1.0f - ratio) + c2 * ratio;
+		float fract = static_cast<float>(stepi) / static_cast<float>(pixelN);
+		V3 point = p1 + v2v1 * fract;
+		V3 color = c1 + c2c1 * fract;
+		int u = static_cast<int>(point[0]);
+		int v = static_cast<int>(point[1]);
 
-		SetGuarded(u + stepi * static_cast<int>(v2v1[0] / (steps - 1)),
-			v + stepi * static_cast<int>(v2v1[1] / (steps - 1)),
-			color.GetColor());
+		SetGuarded(u,v,color.GetColor());
 	}
+}
+
+void FrameBuffer::Draw3DSegment(PPC* ppc, V3 p1, V3 c1, V3 p2, V3 c2)
+{
+	V3 pp1, pp2;
+	
+	if (!ppc->Project(p1, pp1))
+		return;
+	if (!ppc->Project(p2, pp2))
+		return;
+	DrawSegment(pp1,c1,pp2,c2);
 }
 
 void FrameBuffer::DrawRectangle(int u0, int v0, int u1, int v1, unsigned color)
@@ -245,7 +258,9 @@ void FrameBuffer::DrawPoint(int u, int v, unsigned color)
 void FrameBuffer::Draw3DPoint(PPC* camera, V3 p, unsigned color, int pointSize)
 {
 	V3 pp;
-	if (!camera->Project(p, pp) || pp[0] < 0 || pp[1] < 0 || pp[0] >= w || pp[1] >= h)
+	if (!camera->Project(p, pp) || 
+		pp[0] < 0 || pp[1] < 0 || 
+		pp[0] >= static_cast<float>(w) || pp[1] >= static_cast<float>(h))
 		return;
 
 	int u = static_cast<int>(pp[0]);

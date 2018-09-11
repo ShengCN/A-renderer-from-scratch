@@ -5,6 +5,7 @@
 #include <algorithm>
 #include "MathTool.h"
 #include "AABB.h"
+#include "TM.h"
 
 Scene* scene;
 
@@ -42,62 +43,10 @@ void Scene::Render()
 
 bool Scene::DBGFramebuffer()
 {
-	int u0 = 50, v0 = 50, u1 = 300, v1 = 300;
-
-	int r = 30;
-	int stepN = 360;
-
-	// Draw 3D point
-//	{
-//		V3 p(-100.0f, 0.0f, -100.0f);
-//		for (int stepi = 0; stepi < stepN; ++stepi)
-//		{
-//			fb->SetBGR(0xFFFFFFFF);
-//			fb->Draw3DPoint(ppc, p - V3(0.0f,0.0f,stepi), 0xFFFF0000, 7);
-//				fb->redraw();
-//			Fl::check();
-//		}
-//	}
-	// for (int stepi = 0; stepi < stepN; ++stepi)
-	// {
-	// 	fb->SetBGR(0xFFFFFFFF);
-	// 	fb->DrawRectangle(u0 + stepi, v0, u1+stepi, v1, 0xFF00FFFF);
-	// 	fb->DrawCircle(u0+stepi, v0, r, 0xFFFF0000);
-	// 	fb->redraw();
-	// 	Fl::check();
-	// }
-
-	// Draw Triangles
-	 {
-	 	V3 p1(-30.f,0.0f,-30.0f), p2(0.0f, 30.0f, -30.0f), p3(10.f, 0.0f, -30.0f);
-	 	
-		fb->Draw3DPoint(ppc,p1, 0xFF0000FF,7);
-		fb->Draw3DPoint(ppc,p2, 0xFF00FF00,7);
-		fb->Draw3DPoint(ppc,p3, 0xFFFF0000,7);
-		V3 p1r, p2r, p3r;
-		ppc->Project(p1, p1r);
-		ppc->Project(p2, p2r);
-		ppc->Project(p3, p3r);
-		fb->DrawTriangle(ppc, p1, p2, p3, 0xFF999999);
-	 }
-
-//	{
-//	// Demonstration
-//	// stepN = 360;
-//	V3 point(100, 100, 0.0f), axis(1.0f, 0.0f, 1.0f);
-//	float deg = 0.0f;
-//	for (int stepi = 0; stepi < stepN; ++stepi)
-//	{
-//		fb->SetBGR(0XFFFFFFFF);
-//		fb->DrawCircle(point.Rotate(axis, deg + static_cast<float>(stepi))[0] + static_cast<int>(fb->w / 2),
-//			point.Rotate(axis, deg + static_cast<float>(stepi))[1] + static_cast<int>(fb->h / 2),
-//			5, 0xFF0000FF);
-//		// cerr << "Current stepi: " << stepi << "\n" << point.Rotate(V3(1.0f, 0.0f, 1.0f), deg + static_cast<float>(stepi));
-//		fb->redraw();
-//		Fl::wait(4.0);
-//		// Fl::check();
-//	}
-//	}
+	V3 p1(0.0f, 0.f, -100.0f), p2(-50.0f, 50.0f, -100.0f);
+	V3 pp1(320.0f, 240.0f, 0.0f), pp2(220.0f, 140.0f, 0.0f);
+	V3 c1(0.0f), c2(0.0f);
+	// fb->DrawSegment(pp1, c1, pp2, c2);
 
 	std::cerr << "DBGFramebuffer passed!\n";
 	return true;
@@ -205,17 +154,6 @@ bool Scene::DBGPPC()
 	float hfov = ppc->GetHorizontalFOV();
 	cerr <<"Fov: "<< hfov << endl;
 
-	int stepN = 30;
-	V3 p1(-30.f, 0.0f, -30.0f), p2(0.0f, 30.0f, -30.0f), p3(10.f, 0.0f, -30.0f);
-	for(int stepi = 0; stepi < stepN; ++stepi)
-	{
-		fb->SetBGR(0XFFFFFFFF);
-		ppc->Tilt(1.0f);
-		fb->DrawTriangle(ppc, p1, p2, p3, 0xFFAAAAAA);
-		fb->redraw();
-		Fl::check();
-	}
-
 	if(!FloatEqual(hfov/2.0f,55.0f))
 	{
 		cerr << "PPC not pass!\n";
@@ -226,11 +164,22 @@ bool Scene::DBGPPC()
 	return true;
 }
 
+bool Scene::DBGTM()
+{
+	TM tri;
+	tri.SetRectangle(V3(0.0f, 0.0f, -100.0f), 45.0f, 20.0f);
+	// tri.RenderPoints(ppc, fb);
+	tri.RenderWireFrame(ppc, fb);
+
+	cerr << "Triangle Mesh passed! \n";
+	return true;
+}
+
 void Scene::DBG()
 {
 	// cerr << "INFO: pressed DBG" << endl;
 	cerr << "Begin DBG\n";
-	if (DBGV3() && DBGM3() && DBGFramebuffer()&&DBGAABB() && DBGPPC())
+	if (DBGV3() && DBGM3() && DBGFramebuffer()&&DBGAABB() && DBGPPC() && DBGTM())
 		cerr << "All pased! \n";
 	else
 		cerr << "Not pass!\n";
