@@ -167,9 +167,19 @@ bool Scene::DBGPPC()
 bool Scene::DBGTM()
 {
 	TM tri;
-	tri.SetRectangle(V3(0.0f, 0.0f, -50.0f), 45.0f, 20.0f);
+	V3 O(0.0f, 0.0f, -50.0f);
+	tri.SetRectangle(O, 45.0f, 20.0f);
 	// tri.RenderPoints(ppc, fb);
-	tri.RenderWireFrame(ppc, fb);
+	
+	int stepN = 360;
+	for(int stepi = 0; stepi < stepN; ++stepi)
+	{
+		fb->SetBGR(0xFFFFFFFF);
+		tri.RotateAboutArbitraryAxis(O, V3(0.0f, 1.0f, 0.0f), 1.0f);
+		tri.RenderWireFrame(ppc, fb);
+		fb->redraw();
+		Fl::check();
+	}
 
 	cerr << "Triangle Mesh passed! \n";
 	return true;

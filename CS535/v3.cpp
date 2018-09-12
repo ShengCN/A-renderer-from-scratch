@@ -62,7 +62,7 @@ V3 V3::cross(V3 v1)
 		v0[0] * v1[1] - v0[1] * v1[0]);
 }
 
-V3 V3::Rotate(V3 a, float angle)
+V3 V3::Rotate(V3 a, float angled)
 {
 	V3 v = *this, x(1.0f,0.0f,0.0f),y(0.0f,1.0f,0.0f),b,c, ret;
 	auto xa = abs(x*a);
@@ -73,11 +73,10 @@ V3 V3::Rotate(V3 a, float angle)
 		b = x.cross(a).Normalize();
 		c = a.cross(b).Normalize();
 		// from origin to new coord
-		auto rad = Deg2Rad(angle);
+		auto rad = Deg2Rad(angled);
 		M33 ao(a, b, c);
-		cerr << "New matrix: " << ao;
 		M33 rot;
-		rot.SetRotate(0, angle);
+		rot.SetRotate(0, angled);
 		M33 iao = ao.Inverse();
 		return iao * rot * ao * v;
 	}
@@ -87,14 +86,21 @@ V3 V3::Rotate(V3 a, float angle)
 		b = y.cross(a).Normalize();
 		c = a.cross(b).Normalize();
 		// from origin to new coord
-		auto rad = Deg2Rad(angle);
+		auto rad = Deg2Rad(angled);
 		M33 ao(b, a, c);
-		cerr << "New matrix: " << ao;
 		M33 rot;
-		rot.SetRotate(1, angle);
+		rot.SetRotate(1, angled);
 		M33 iao = ao.Inverse();
 		return iao * rot * ao * v;
 	}
+}
+
+V3 V3::RotateThisPointAboutArbitraryAxis(V3 O, V3 a, float angled)
+{
+	V3 p = *this;
+	V3 OP = p - O;
+	OP = OP.Rotate(a, angled);
+	return OP + O;
 }
 
 float& V3::operator[](int i)

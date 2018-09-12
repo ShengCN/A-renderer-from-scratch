@@ -60,6 +60,10 @@ void TM::RenderWireFrame(PPC* ppc, FrameBuffer* fb)
 
 void TM::RotateAboutArbitraryAxis(V3 O, V3 a, float angled)
 {
+	for(int vi = 0; vi < vertsN; ++vi)
+	{
+		verts[vi] = verts[vi].RotateThisPointAboutArbitraryAxis(O, a, angled);
+	}
 }
 
 TM::~TM()

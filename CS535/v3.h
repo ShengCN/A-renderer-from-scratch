@@ -16,7 +16,8 @@ public:
 	void SetColor(unsigned int color);
 	unsigned int GetColor();
 	V3 cross(V3 v1);
-	V3 Rotate(V3 a, float angle); 
+	V3 Rotate(V3 a, float angled);    // Rotate in arbitrary axis 
+	V3 RotateThisPointAboutArbitraryAxis(V3 O, V3 a, float angled);
 	float& operator[](int i);
 	float operator*(V3 v1);
 	V3 operator*(float scf);
