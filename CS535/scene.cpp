@@ -58,7 +58,7 @@ bool Scene::DBGV3()
 	v1[0] = 0.0f;
 
 	cerr << v1 << v1 * v2 << endl << v1 - v2 << v1.cross(v2) << v1 * 3.0f << (v1 * 3.0f) / 3.0f;
-	cerr << v1.Length() << endl << v3.Normalize();
+	cerr << v1.Length() << endl << v3.UnitVector();
 	cerr << v1 << "x Rotate 90 degree:\n " << v1.Rotate(V3(1.0f, 0.0f, 0.0f), 90.0f);
 	cerr << v1 << "y Rotate 90 degree:\n " << v1.Rotate(V3(0.0f, 1.0f, 0.0f), 90.0f);
 	cerr << v1 << "z Rotate 90 degree:\n " << v1.Rotate(V3(0.0f, 0.0f, 1.0f), 90.0f);
@@ -75,13 +75,29 @@ bool Scene::DBGV3()
 		|| v1.cross(v2) != V3(0.0f, 0.5f, -0.5f)
 		|| v1 * 3.0f != V3(0.0f, 3.0f, 3.0f)
 		|| (v1 * 3.0f) / 3.0f != v1
-		|| v3.Normalize() != V3(1.0f, 0.0f, 0.0f)
-		|| v3.Normalize().Length() != 1.0f
+		|| v3.UnitVector() != V3(1.0f, 0.0f, 0.0f)
+		|| v3.UnitVector().Length() != 1.0f
 		|| v1.Rotate(V3(1.0f, 0.0f, 0.0f), 90.0f) != V3(0.0f, -1.0f, 1.0f)
 		|| v1.Rotate(V3(0.0f, 1.0f, 0.0f), 90.0f) != V3(1.0f, 1.0f, 0.0f)
 		|| v1.Rotate(V3(0.0f, 0.0f, 1.0f), 90.0f) != V3(-1.0f, 0.0f, 1.0f))
 	{
 		cerr << "DBGV3 error\n";
+
+		if (v1.Rotate(V3(1.0f, 0.0f, 0.0f), 90.0f) != V3(0.0f, -1.0f, 1.0f))
+		{
+			cerr << "X rotation error\n";
+			cerr << "It should be: \n" << V3(0.0f, -1.0f, 1.0f) << v1.Rotate(V3(1.0f, 0.0f, 0.0f), 90.0f);
+		}
+		if (v1.Rotate(V3(0.0f, 1.0f, 0.0f), 90.0f) != V3(1.0f, 1.0f, 0.0f))
+		{
+			cerr << "Y rotation error \n";
+			cerr << "It should be: \n" << V3(1.0f, 1.0f, 0.0f) << v1.Rotate(V3(0.0f, 1.0f, 0.0f), 90.0f);
+		}
+		if (v1.Rotate(V3(0.0f, 0.0f, 1.0f), 90.0f) != V3(-1.0f, 0.0f, 1.0f))
+		{
+			cerr << "Z rotation error \n";
+			cerr << "It should be: \n" << V3(-1.0f, 0.0f, 1.0f) << v1.Rotate(V3(0.0f, 0.0f, 1.0f), 90.0f);
+		}
 		return false;
 	}
 

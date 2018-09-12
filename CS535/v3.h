@@ -11,7 +11,7 @@ public:
 	V3() {};
 	V3(float x);
 	V3(float x, float y, float z);
-	V3 Normalize();
+	V3 UnitVector();
 	float Length();
 	void SetColor(unsigned int color);
 	unsigned int GetColor();

@@ -32,18 +32,18 @@ int PPC::Project(V3 P, V3& ProjP)
 	if (w <= 0.0f)
 		return 0;
 	
-	ProjP = V3(u, v, w);
+	ProjP = V3(u, v, 1.0f / w);
 	return 1;
 }
 
 V3 PPC::GetVD()
 {
-	return (a^b).Normalize();
+	return (a^b).UnitVector();
 }
 
 float PPC::GetF()
 {
-	return (a^b).Normalize() * c;
+	return (a^b).UnitVector() * c;
 }
 
 float PPC::GetHorizontalFOV()
@@ -68,19 +68,19 @@ V3 PPC::GetRayCenter(int u, int v)
 
 void PPC::Pan(float theta)
 {
-	a = a.Rotate(b.Normalize()*(-1.0f), theta);
-	c = c.Rotate(b.Normalize()*(-1.0f), theta);
+	a = a.Rotate(b.UnitVector()*(-1.0f), theta);
+	c = c.Rotate(b.UnitVector()*(-1.0f), theta);
 }
 
 void PPC::Tilt(float theta)
 {
-	b = b.Rotate(a.Normalize(), theta);
-	c = c.Rotate(c.Normalize(), theta);
+	b = b.Rotate(a.UnitVector(), theta);
+	c = c.Rotate(c.UnitVector(), theta);
 }
 
 void PPC::Roll(float theta)
 {
-	V3 dir = (a ^ b).Normalize();
+	V3 dir = (a ^ b).UnitVector();
 	a = a.Rotate(dir, theta);
 	b = b.Rotate(dir, theta);
 	c = c.Rotate(dir, theta);
@@ -91,7 +91,7 @@ void PPC::RevolveH(V3 p, float theta)
 	// view direction
 	float focal = GetF();
 	
-	V3 vd = (C - p).Normalize();	
+	V3 vd = (C - p).UnitVector();	
 	vd = vd.Rotate(V3(0.0f, 1.0f, 0.0f), theta);
 
 	a = vd ^ V3(0.0f, 1.0f, 0.0f);
@@ -106,7 +106,7 @@ void PPC::RevolveV(V3 p, float theta)
 	// view direction
 	float focal = GetF();
 
-	V3 vd = (C - p).Normalize();
+	V3 vd = (C - p).UnitVector();
 	vd = vd.Rotate(V3(1.0f, 0.0f, 0.0f), theta);
 
 	b = vd ^ V3(1.0f, 0.0f, 0.0f);

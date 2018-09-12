@@ -16,7 +16,7 @@ V3::V3(float x, float y, float z) {
 
 }
 
-V3 V3::Normalize()
+V3 V3::UnitVector()
 {
 	V3 v = *this;
 	return v / Length();
@@ -67,32 +67,23 @@ V3 V3::Rotate(V3 a, float angled)
 	V3 v = *this, x(1.0f,0.0f,0.0f),y(0.0f,1.0f,0.0f),b,c, ret;
 	auto xa = abs(x*a);
 	auto ya = abs(y*a);
-	if(xa<ya)
+	V3 aux = x;
+	if(xa > ya)
 	{
-		a = a.Normalize();
-		b = x.cross(a).Normalize();
-		c = a.cross(b).Normalize();
-		// from origin to new coord
-		auto rad = Deg2Rad(angled);
-		M33 ao(a, b, c);
-		M33 rot;
-		rot.SetRotate(0, angled);
-		M33 iao = ao.Inverse();
-		return iao * rot * ao * v;
+		aux = y;
 	}
-	else
-	{
-		a = a.Normalize();
-		b = y.cross(a).Normalize();
-		c = a.cross(b).Normalize();
-		// from origin to new coord
-		auto rad = Deg2Rad(angled);
-		M33 ao(b, a, c);
-		M33 rot;
-		rot.SetRotate(1, angled);
-		M33 iao = ao.Inverse();
-		return iao * rot * ao * v;
-	}
+	aux = aux.UnitVector();
+
+	V3 a0 = (aux^a).UnitVector();
+	V3 a2 = (a0^a).UnitVector();
+
+	// from origin to new coord
+	auto rad = Deg2Rad(angled);
+	M33 lcs(a0, a, a2);
+	M33 rot;
+	rot.SetRotate(1, angled);
+	M33 iao = lcs.Inverse();
+	return iao * rot * lcs * v;
 }
 
 V3 V3::RotateThisPointAboutArbitraryAxis(V3 O, V3 a, float angled)
