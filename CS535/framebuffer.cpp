@@ -1,14 +1,16 @@
 #include "framebuffer.h"
 #include "math.h"
 #include <iostream>
+#include <algorithm>
+#include <fstream>
 #include "scene.h"
 #include "v3.h"
 #include <iostream>
 
 #include "tiffio.h"
-#include <algorithm>
 #include "AABB.h"
 #include "MathTool.h"
+
 
 FrameBuffer::FrameBuffer(int u0, int v0, int _w, int _h)
 	: Fl_Gl_Window(u0, v0, _w, _h, nullptr)
@@ -63,8 +65,6 @@ void FrameBuffer::SetBGR(unsigned int bgr)
 
 void FrameBuffer::Set(int u, int v, int color)
 {
-	//todo
-	// pix[u*w + v] = color;
 	pix[(h - 1 - v) * w + u] = color;
 }
 
@@ -72,7 +72,9 @@ void FrameBuffer::SetGuarded(int u, int v, unsigned int color)
 {
 	// clip to window 
 	if (u < 0 || v < 0 || u > h - 1 || v > w - 1)
+	{
 		return;
+	}
 
 	Set(u, v, color);
 }
@@ -170,21 +172,23 @@ void FrameBuffer::DrawSegment(V3 p0, V3 c0, V3 p1, V3 c1)
 	if(fabsf(v2v1[0])> fabsf(v2v1[1]))
 	{
 		// Horizontal
-		 pixelN = static_cast<int>(fabs(v2v1[0]) + 1);
+		 pixelN = static_cast<int>(fabs(v2v1[0])) + 1;
 	}
 	else
 	{
 		// Vertical
-		 pixelN = static_cast<int>(fabs(v2v1[1]) + 1);
+		 pixelN = static_cast<int>(fabs(v2v1[1])) + 1;
 	}
 
 	int u = static_cast<int>(p0[0]);
 	int v = static_cast<int>(p0[1]);
-	for(int stepi = 0 ; stepi < pixelN; ++stepi)
+
+	for (int stepi = 0; stepi < pixelN + 1; ++stepi)
 	{
-		float fract = static_cast<float>(stepi) / static_cast<float>(pixelN-1);
+		float fract = static_cast<float>(stepi) / static_cast<float>(pixelN);
 		V3 point = p0 + v2v1 * fract;
 		V3 color = c0 + c2c1 * fract;
+
 		int u = static_cast<int>(point[0]);
 		int v = static_cast<int>(point[1]);
 
