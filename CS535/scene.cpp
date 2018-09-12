@@ -65,7 +65,7 @@ bool Scene::DBGV3()
 	// cerr << "Please input a V3: " << endl;
 	// cin >> v4;
 	// cerr << "Your V3: "<<v4;
-	
+
 	v4.SetColor(0xFFFFFFFF);
 	cerr << v4.GetColor() << endl;
 	if (!FloatEqual(v1[0], 0.0f)
@@ -149,12 +149,12 @@ bool Scene::DBGM3()
 
 bool Scene::DBGAABB()
 {
-	V3 p0(-1.0f, 0.0f, 0.0f), p1(5.0f, 5.0, 5.0),p2(-5.5f,0.5f,0.5f);
+	V3 p0(-1.0f, 0.0f, 0.0f), p1(5.0f, 5.0, 5.0), p2(-5.5f, 0.5f, 0.5f);
 	AABB bbox(p0);
 	bbox.AddPoint(p1);
 	bbox.AddPoint(p2);
 
-	if(bbox.corners[0]!=V3(-5.5f,0.0f,0.0f) || bbox.corners[1]!=p1)
+	if (bbox.corners[0] != V3(-5.5f, 0.0f, 0.0f) || bbox.corners[1] != p1)
 	{
 		cerr << "AABB not passed \n";
 		return false;
@@ -168,9 +168,9 @@ bool Scene::DBGAABB()
 bool Scene::DBGPPC()
 {
 	float hfov = ppc->GetHorizontalFOV();
-	cerr <<"Fov: "<< hfov << endl;
+	cerr << "Fov: " << hfov << endl;
 
-	if(!FloatEqual(hfov/2.0f,55.0f))
+	if (!FloatEqual(hfov / 2.0f, 55.0f))
 	{
 		cerr << "PPC not pass!\n";
 		return false;
@@ -182,21 +182,13 @@ bool Scene::DBGPPC()
 
 bool Scene::DBGTM()
 {
-	TM tri;
-	V3 O(0.0f, 0.0f, -50.0f);
-	tri.SetRectangle(O, 45.0f, 20.0f);
-	tri.RotateAboutArbitraryAxis(O, V3(0.0f, 1.0f, 0.0f), 1.0f);
-	tri.RenderWireFrame(ppc, fb);
+	TM tm;
+	tm.LoadBin("geometry/teapot57K.bin");
 
-	// int stepN = 360;
-	// for(int stepi = 0; stepi < stepN; ++stepi)
-	// {
-	// 	fb->SetBGR(0xFFFFFFFF);
-	// 	tri.RotateAboutArbitraryAxis(O, V3(0.0f, 1.0f, 0.0f), 1.0f);
-	// 	tri.RenderWireFrame(ppc, fb);
-	// 	fb->redraw();
-	// 	Fl::check();
-	// }
+	ppc->C = V3(0.0f, 0.0f, 200.0f);
+	fb->Clear(0xFFFFFFFF, 0.0f);
+	tm.RenderWireFrame(ppc, fb);
+	fb->redraw();
 
 	cerr << "Triangle Mesh passed! \n";
 	return true;
@@ -206,7 +198,7 @@ void Scene::DBG()
 {
 	// cerr << "INFO: pressed DBG" << endl;
 	cerr << "Begin DBG\n";
-	if (DBGV3() && DBGM3() && DBGFramebuffer()&&DBGAABB() && DBGPPC() && DBGTM())
+	if (DBGV3() && DBGM3() && DBGFramebuffer() && DBGAABB() && DBGPPC() && DBGTM())
 		cerr << "All pased! \n";
 	else
 		cerr << "Not pass!\n";

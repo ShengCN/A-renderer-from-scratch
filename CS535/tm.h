@@ -7,7 +7,7 @@
 class TM
 {
 public:
-	V3 *verts, *colors;		// vertices and colors
+	V3 *verts, *colors, *normals;		// vertices and colors
 	unsigned int *tris;		// topological index
 	int vertsN, trisN;
 	
@@ -17,6 +17,7 @@ public:
 	void RenderPoints(PPC *ppc, FrameBuffer *fb);
 	void RenderWireFrame(PPC *ppc, FrameBuffer *fb);
 	void RotateAboutArbitraryAxis(V3 O, V3 a, float angled);
+	void LoadBin(char *fname);
 	~TM();
 };
 

@@ -32,7 +32,7 @@ int PPC::Project(V3 P, V3& ProjP)
 	if (w <= 0.0f)
 		return 0;
 	
-	ProjP = V3(u, v, 1.0f / w);
+	ProjP = V3(u, v, 1.0f/ w);
 	return 1;
 }
 

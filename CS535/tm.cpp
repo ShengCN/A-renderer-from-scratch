@@ -1,5 +1,6 @@
 #include "TM.h"
-
+#include <fstream>
+using namespace std;
 
 void TM::SetRectangle(V3 O, float rw, float rh)
 {
@@ -33,6 +34,7 @@ void TM::Allocate()
 {
 	verts = new V3[vertsN];
 	colors = new V3[vertsN];
+	normals = new V3[vertsN];
 	tris = new unsigned int[3 * trisN];		// each triangle has three topological indexs
 }
 
@@ -64,6 +66,77 @@ void TM::RotateAboutArbitraryAxis(V3 O, V3 a, float angled)
 	{
 		verts[vi] = verts[vi].RotateThisPointAboutArbitraryAxis(O, a, angled);
 	}
+}
+
+void TM::LoadBin(char* fname)
+{
+	ifstream ifs(fname, ios::binary);
+	if (ifs.fail()) {
+		cerr << "INFO: cannot open file: " << fname << endl;
+		return;
+	}
+
+	ifs.read((char*)&vertsN, sizeof(int));
+	char yn;
+	ifs.read(&yn, 1); // always xyz
+	if (yn != 'y') {
+		cerr << "INTERNAL ERROR: there should always be vertex xyz data" << endl;
+		return;
+	}
+	if (verts)
+		delete verts;
+	verts = new V3[vertsN];
+
+	ifs.read(&yn, 1); // cols 3 floats
+	if (colors)
+		delete colors;
+	colors = 0;
+	if (yn == 'y') {
+		colors = new V3[vertsN];
+	}
+
+	ifs.read(&yn, 1); // normals 3 floats
+	if (normals)
+		delete normals;
+	normals = 0;
+	if (yn == 'y') {
+		normals = new V3[vertsN];
+	}
+
+	ifs.read(&yn, 1); // texture coordinates 2 floats
+	float *tcs = 0; // don't have texture coordinates for now
+	if (tcs)
+		delete tcs;
+	tcs = 0;
+	if (yn == 'y') {
+		tcs = new float[vertsN * 2];
+	}
+
+	ifs.read((char*)verts, vertsN * 3 * sizeof(float)); // load verts
+
+	if (colors) {
+		ifs.read((char*)colors, vertsN * 3 * sizeof(float)); // load cols
+	}
+
+	if (normals)
+		ifs.read((char*)normals, vertsN * 3 * sizeof(float)); // load normals
+
+	if (tcs)
+		ifs.read((char*)tcs, vertsN * 2 * sizeof(float)); // load texture coordinates
+
+	ifs.read((char*)&trisN, sizeof(int));
+	if (tris)
+		delete tris;
+	tris = new unsigned int[trisN * 3];
+	ifs.read((char*)tris, trisN * 3 * sizeof(unsigned int)); // read tiangles
+
+	ifs.close();
+
+	cerr << "INFO: loaded " << vertsN << " verts, " << trisN << " tris from " << endl << "      " << fname << endl;
+	cerr << "      xyz " << ((colors) ? "rgb " : "") << ((normals) ? "nxnynz " : "") << ((tcs) ? "tcstct " : "") << endl;
+
+	delete[]tcs;
+
 }
 
 TM::~TM()

@@ -18,6 +18,7 @@ FrameBuffer::FrameBuffer(int u0, int v0, int _w, int _h)
 	w = _w;
 	h = _h;
 	pix = new unsigned int[w * h];
+	zb = new float[w*h];
 }
 
 
@@ -164,6 +165,23 @@ int FrameBuffer::ClipToScreen(float& u0, float& v0, float& u1, float& v1)
 	return 1;
 }
 
+void FrameBuffer::Clear(unsigned bgr, float z0)
+{
+	SetBGR(bgr);
+	for (int i = 0; i < w * h; ++i)
+		zb[i] = z0;
+}
+
+bool FrameBuffer::Visible(int u, int v, float curz)
+{
+	int uv = (h - 1 - v)*w + u;
+	if (zb[uv] > curz)
+		return false;
+
+	zb[uv] = curz;
+	return true;
+}
+
 void FrameBuffer::DrawSegment(V3 p0, V3 c0, V3 p1, V3 c1)
 {
 	V3 v2v1 = p1 - p0;
@@ -192,7 +210,12 @@ void FrameBuffer::DrawSegment(V3 p0, V3 c0, V3 p1, V3 c1)
 		int u = static_cast<int>(point[0]);
 		int v = static_cast<int>(point[1]);
 
-		SetGuarded(u,v,color.GetColor());
+		// Depth test
+		if(!Visible(u,v,point[2]))
+			continue;
+
+		SetGuarded(u, v, color.GetColor());
+		
 	}
 }
 

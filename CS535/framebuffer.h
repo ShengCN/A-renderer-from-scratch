@@ -9,7 +9,8 @@
 
 class FrameBuffer : public Fl_Gl_Window {
 public:
-	unsigned int *pix;
+	unsigned int *pix;	// pixel 
+	float *zb;			// z buffer
 	int w, h;
 	FrameBuffer(int u0, int v0, int _w, int _h);
 	void draw();
@@ -21,6 +22,8 @@ public:
 	void SaveAsTiff(char* fname);
 	int ClipToScreen(int& u0, int& v0, int& u1, int& v1);
 	int ClipToScreen(float& u0, float& v0, float& u1, float& v1);
+	void Clear(unsigned int bgr, float z0);
+	bool Visible(int u, int v, float z);
 
 	// Draw something
 	void DrawSegment(V3 p0, V3 c0, V3 p1, V3 c1);
