@@ -160,7 +160,6 @@ bool Scene::DBGAABB()
 		return false;
 	}
 
-
 	cerr << "AABB passed \n";
 	return true;
 }
@@ -170,7 +169,7 @@ bool Scene::DBGPPC()
 	float hfov = ppc->GetHorizontalFOV();
 	cerr << "Fov: " << hfov << endl;
 
-	if (!FloatEqual(hfov / 2.0f, 55.0f))
+	if (!FloatEqual(hfov, 55.0f))
 	{
 		cerr << "PPC not pass!\n";
 		return false;
