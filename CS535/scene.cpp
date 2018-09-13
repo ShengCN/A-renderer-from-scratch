@@ -182,10 +182,25 @@ bool Scene::DBGPPC()
 bool Scene::DBGTM()
 {
 	TM tm;
+//	{
+//		// Test Triangel
+//		V3 p0(0.0f, 50.0f, -200.0f);
+//		V3 p1(-30.0f, 20.0f, -200.0f);
+//		V3 p2(30.0f, 20.0f, -200.0f);
+//
+//		V3 c0(1.0f, 0.0f, 0.0f);
+//		V3 c1(0.0f, 1.0f, 0.0f);
+//		V3 c2(0.0f, 0.0f, 1.0f);
+//
+//		tm.SetTriangle(p0, c0, p1, c1, p2, c2);
+//		tm.Render(ppc, fb);
+//	}
+
 	tm.LoadBin("geometry/teapot57K.bin");
 
 	ppc->C = V3(0.0f, 0.0f, 200.0f);
 	fb->Clear(0xFFFFFFFF, 0.0f);
+	// tm.Render(ppc, fb);
 	tm.RenderWireFrame(ppc, fb);
 	fb->redraw();
 

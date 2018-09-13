@@ -32,8 +32,10 @@ public:
 	void DrawCircle(int u0, int v0, int r, unsigned int color);
 	void DrawEllipse(int u0, int v0, float r0, float r1, unsigned int color);
 	void DrawPoint(int u, int v, unsigned int color);
-	void Draw3DPoint(PPC* camera, V3 p, unsigned int color, int pointSize);
-	void DrawTriangle(PPC* camera, V3 p1, V3 p2, V3 p3, unsigned int color);
+	void Draw3DPoint(PPC* ppc, V3 p, unsigned int color, int pointSize);
+	void Draw3DTriangle(PPC* ppc, V3 p1, V3 p2, V3 p3, V3 color);
+	void Draw3DTriangle(PPC* ppc, V3 p0, V3 c0, V3 p1, V3 c1, V3 p2, V3 c2);
 private:
 	void Set(int u, int v, int color);
+	bool InsideTriangle(V3 p, V3 v1, V3 v2, V3 v3);
 };

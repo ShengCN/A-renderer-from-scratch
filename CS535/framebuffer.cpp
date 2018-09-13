@@ -10,6 +10,7 @@
 #include "tiffio.h"
 #include "AABB.h"
 #include "MathTool.h"
+#include "m33.h"
 
 
 FrameBuffer::FrameBuffer(int u0, int v0, int _w, int _h)
@@ -67,6 +68,24 @@ void FrameBuffer::SetBGR(unsigned int bgr)
 void FrameBuffer::Set(int u, int v, int color)
 {
 	pix[(h - 1 - v) * w + u] = color;
+}
+
+bool FrameBuffer::InsideTriangle(V3 p, V3 v1, V3 v2, V3 v3)
+{
+	float x[3], y[3];
+	x[1] = v1[0];
+	x[2] = v2[0];
+	y[1] = v1[1];
+	y[2] = v2[1];
+
+	float xCo = y[2] - y[1];
+	float yCo = x[2] - x[1];
+	float x1y2 = x[1] * y[2];
+	float y1x2 = y[1] * x[2];
+	float res1 = p[0] * xCo - p[1] * yCo - x1y2 + y1x2;
+	float res2 = v3[0] * xCo - v3[1] * yCo - x1y2 + y1x2;
+
+	return res1 * res2 >= 0.0f ? true : false;
 }
 
 void FrameBuffer::SetGuarded(int u, int v, unsigned int color)
@@ -298,33 +317,15 @@ void FrameBuffer::Draw3DPoint(PPC* camera, V3 p, unsigned color, int pointSize)
 	DrawRectangle(u - halfPointSize, v - halfPointSize, u + halfPointSize, v + halfPointSize, color);
 }
 
-void FrameBuffer::DrawTriangle(PPC* camera,V3 p1, V3 p2, V3 p3, unsigned color)
+void FrameBuffer::Draw3DTriangle(PPC* camera, V3 p1, V3 p2, V3 p3, V3 color)
 {
-	V3 pp1, pp2, pp3;  // image space point coordinate
-	if (!camera->Project(p1, pp1) || !camera->Project(p2, pp2) || !camera->Project(p3, pp3))
+	V3 pp0, pp1, pp2;  // image space point coordinate
+	if (!camera->Project(p1, pp0) || !camera->Project(p2, pp1) || !camera->Project(p3, pp2))
 		return;
 
-	auto DetectInside = [&](V3 p, V3 t1, V3 t2, V3 t3)
-	{
-		float x[3], y[3];
-		x[1] = t1[0];
-		x[2] = t2[0];
-		y[1] = t1[1];
-		y[2] = t2[1];
-
-		float xCo = y[2] - y[1];
-		float yCo = x[2] - x[1];
-		float x1y2 = x[1]*y[2];
-		float y1x2 = y[1]*x[2];
-		float res1 = p[0] * xCo - p[1] * yCo - x1y2 + y1x2;
-		float res2 = t3[0] * xCo - t3[1] * yCo - x1y2 + y1x2;
-
-		return res1 * res2 >= 0.0f ? true : false;
-	};
-
-	AABB bbTri(pp1);
+	AABB bbTri(pp0);
+	bbTri.AddPoint(pp1);
 	bbTri.AddPoint(pp2);
-	bbTri.AddPoint(pp3);
 	ClipToScreen(bbTri.corners[0][0], bbTri.corners[0][1], bbTri.corners[1][0], bbTri.corners[1][1]);
 	
 	// Rasterize bbox 
@@ -336,12 +337,74 @@ void FrameBuffer::DrawTriangle(PPC* camera,V3 p1, V3 p2, V3 p3, unsigned color)
 		for(int j = left; j <= right; ++j)
 		{
 			V3 p(j,i, 0.0f);
-			bool s1 = DetectInside(p, pp1, pp2,pp3);
-			bool s2 = DetectInside(p, pp2, pp3,pp1);
-			bool s3 = DetectInside(p, pp3, pp1,pp2);
+			bool s1 = InsideTriangle(p, pp0, pp1,pp2);
+			bool s2 = InsideTriangle(p, pp1, pp2,pp0);
+			bool s3 = InsideTriangle(p, pp2, pp0,pp1);
 			if (s1 == true && s2 == true && s3 == true)
 			{
-				DrawPoint(j, i, color);
+				// DrawPoint(j, i, color.GetColor());
+				int u = j, v = i;
+				M33 m;	// Project of P based on A, B, C
+				m.SetColumn(0, V3(pp0[0], pp0[1], 1.0f));
+				m.SetColumn(1, V3(pp0[0], pp0[1], 1.0f));
+				m.SetColumn(2, V3(pp1[0], pp1[1], 1.0f));
+				V3 ABC = m.Inverse()*p;
+
+				// Depth test
+				float ppz = ABC * V3(pp0[2], pp0[2], pp1[2]);
+				if (Visible(u, v, ppz))
+					DrawPoint(u, v, color.GetColor());
+			}
+		}
+	}
+}
+
+void FrameBuffer::Draw3DTriangle(PPC* ppc, V3 p0, V3 c0, V3 p1, V3 c1, V3 p2, V3 c2)
+{
+	V3 pp0, pp1, pp2;
+	if (!ppc->Project(p0, pp0))
+		return;
+	if (!ppc->Project(p1, pp1))
+		return;
+	if (!ppc->Project(p2, pp2))
+		return;
+
+	AABB bbTri(pp0);
+	bbTri.AddPoint(pp1);
+	bbTri.AddPoint(pp2);
+	ClipToScreen(bbTri.corners[0][0], bbTri.corners[0][1], bbTri.corners[1][0], bbTri.corners[1][1]);
+
+	// Rasterize bbox 
+	int left = static_cast<int>(bbTri.corners[0][0] + 0.5f), right = static_cast<int>(bbTri.corners[1][0] - 0.5f);
+	int top = static_cast<int>(bbTri.corners[0][1] + 0.5f), bottom = static_cast<int>(bbTri.corners[1][1] - 0.5f);
+
+	for (int i = top; i <= bottom; ++i)
+	{
+		for (int j = left; j <= right; ++j)
+		{
+			V3 p(j, i, 1.0f);
+			bool s1 = InsideTriangle(p, pp0, pp1, pp2);
+			bool s2 = InsideTriangle(p, pp1, pp2, pp0);
+			bool s3 = InsideTriangle(p, pp2, pp0, pp1);
+			if (s1 == true && s2 == true && s3 == true)
+			{
+				int u = j, v = i;
+				V3 c;
+				M33 m;	// Project of P based on A, B, C
+				m.SetColumn(0, V3(pp0[0], pp0[1], 1.0f));
+				m.SetColumn(1, V3(pp1[0], pp1[1], 1.0f));
+				m.SetColumn(2, V3(pp2[0], pp2[1], 1.0f));
+				V3 ABC = m.Inverse()*p;
+				M33 cm;	// color matrix
+				cm.SetColumn(0, c0);
+				cm.SetColumn(1, c1);
+				cm.SetColumn(2, c2);
+				c = cm * ABC;
+
+				// Depth test
+				float ppz = ABC * V3(pp0[2], pp1[2], pp2[2]);
+				if(Visible(u,v,ppz))
+					DrawPoint(u, v, c.GetColor());
 			}
 		}
 	}

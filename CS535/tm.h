@@ -13,9 +13,11 @@ public:
 	
 	TM() :verts(nullptr), colors(nullptr), tris(nullptr), vertsN(0), trisN(0){};
 	void SetRectangle(V3 O, float rw, float rh);
+	void SetTriangle(V3 p0, V3 c0, V3 p1, V3 c1, V3 p2, V3 c2);
 	void Allocate();
 	void RenderPoints(PPC *ppc, FrameBuffer *fb);
 	void RenderWireFrame(PPC *ppc, FrameBuffer *fb);
+	void Render(PPC *ppc, FrameBuffer *fb);
 	void RotateAboutArbitraryAxis(V3 O, V3 a, float angled);
 	void LoadBin(char *fname);
 	~TM();

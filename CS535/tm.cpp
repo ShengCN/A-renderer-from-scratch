@@ -30,6 +30,25 @@ void TM::SetRectangle(V3 O, float rw, float rh)
 	}
 }
 
+void TM::SetTriangle(V3 p0, V3 c0, V3 p1, V3 c1, V3 p2, V3 c2)
+{
+	vertsN = 3;
+	trisN = 1;
+	Allocate();
+
+	verts[0] = p0;
+	verts[1] = p1;
+	verts[2] = p2;
+
+	colors[0] = c0;
+	colors[1] = c1;
+	colors[2] = c2;
+
+	tris[0] = 0;
+	tris[1] = 1;
+	tris[2] = 2;
+}
+
 void TM::Allocate()
 {
 	verts = new V3[vertsN];
@@ -57,6 +76,21 @@ void TM::RenderWireFrame(PPC* ppc, FrameBuffer* fb)
 			int vi1 = tris[ti * 3 + (ei + 1) % 3];
 			fb->Draw3DSegment(ppc, verts[vi0], colors[vi0], verts[vi1], colors[vi1]);
 		}
+	}
+}
+
+void TM::Render(PPC* ppc, FrameBuffer* fb)
+{
+	for (int ti = 0; ti < trisN; ++ti)
+	{
+		int vi0 = tris[ti * 3 + 0];
+		int vi1 = tris[ti * 3 + 1];
+		int vi2 = tris[ti * 3 + 2];
+		fb->Draw3DTriangle(ppc, verts[vi0], colors[vi0], 
+								verts[vi1], colors[vi1],
+								verts[vi2], colors[vi2]);
+
+//		fb->Draw3DTriangle(ppc, verts[vi0], verts[vi1], verts[vi2], V3(0.8f));
 	}
 }
 
