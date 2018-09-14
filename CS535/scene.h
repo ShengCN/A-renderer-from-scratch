@@ -10,6 +10,7 @@ public:
 	GUI* gui;
 	FrameBuffer* fb;
 	PPC* ppc;
+	PPC* wppc;	// world ppc, to track current ppc
 	Scene();
 	void DBG();
 	void Render();

@@ -425,3 +425,25 @@ void FrameBuffer::Draw3DTriangle(PPC* ppc, V3 p0, V3 c0, V3 p1, V3 c1, V3 p2, V3
 		}
 	}
 }
+
+void FrameBuffer::DrawPPC(PPC* wPPC, PPC* tPPC)
+{
+	float f = tPPC->GetF();
+
+	V3 vd = tPPC->GetVD();
+	V3 tC = tPPC->C;
+	V3 ta = tPPC->a, tb = tPPC->b, tc = tPPC->c;
+	float w = tPPC->w, h = tPPC->h;
+	V3 c = V3(0.0f, 1.0f, 0.0f);
+
+	// Draw a pyramid
+	Draw3DSegment(wPPC, tC, c, tC + tc, c);
+	Draw3DSegment(wPPC, tC, c, tC + tc + ta * w, c);
+	Draw3DSegment(wPPC, tC, c, tC + tc + tb * h, c);
+	Draw3DSegment(wPPC, tC, c, tC + tc + ta * w + tb * h, c);
+	
+	Draw3DSegment(wPPC, tC + tc, c, tC + tc + ta * w, c);
+	Draw3DSegment(wPPC, tC + tc, c, tC + tc + tb * h, c);
+	Draw3DSegment(wPPC, tC + tc + ta * w, c, tC + tc + ta * w + tb * h, c);
+	Draw3DSegment(wPPC, tC + tc + tb * h, c, tC + tc + ta * w + tb * h, c);
+}

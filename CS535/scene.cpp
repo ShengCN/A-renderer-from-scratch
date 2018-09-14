@@ -25,11 +25,11 @@ Scene::Scene()
 	int fovf = 55.0f;
 
 	ppc = new PPC(w, h, fovf);
+	wppc = new PPC(w, h, fovf);
+
 	fb = new FrameBuffer(u0, v0, w, h);
 	fb->label("SW Framebuffer");
 	fb->show();
-
-
 	gui->uiw->position(u0, v0 + fb->h + 60);
 
 	Render();
@@ -197,17 +197,22 @@ bool Scene::DBGTM()
 //	}
 
 	tm.LoadBin("geometry/teapot1K.bin");
+	
 	ppc->PositionAndOrient(V3(0.0f, 50.0, 200.0f), V3(0.0f, 0.0f, 0.0f), V3(0.0f, 1.0f, 0.0f));
-	int stepN = 100;
-	for (int stepi = 0; stepi < stepN; ++stepi)
-	{
+	wppc->PositionAndOrient(V3(0.0f, 200.0f, 200.0f)*10.0f, V3(0.0f, 0.0f, 0.0f), V3(0.0f, 1.0f, 0.0f));
+	// int stepN = 100;
+	// for (int stepi = 0; stepi < stepN; ++stepi)
+	// {
 		fb->Clear(0xFF999999, 0.0f);
-		ppc->Zoom(static_cast<float>(-stepi)*0.01f + 1.0f);
-		// tm.Render(ppc, fb);
-		tm.RenderWireFrame(ppc, fb);
+		tm.RenderWireFrame(wppc, fb);
+		fb->DrawPPC(wppc, ppc);
 		fb->redraw();
-		Fl::check();
-	 }
+
+	// 	fb->redraw();
+	// 	Fl::check();
+	// }
+
+	// tm.Render(ppc, fb);
 	cerr << "Triangle Mesh passed! \n";
 	return true;
 }
@@ -216,7 +221,7 @@ void Scene::DBG()
 {
 	// cerr << "INFO: pressed DBG" << endl;
 	cerr << "Begin DBG\n";
-	if (DBGV3() && DBGM3() && DBGFramebuffer() && DBGAABB() && DBGPPC() && DBGTM())
+	if (DBGV3() && DBGM3() && DBGFramebuffer() && DBGAABB() && DBGTM() && DBGPPC())
 		cerr << "All pased! \n";
 	else
 		cerr << "Not pass!\n";
