@@ -91,10 +91,8 @@ bool FrameBuffer::InsideTriangle(V3 p, V3 v1, V3 v2, V3 v3)
 void FrameBuffer::SetGuarded(int u, int v, unsigned int color)
 {
 	// clip to window 
-	if (u < 0 || v < 0 || u > h - 1 || v > w - 1)
-	{
+	if (!IsInScreen(u, v))
 		return;
-	}
 
 	Set(u, v, color);
 }
@@ -184,6 +182,20 @@ int FrameBuffer::ClipToScreen(float& u0, float& v0, float& u1, float& v1)
 	return 1;
 }
 
+bool FrameBuffer::IsInScreen(int u, int v)
+{
+	if (u < 0)
+		return false;
+	if (u > w - 1)
+		return false;
+	if (v < 0)
+		return false;
+	if (v > h - 1)
+		return false;
+
+	return true;
+}
+
 void FrameBuffer::Clear(unsigned bgr, float z0)
 {
 	SetBGR(bgr);
@@ -193,6 +205,10 @@ void FrameBuffer::Clear(unsigned bgr, float z0)
 
 bool FrameBuffer::Visible(int u, int v, float curz)
 {
+	// First, u, v should be in screen
+	if (!IsInScreen(u, v))
+		return false;
+
 	int uv = (h - 1 - v)*w + u;
 	if (zb[uv] > curz)
 		return false;

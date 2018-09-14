@@ -131,3 +131,8 @@ void PPC::PositionAndOrient(V3 newC, V3 lap, V3 up)
 	C = newC;
 }
 
+void PPC::Zoom(float theta)
+{
+
+}
+
