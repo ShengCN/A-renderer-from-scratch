@@ -200,17 +200,17 @@ bool Scene::DBGTM()
 	
 	ppc->PositionAndOrient(V3(0.0f, 50.0, 200.0f), V3(0.0f, 0.0f, 0.0f), V3(0.0f, 1.0f, 0.0f));
 	wppc->PositionAndOrient(V3(0.0f, 200.0f, 200.0f)*10.0f, V3(0.0f, 0.0f, 0.0f), V3(0.0f, 1.0f, 0.0f));
-	// int stepN = 100;
-	// for (int stepi = 0; stepi < stepN; ++stepi)
-	// {
+	int stepN = 100;
+	for (int stepi = 0; stepi < stepN; ++stepi)
+	{
 		fb->Clear(0xFF999999, 0.0f);
 		tm.RenderWireFrame(wppc, fb);
+		ppc->Zoom(1.0f + static_cast<float>(stepi) * 0.01f);
 		fb->DrawPPC(wppc, ppc);
 		fb->redraw();
 
-	// 	fb->redraw();
-	// 	Fl::check();
-	// }
+		Fl::check();
+	}
 
 	// tm.Render(ppc, fb);
 	cerr << "Triangle Mesh passed! \n";
@@ -221,7 +221,7 @@ void Scene::DBG()
 {
 	// cerr << "INFO: pressed DBG" << endl;
 	cerr << "Begin DBG\n";
-	if (DBGV3() && DBGM3() && DBGFramebuffer() && DBGAABB() && DBGTM() && DBGPPC())
+	if (DBGV3() && DBGM3() && DBGFramebuffer() && DBGAABB() && DBGPPC() && DBGTM())
 		cerr << "All pased! \n";
 	else
 		cerr << "Not pass!\n";
