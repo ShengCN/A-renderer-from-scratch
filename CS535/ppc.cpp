@@ -48,12 +48,12 @@ float PPC::GetF()
 
 float PPC::GetHorizontalFOV()
 {
-	return 2.0f * Rad2Deg(atan(static_cast<float>(w / 2) * a.Length() / GetF()));
+	return 2.0f * Rad2Deg(atan(static_cast<float>(w) / 2.0f * a.Length() / GetF()));
 }
 
 float PPC::GetVerticalFOV()
 {
-	return 2.0f * Rad2Deg(atan(static_cast<float>(h / 2) * b.Length() / GetF()));
+	return 2.0f * Rad2Deg(atan(static_cast<float>(h) / 2.0f * b.Length() / GetF()));
 }
 
 V3 PPC::GetRay(int u, int v)
@@ -131,8 +131,11 @@ void PPC::PositionAndOrient(V3 newC, V3 lap, V3 up)
 	C = newC;
 }
 
-void PPC::Zoom(float theta)
+void PPC::Zoom(float scf)
 {
-
+	V3 vd = GetVD();
+	float f = GetF();
+	float newf = f * scf;
+	c = c + vd * (newf-f);
 }
 

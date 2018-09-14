@@ -197,13 +197,17 @@ bool Scene::DBGTM()
 //	}
 
 	tm.LoadBin("geometry/teapot1K.bin");
-	ppc->PositionAndOrient(V3(0.0f, 0.0, 200.0f), V3(0.0f, 0.0f, 0.0f), V3(0.0f, 1.0f, 0.0f));
-	fb->Clear(0xFF999999, 0.0f);
-	tm.Scale(V3(0.0f), 2.0f);
-	// tm.Render(ppc, fb);
-	tm.RenderWireFrame(ppc, fb);
-	fb->redraw();
-
+	ppc->PositionAndOrient(V3(0.0f, 50.0, 200.0f), V3(0.0f, 0.0f, 0.0f), V3(0.0f, 1.0f, 0.0f));
+	int stepN = 100;
+	for (int stepi = 0; stepi < stepN; ++stepi)
+	{
+		fb->Clear(0xFF999999, 0.0f);
+		ppc->Zoom(static_cast<float>(-stepi)*0.01f + 1.0f);
+		// tm.Render(ppc, fb);
+		tm.RenderWireFrame(ppc, fb);
+		fb->redraw();
+		Fl::check();
+	 }
 	cerr << "Triangle Mesh passed! \n";
 	return true;
 }
