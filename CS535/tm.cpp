@@ -102,6 +102,26 @@ void TM::RotateAboutArbitraryAxis(V3 O, V3 a, float angled)
 	}
 }
 
+void TM::Translate(V3 tv)
+{
+	for(int vi = 0; vi < vertsN; ++vi)
+	{
+		verts[vi] = verts[vi] + tv;
+	}
+}
+
+void TM::Scale(V3 O, float scf)
+{
+	AABB aabb = ComputeAABB();
+	V3 aabbO = aabb.GetCenter();
+	Translate(V3(0.0f) - aabbO);
+	for(int vi = 0; vi < vertsN; ++vi)
+	{
+		verts[vi] = verts[vi] * scf;
+	}
+	Translate(O);
+}
+
 void TM::LoadBin(char* fname)
 {
 	ifstream ifs(fname, ios::binary);
@@ -171,6 +191,16 @@ void TM::LoadBin(char* fname)
 
 	delete[]tcs;
 
+}
+
+AABB TM::ComputeAABB()
+{
+	AABB aabb(0.0f);
+	for(int vi = 0; vi< vertsN; ++vi)
+	{
+		aabb.AddPoint(verts[vi]);
+	}
+	return aabb;
 }
 
 TM::~TM()

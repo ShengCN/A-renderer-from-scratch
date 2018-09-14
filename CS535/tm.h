@@ -1,6 +1,7 @@
 #pragma once
 #include "v3.h"
 #include "framebuffer.h"
+#include "AABB.h"
 
 // Triangle Mesh
 
@@ -19,7 +20,10 @@ public:
 	void RenderWireFrame(PPC *ppc, FrameBuffer *fb);
 	void Render(PPC *ppc, FrameBuffer *fb);
 	void RotateAboutArbitraryAxis(V3 O, V3 a, float angled);
+	void Translate(V3 tv);
+	void Scale(V3 O, float scf);
 	void LoadBin(char *fname);
+	AABB ComputeAABB();
 	~TM();
 };
 

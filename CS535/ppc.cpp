@@ -116,3 +116,18 @@ void PPC::RevolveV(V3 p, float theta)
 	C = p + vd * focal;
 }
 
+void PPC::PositionAndOrient(V3 newC, V3 lap, V3 up)
+{
+	V3 newa, newb, newc;
+	V3 newvd = (lap - newC).UnitVector();
+	float f = GetF();
+	newa = (newvd ^ up).UnitVector() * a.Length();
+	newb = (newvd ^ newa).UnitVector() * b.Length();
+	newc = (newvd * f) - newa * static_cast<float>(w) / 2.0f - newb * static_cast<float>(h) / 2.0f;
+
+	a = newa;
+	b = newb;
+	c = newc;
+	C = newC;
+}
+

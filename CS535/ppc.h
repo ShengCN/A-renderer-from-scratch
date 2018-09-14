@@ -28,7 +28,7 @@ public:
 	void RevolveV(V3 p, float theta);	// Revolve Vertically
 	
 	// Position
-	void PositionAndOrient(V3 p, float d, V3 up);		// look at a point, distance d, up vector up
+	void PositionAndOrient(V3 newC, V3 lap, V3 up);		// look at a point, distance d, up vector up
 
 	// Internal parameters change
 	void Zoom(float theta);		// zoom in or out
