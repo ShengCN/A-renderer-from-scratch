@@ -110,16 +110,12 @@ void TM::Translate(V3 tv)
 	}
 }
 
-void TM::Scale(V3 O, float scf)
+void TM::Scale(float scf)
 {
-	AABB aabb = ComputeAABB();
-	V3 aabbO = aabb.GetCenter();
-	Translate(V3(0.0f) - aabbO);
 	for(int vi = 0; vi < vertsN; ++vi)
 	{
 		verts[vi] = verts[vi] * scf;
 	}
-	Translate(O);
 }
 
 void TM::LoadBin(char* fname)
@@ -201,6 +197,17 @@ AABB TM::ComputeAABB()
 		aabb.AddPoint(verts[vi]);
 	}
 	return aabb;
+}
+
+void TM::PositionAndSize(V3 tmC, float tmSize)
+{
+	AABB aabb = ComputeAABB();
+	V3 oldC = aabb.GetCenter();
+	float oldSize = aabb.GetDiagnoalLength();
+
+	Translate(V3(0.0f) - oldC);
+	Scale(tmSize / oldSize);
+	Translate(tmC);
 }
 
 TM::~TM()

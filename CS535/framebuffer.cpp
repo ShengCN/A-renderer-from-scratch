@@ -438,9 +438,9 @@ void FrameBuffer::DrawPPC(PPC* wPPC, PPC* tPPC)
 
 	// Draw a pyramid
 	Draw3DSegment(wPPC, tC, c, tC + tc, c);
-	Draw3DSegment(wPPC, tC, c, tC + tc + ta * w, c);
-	Draw3DSegment(wPPC, tC, c, tC + tc + tb * h, c);
-	Draw3DSegment(wPPC, tC, c, tC + tc + ta * w + tb * h, c);
+	// Draw3DSegment(wPPC, tC, c, tC + tc + ta * w, c);
+	// Draw3DSegment(wPPC, tC, c, tC + tc + tb * h, c);
+	// Draw3DSegment(wPPC, tC, c, tC + tc + ta * w + tb * h, c);
 	
 	Draw3DSegment(wPPC, tC + tc, c, tC + tc + ta * w, c);
 	Draw3DSegment(wPPC, tC + tc, c, tC + tc + tb * h, c);

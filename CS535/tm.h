@@ -21,9 +21,11 @@ public:
 	void Render(PPC *ppc, FrameBuffer *fb);
 	void RotateAboutArbitraryAxis(V3 O, V3 a, float angled);
 	void Translate(V3 tv);
-	void Scale(V3 O, float scf);
+	void Scale(float scf);		// normalize size to some scf
 	void LoadBin(char *fname);
 	AABB ComputeAABB();
+	void PositionAndSize(V3 tmC, float tmSize);
+	
 	~TM();
 };
 

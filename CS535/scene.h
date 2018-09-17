@@ -1,8 +1,10 @@
 #pragma once
-
+#include <vector>
 #include "gui.h"
 #include "framebuffer.h"
 #include "ppc.h"
+#include "TM.h"
+using std::vector;
 
 class Scene
 {
@@ -11,9 +13,12 @@ public:
 	FrameBuffer* fb;
 	PPC* ppc;
 	PPC* wppc;	// world ppc, to track current ppc
+	vector<TM*> meshes;
+
 	Scene();
 	void DBG();
-	void Render();
+	void Render();				// render all triangles in the scene
+	void RenderWireFrame();
 
 private:
 	bool DBGFramebuffer();
@@ -21,7 +26,6 @@ private:
 	bool DBGM3();
 	bool DBGAABB();
 	bool DBGPPC();
-	bool DBGTM();
 };
 
 extern Scene* scene;

@@ -26,18 +26,40 @@ Scene::Scene()
 
 	ppc = new PPC(w, h, fovf);
 	wppc = new PPC(w, h, fovf);
+	wppc->PositionAndOrient(V3(0.0f, 200.0f, 200.0f)*10.0f, V3(0.0f, 0.0f, 0.0f), V3(0.0f, 1.0f, 0.0f));
 
 	fb = new FrameBuffer(u0, v0, w, h);
 	fb->label("SW Framebuffer");
 	fb->show();
 	gui->uiw->position(u0, v0 + fb->h + 60);
+	TM *tm = new TM();
+	tm->LoadBin("geometry/teapot1K.bin");
+	meshes.push_back(tm);
 
-	Render();
+	// Position  all the triangle meshes
+	V3 tmC = ppc->C + ppc->GetVD() * 100.0f;
+	float tmSize = 50.0f;
+	for_each(meshes.begin(), meshes.end(), [&](TM *tm) {tm->PositionAndSize(tmC, tmSize); });
+
+	// Render();
+	RenderWireFrame();
 }
 
 void Scene::Render()
 {
 	fb->SetBGR(0xFFFFFFFF);
+	for_each(meshes.begin(), meshes.end(), [&](TM *t) {t->Render(ppc, fb); });
+	fb->redraw();
+}
+
+void Scene::RenderWireFrame()
+{
+	fb->Clear(0xFFFFFFFF, 0.0f);
+
+	// Draw all triangles
+	for_each(meshes.begin(), meshes.end(), [&](TM *t) {t->RenderWireFrame(ppc, fb); });
+
+	// commit frame update
 	fb->redraw();
 }
 
@@ -175,53 +197,21 @@ bool Scene::DBGPPC()
 		return false;
 	}
 
+	fb->Clear(0xFFFFFFFF,0.0f);
+	for_each(meshes.begin(), meshes.end(), [&](TM *tm) {tm->RenderWireFrame(wppc, fb); });
+	fb->DrawPPC(wppc, ppc);
+	fb->redraw();
+
 	cerr << "PPC passed \n";
 	return true;
 }
 
-bool Scene::DBGTM()
-{
-	TM tm;
-//	{
-//		// Test Triangel
-//		V3 p0(0.0f, 50.0f, -200.0f);
-//		V3 p1(-30.0f, 20.0f, -200.0f);
-//		V3 p2(30.0f, 20.0f, -200.0f);
-//
-//		V3 c0(1.0f, 0.0f, 0.0f);
-//		V3 c1(0.0f, 1.0f, 0.0f);
-//		V3 c2(0.0f, 0.0f, 1.0f);
-//
-//		tm.SetTriangle(p0, c0, p1, c1, p2, c2);
-//		tm.Render(ppc, fb);
-//	}
-
-	tm.LoadBin("geometry/teapot1K.bin");
-	
-	ppc->PositionAndOrient(V3(0.0f, 50.0, 200.0f), V3(0.0f, 0.0f, 0.0f), V3(0.0f, 1.0f, 0.0f));
-	wppc->PositionAndOrient(V3(0.0f, 200.0f, 200.0f)*10.0f, V3(0.0f, 0.0f, 0.0f), V3(0.0f, 1.0f, 0.0f));
-	int stepN = 100;
-	for (int stepi = 0; stepi < stepN; ++stepi)
-	{
-		fb->Clear(0xFF999999, 0.0f);
-		tm.RenderWireFrame(wppc, fb);
-		ppc->Zoom(1.0f + static_cast<float>(stepi) * 0.01f);
-		fb->DrawPPC(wppc, ppc);
-		fb->redraw();
-
-		Fl::check();
-	}
-
-	// tm.Render(ppc, fb);
-	cerr << "Triangle Mesh passed! \n";
-	return true;
-}
 
 void Scene::DBG()
 {
 	// cerr << "INFO: pressed DBG" << endl;
 	cerr << "Begin DBG\n";
-	if (DBGV3() && DBGM3() && DBGFramebuffer() && DBGAABB() && DBGPPC() && DBGTM())
+	if (DBGV3() && DBGM3() && DBGFramebuffer() && DBGAABB() && DBGPPC()) // && DBGTM())
 		cerr << "All pased! \n";
 	else
 		cerr << "Not pass!\n";
