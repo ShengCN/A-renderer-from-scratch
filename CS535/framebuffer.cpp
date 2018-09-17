@@ -415,10 +415,11 @@ void FrameBuffer::Draw3DTriangle(PPC* ppc, V3 p0, V3 c0, V3 p1, V3 c1, V3 p2, V3
 				V3 vpg(c0[1],c1[1],c2[1]);
 				V3 vpb(c0[2],c1[2],c2[2]);
 				V3 vpz(pp0[2], pp1[2], pp2[2]);
-				V3 abcR = m.Inverse()*vpr;
-				V3 abcG = m.Inverse()*vpg;
-				V3 abcB = m.Inverse()*vpb;
-				V3 abcZ = m.Inverse()*vpz;
+				M33 mInverse = m.Inverse();
+				V3 abcR = mInverse * vpr;
+				V3 abcG = mInverse * vpg;
+				V3 abcB = mInverse * vpb;
+				V3 abcZ = mInverse * vpz;
 
 				// Depth test
 				float ppr = abcR * pp;
