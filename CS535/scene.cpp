@@ -41,7 +41,7 @@ Scene::Scene()
 	for_each(meshes.begin(), meshes.end(), [&](TM *tm) {tm->PositionAndSize(tmC, tmSize); });
 
 	ppc->PositionAndOrient(V3(0.0f), tm->GetCenter(), V3(0.0f, 1.0, 0.0f));
-	wppc->PositionAndOrient(V3(0.0f, 100.0f, 200.0f), ppc->C, V3(0.0f, 1.0f, 0.0f));
+	wppc->PositionAndOrient(V3(0.0f, 200.0f, 400.0f) * 0.5f, ppc->C, V3(0.0f, 1.0f, 0.0f));
 
 	// Render();
 	RenderWireFrame();
@@ -210,11 +210,17 @@ bool Scene::DBGPPC()
 		return false;
 	}
 
-	fb->Clear(0xFFFFFFFF,0.0f);
-	for_each(meshes.begin(), meshes.end(), [&](TM *tm) {tm->RenderWireFrame(wppc, fb); });
-	fb->DrawPPC(wppc, ppc);
-	fb->redraw();
-
+	int stepN = 100;
+	for(int i = 0; i < stepN; ++i)
+	{
+		ppc->Pan(1.0f);
+		fb->Clear(0xFFFFFFFF, 0.0f);
+		for_each(meshes.begin(), meshes.end(), [&](TM *tm) {tm->RenderWireFrame(wppc, fb); });
+		fb->DrawPPC(wppc, ppc,20.0f);
+		fb->redraw();
+		Fl::check();
+	}
+	
 	cerr << "PPC passed \n";
 	return true;
 }

@@ -426,13 +426,14 @@ void FrameBuffer::Draw3DTriangle(PPC* ppc, V3 p0, V3 c0, V3 p1, V3 c1, V3 p2, V3
 	}
 }
 
-void FrameBuffer::DrawPPC(PPC* wPPC, PPC* tPPC)
+void FrameBuffer::DrawPPC(PPC* wPPC, PPC* tPPC, float vf)
 {
 	float f = tPPC->GetF();
+	float scf = vf / f;
 
 	V3 vd = tPPC->GetVD();
 	V3 tC = tPPC->C;
-	V3 ta = tPPC->a, tb = tPPC->b, tc = tPPC->c;
+	V3 ta = tPPC->a * scf, tb = tPPC->b* scf, tc = tPPC->c* scf;
 	float w = tPPC->w, h = tPPC->h;
 	V3 c = V3(0.0f, 1.0f, 0.0f);
 
