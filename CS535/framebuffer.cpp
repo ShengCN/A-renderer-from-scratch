@@ -130,7 +130,7 @@ void FrameBuffer::LoadTiff(char* fname)
 }
 
 // save as tiff image
-void FrameBuffer::SaveAsTiff(char* fname)
+void FrameBuffer::SaveAsTiff(const char* fname)
 {
 	TIFF* out = TIFFOpen(fname, "w");
 

@@ -6,6 +6,7 @@
 #include "MathTool.h"
 #include "AABB.h"
 #include "TM.h"
+#include <string>
 
 Scene* scene;
 
@@ -211,6 +212,7 @@ bool Scene::DBGPPC()
 	}
 
 	int stepN = 100;
+	
 	for(int i = 0; i < stepN; ++i)
 	{
 		ppc->Pan(1.0f);
@@ -218,7 +220,10 @@ bool Scene::DBGPPC()
 		for_each(meshes.begin(), meshes.end(), [&](TM *tm) {tm->RenderWireFrame(wppc, fb); });
 		fb->DrawPPC(wppc, ppc,20.0f);
 		fb->redraw();
-		Fl::check();
+		string fileName = ".//images//ppcdebug";
+		fileName += to_string(i) + ".tiff";
+		fb->SaveAsTiff(fileName.c_str());
+		// Fl::check();
 	}
 	
 	cerr << "PPC passed \n";
