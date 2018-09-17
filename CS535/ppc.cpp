@@ -41,19 +41,19 @@ V3 PPC::GetVD()
 	return (a^b).UnitVector();
 }
 
-float PPC::GetF()
+float PPC::GetFocal()
 {
 	return (a^b).UnitVector() * c;
 }
 
 float PPC::GetHorizontalFOV()
 {
-	return 2.0f * Rad2Deg(atan(static_cast<float>(w) / 2.0f * a.Length() / GetF()));
+	return 2.0f * Rad2Deg(atan(static_cast<float>(w) / 2.0f * a.Length() / GetFocal()));
 }
 
 float PPC::GetVerticalFOV()
 {
-	return 2.0f * Rad2Deg(atan(static_cast<float>(h) / 2.0f * b.Length() / GetF()));
+	return 2.0f * Rad2Deg(atan(static_cast<float>(h) / 2.0f * b.Length() / GetFocal()));
 }
 
 V3 PPC::GetRay(int u, int v)
@@ -88,23 +88,27 @@ void PPC::Roll(float theta)
 
 void PPC::RevolveH(V3 p, float theta)
 {
-	// view direction
-	float focal = GetF();
-	
-	V3 vd = (C - p).UnitVector();	
-	vd = vd.Rotate(V3(0.0f, 1.0f, 0.0f), theta);
+	// float f = GetFocal();
+	V3 rC = C.RotateThisPointAboutArbitraryAxis(p, V3(0.0f, 1.0f, 0.0f), theta);
+	// V3 vd = (p - rC).UnitVector();
+ //
+	// V3 ra = (vd ^ V3(0.0f, 1.0f, 0.0f)).UnitVector() * a.Length();
+	// V3 rb = (vd ^ ra).UnitVector() * b.Length();
+	// V3 rc = vd * f - ra * static_cast<float>(w) / 2.0f - rb * static_cast<float>(h) / 2.0f;
+ //
+	// // update ppc intrinsic parameters
+	// C = rC;
+	// a = ra;
+	// b = rb;
+	// c = rc;
 
-	a = vd ^ V3(0.0f, 1.0f, 0.0f);
-	b = vd ^ a;
-	// c + w / 2 * a + h / 2 * b = vd
-	c = vd - a * static_cast<float>(w) / 2.0f - b * static_cast<float>(h) / 2.0f;
-	C = p + vd * focal;
+	PositionAndOrient(rC, p, V3(0.0f, 1.0f, 0.0f));
 }
 
 void PPC::RevolveV(V3 p, float theta)
 {
 	// view direction
-	float focal = GetF();
+	float focal = GetFocal();
 
 	V3 vd = (C - p).UnitVector();
 	vd = vd.Rotate(V3(1.0f, 0.0f, 0.0f), theta);
@@ -120,7 +124,7 @@ void PPC::PositionAndOrient(V3 newC, V3 lap, V3 up)
 {
 	V3 newa, newb, newc;
 	V3 newvd = (lap - newC).UnitVector();
-	float f = GetF();
+	float f = GetFocal();
 	newa = (newvd ^ up).UnitVector() * a.Length();
 	newb = (newvd ^ newa).UnitVector() * b.Length();
 	newc = (newvd * f) - newa * static_cast<float>(w) / 2.0f - newb * static_cast<float>(h) / 2.0f;
@@ -134,7 +138,7 @@ void PPC::PositionAndOrient(V3 newC, V3 lap, V3 up)
 void PPC::Zoom(float scf)
 {
 	V3 vd = GetVD();
-	float f = GetF();
+	float f = GetFocal();
 	float newf = f * scf;
 	c = c + vd * (newf-f);
 }

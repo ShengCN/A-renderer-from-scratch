@@ -13,7 +13,7 @@ public:
 
 	// Access
 	V3 GetVD();					// view direction
-	float GetF();				// focal length
+	float GetFocal();				// focal length
 	float GetHorizontalFOV();
 	float GetVerticalFOV();
 	// V3 GetPrincipalPoint();	// pixel coordinates of COP project onto image plane
@@ -28,7 +28,7 @@ public:
 	void RevolveV(V3 p, float theta);	// Revolve Vertically
 	
 	// Position
-	void PositionAndOrient(V3 newC, V3 lap, V3 up);		// look at a point, distance d, up vector up
+	void PositionAndOrient(V3 newC, V3 lap, V3 up);		// lap->look at point
 
 	// Internal parameters change
 	void Zoom(float theta);		// zoom in or out

@@ -28,17 +28,17 @@ void M33::SetRotate(int axis, float degree)
 	auto rad = Deg2Rad(degree);
 	switch (axis)
 	{
-	case 0:
+	case 0:		// x
 		ret[0] = V3(1.0f, 0.0f, 0.0f);
 		ret[1] = V3(0.0f, cos(rad), -sin(rad));
 		ret[2] = V3(0.0f, sin(rad), cos(rad));
 		break;
-	case 1:
+	case 1:		// y
 		ret[0] = V3(cos(rad),0.0f, sin(rad));
 		ret[1] = V3(0.0f, 1.0f, 0.0f);
 		ret[2] = V3(-sin(rad), 0.0f, cos(rad));
 		break;
-	case 2:
+	case 2:		// z
 		ret[0] = V3(cos(rad), -sin(rad), 0.0f);
 		ret[1] = V3(sin(rad), cos(rad), 0.0f);
 		ret[2] = V3(0.0f, 0.0f, 1.0f);

@@ -398,27 +398,34 @@ void FrameBuffer::Draw3DTriangle(PPC* ppc, V3 p0, V3 c0, V3 p1, V3 c1, V3 p2, V3
 	{
 		for (int j = left; j <= right; ++j)
 		{
-			V3 p(j, i, 1.0f);
-			bool s1 = InsideTriangle(p, pp0, pp1, pp2);
-			bool s2 = InsideTriangle(p, pp1, pp2, pp0);
-			bool s3 = InsideTriangle(p, pp2, pp0, pp1);
+			V3 pp(j, i, 1.0f);
+			bool s1 = InsideTriangle(pp, pp0, pp1, pp2);
+			bool s2 = InsideTriangle(pp, pp1, pp2, pp0);
+			bool s3 = InsideTriangle(pp, pp2, pp0, pp1);
 			if (s1 == true && s2 == true && s3 == true)
 			{
+				// Screen-space interpolation
 				int u = j, v = i;
 				V3 c;
 				M33 m;	// Project of P based on A, B, C
-				m.SetColumn(0, V3(pp0[0], pp0[1], 1.0f));
-				m.SetColumn(1, V3(pp1[0], pp1[1], 1.0f));
-				m.SetColumn(2, V3(pp2[0], pp2[1], 1.0f));
-				V3 ABC = m.Inverse()*p;
-				M33 cm;	// color matrix
-				cm.SetColumn(0, c0);
-				cm.SetColumn(1, c1);
-				cm.SetColumn(2, c2);
-				c = cm * ABC;
+				m[0] = V3(pp0[0], pp0[1], 1.0f);
+				m[1] = V3(pp1[0], pp1[1], 1.0f);
+				m[2] = V3(pp2[0], pp2[1], 1.0f);
+				V3 vpr(c0[0],c1[0],c2[0]);
+				V3 vpg(c0[1],c1[1],c2[1]);
+				V3 vpb(c0[2],c1[2],c2[2]);
+				V3 vpz(pp0[2], pp1[2], pp2[2]);
+				V3 abcR = m.Inverse()*vpr;
+				V3 abcG = m.Inverse()*vpg;
+				V3 abcB = m.Inverse()*vpb;
+				V3 abcZ = m.Inverse()*vpz;
 
 				// Depth test
-				float ppz = ABC * V3(pp0[2], pp1[2], pp2[2]);
+				float ppr = abcR * pp;
+				float ppg = abcG * pp;
+				float ppb = abcB * pp;
+				float ppz = abcZ * pp;
+				c = V3(ppr, ppg, ppb);
 				if(Visible(u,v,ppz))
 					DrawPoint(u, v, c.GetColor());
 			}
@@ -428,7 +435,7 @@ void FrameBuffer::Draw3DTriangle(PPC* ppc, V3 p0, V3 c0, V3 p1, V3 c1, V3 p2, V3
 
 void FrameBuffer::DrawPPC(PPC* wPPC, PPC* tPPC, float vf)
 {
-	float f = tPPC->GetF();
+	float f = tPPC->GetFocal();
 	float scf = vf / f;
 
 	V3 vd = tPPC->GetVD();

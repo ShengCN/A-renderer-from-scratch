@@ -44,14 +44,14 @@ Scene::Scene()
 	ppc->PositionAndOrient(V3(0.0f), tm->GetCenter(), V3(0.0f, 1.0, 0.0f));
 	wppc->PositionAndOrient(V3(0.0f, 200.0f, 400.0f) * 0.5f, ppc->C, V3(0.0f, 1.0f, 0.0f));
 
-	// Render();
-	RenderWireFrame();
+	Render();
+	// RenderWireFrame();
 }
 
 void Scene::Render()
 {
-	fb->SetBGR(0xFFFFFFFF);
-	for_each(meshes.begin(), meshes.end(), [&](TM *t) {t->Render(ppc, fb); });
+	fb->Clear(0xFFFFFFFF, 0.0f);
+	for_each(meshes.begin(), meshes.end(), [&](TM *t) { t->Render(ppc, fb); });
 	fb->redraw();
 }
 
@@ -211,21 +211,28 @@ bool Scene::DBGPPC()
 		return false;
 	}
 
-	int stepN = 100;
-	
-	for(int i = 0; i < stepN; ++i)
-	{
-		ppc->Pan(1.0f);
-		fb->Clear(0xFFFFFFFF, 0.0f);
-		for_each(meshes.begin(), meshes.end(), [&](TM *tm) {tm->RenderWireFrame(wppc, fb); });
-		fb->DrawPPC(wppc, ppc,20.0f);
-		fb->redraw();
-		string fileName = ".//images//ppcdebug";
-		fileName += to_string(i) + ".tiff";
-		fb->SaveAsTiff(fileName.c_str());
-		// Fl::check();
-	}
-	
+	 // int stepN = 360;
+	 // for(int i = 0; i < stepN; ++i)
+	 // {
+		//  // Render();
+		// fb->Clear(0xFFFFFFFF, 0.0f);
+		// for_each(meshes.begin(), meshes.end(), [&](TM *tm) {tm->Render(wppc, fb); });
+		// ppc->RevolveH(meshes[0]->GetCenter(), 1.0f);
+	 // 	fb->DrawPPC(wppc, ppc, 50.0f);
+		// fb->redraw();
+	 // 	// string fileName = ".//images//ppcdebug";
+	 // 	// fileName += to_string(i) + ".tiff";
+	 // 	// fb->SaveAsTiff(fileName.c_str());
+	 // 	Fl::check();
+	 // }
+
+	 // int stepN = 360;
+	 // for (int i = 0; i < stepN; ++i)
+	 // {
+		//  ppc->RevolveH(meshes[0]->GetCenter(), 1.0f);
+		//  Render();
+	 // 	Fl::check();
+	 // }
 	cerr << "PPC passed \n";
 	return true;
 }
