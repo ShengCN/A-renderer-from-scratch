@@ -210,6 +210,13 @@ void TM::PositionAndSize(V3 tmC, float tmSize)
 	Translate(tmC);
 }
 
+V3 TM::GetCenter()
+{
+	AABB aabb(0.0f);
+	aabb = ComputeAABB();
+	return aabb.GetCenter();
+}
+
 TM::~TM()
 {
 	if (verts != nullptr)

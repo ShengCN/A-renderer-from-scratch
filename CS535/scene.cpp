@@ -26,7 +26,6 @@ Scene::Scene()
 
 	ppc = new PPC(w, h, fovf);
 	wppc = new PPC(w, h, fovf);
-	wppc->PositionAndOrient(V3(0.0f, 200.0f, 200.0f)*10.0f, V3(0.0f, 0.0f, 0.0f), V3(0.0f, 1.0f, 0.0f));
 
 	fb = new FrameBuffer(u0, v0, w, h);
 	fb->label("SW Framebuffer");
@@ -40,6 +39,9 @@ Scene::Scene()
 	V3 tmC = ppc->C + ppc->GetVD() * 100.0f;
 	float tmSize = 50.0f;
 	for_each(meshes.begin(), meshes.end(), [&](TM *tm) {tm->PositionAndSize(tmC, tmSize); });
+
+	ppc->PositionAndOrient(V3(0.0f), tm->GetCenter(), V3(0.0f, 1.0, 0.0f));
+	wppc->PositionAndOrient(V3(0.0f, 100.0f, 200.0f), ppc->C, V3(0.0f, 1.0f, 0.0f));
 
 	// Render();
 	RenderWireFrame();
@@ -61,6 +63,17 @@ void Scene::RenderWireFrame()
 
 	// commit frame update
 	fb->redraw();
+}
+
+Scene::~Scene()
+{
+	if(ppc!=nullptr)
+		delete ppc;
+	if (wppc != nullptr)
+		delete wppc;
+	for_each(meshes.begin(), meshes.end(), [](TM *tm) { if(tm!=nullptr) tm->~TM(); });
+	if(fb!=nullptr)
+		delete fb;
 }
 
 bool Scene::DBGFramebuffer()

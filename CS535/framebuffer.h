@@ -37,6 +37,7 @@ public:
 	void Draw3DTriangle(PPC* ppc, V3 p1, V3 p2, V3 p3, V3 color);
 	void Draw3DTriangle(PPC* ppc, V3 p0, V3 c0, V3 p1, V3 c1, V3 p2, V3 c2);
 	void DrawPPC(PPC* wPPC, PPC* tPPC);	// visualize target PPC using wPPC
+
 private:
 	void Set(int u, int v, int color);
 	bool InsideTriangle(V3 p, V3 v1, V3 v2, V3 v3);

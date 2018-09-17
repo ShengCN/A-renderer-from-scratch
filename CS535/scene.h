@@ -20,6 +20,7 @@ public:
 	void Render();				// render all triangles in the scene
 	void RenderWireFrame();
 
+	~Scene();
 private:
 	bool DBGFramebuffer();
 	bool DBGV3();

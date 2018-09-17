@@ -25,7 +25,8 @@ public:
 	void LoadBin(char *fname);
 	AABB ComputeAABB();
 	void PositionAndSize(V3 tmC, float tmSize);
-	
+	V3 GetCenter();
+
 	~TM();
 };
 
