@@ -398,7 +398,7 @@ void FrameBuffer::Draw3DTriangle(PPC* ppc, V3 p0, V3 c0, V3 p1, V3 c1, V3 p2, V3
 	{
 		for (int j = left; j <= right; ++j)
 		{
-			V3 pp(j, i, 1.0f);
+			V3 pp(static_cast<float>(j) + 0.5f, static_cast<float>(i) + 0.5f, 1.0f);
 			bool s1 = InsideTriangle(pp, pp0, pp1, pp2);
 			bool s2 = InsideTriangle(pp, pp1, pp2, pp0);
 			bool s3 = InsideTriangle(pp, pp2, pp0, pp1);
