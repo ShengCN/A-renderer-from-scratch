@@ -61,8 +61,10 @@ void FrameBuffer::KeyboardHandle()
 
 void FrameBuffer::SetBGR(unsigned int bgr)
 {
-	for (int uv = 0; uv < w * h; uv++)
-		pix[uv] = bgr;
+	// for (int uv = 0; uv < w * h; uv++)
+	// 	pix[uv] = bgr;
+
+	memset(pix, bgr, 4 * w * h);
 }
 
 void FrameBuffer::Set(int u, int v, int color)
@@ -199,8 +201,9 @@ bool FrameBuffer::IsInScreen(int u, int v)
 void FrameBuffer::Clear(unsigned bgr, float z0)
 {
 	SetBGR(bgr);
-	for (int i = 0; i < w * h; ++i)
-		zb[i] = z0;
+	// for (int i = 0; i < w * h; ++i)
+	// 	zb[i] = z0;
+	memset(zb, 0, 4 * w * h);
 }
 
 bool FrameBuffer::Visible(int u, int v, float curz)
@@ -233,9 +236,6 @@ void FrameBuffer::DrawSegment(V3 p0, V3 c0, V3 p1, V3 c1)
 		 pixelN = static_cast<int>(fabs(v2v1[1])) + 1;
 	}
 
-	int u = static_cast<int>(p0[0]);
-	int v = static_cast<int>(p0[1]);
-
 	for (int stepi = 0; stepi < pixelN + 1; ++stepi)
 	{
 		float fract = static_cast<float>(stepi) / static_cast<float>(pixelN);
@@ -246,11 +246,8 @@ void FrameBuffer::DrawSegment(V3 p0, V3 c0, V3 p1, V3 c1)
 		int v = static_cast<int>(point[1]);
 
 		// Depth test
-		if(!Visible(u,v,point[2]))
-			continue;
-
-		SetGuarded(u, v, color.GetColor());
-		
+		if(Visible(u,v,point[2]))
+			SetGuarded(u, v, color.GetColor());
 	}
 }
 
@@ -447,8 +444,10 @@ void FrameBuffer::Draw3DTriangle(PPC* ppc, V3 p0, V3 c0, V3 p1, V3 c1, V3 p2, V3
 				V3 ppx = (p0 - ppc->C) + (p1 - p0) * k + (p2 - p0)*l;
 				V3 pppx;
 				ppc->Project(ppx, pppx);
-				if (Visible(u,v,pppx[2]))
+				if (Visible(u, v, pppx[2]))
+				{
 					DrawPoint(u, v, c.GetColor());
+				}
 			}
 		}
 	}
