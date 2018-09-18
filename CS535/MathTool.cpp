@@ -2,7 +2,7 @@
 
 bool FloatEqual(float a, float b)
 {
-	auto res = std::abs(a - b) < 1e-6;
+	auto res = std::abs(a - b) < 1e-5;
 	return res;
 };
 

@@ -191,7 +191,7 @@ void TM::LoadBin(char* fname)
 
 AABB TM::ComputeAABB()
 {
-	AABB aabb(0.0f);
+	AABB aabb(verts[0]);
 	for(int vi = 0; vi< vertsN; ++vi)
 	{
 		aabb.AddPoint(verts[vi]);
@@ -212,7 +212,7 @@ void TM::PositionAndSize(V3 tmC, float tmSize)
 
 V3 TM::GetCenter()
 {
-	AABB aabb(0.0f);
+	AABB aabb(verts[0]);
 	aabb = ComputeAABB();
 	return aabb.GetCenter();
 }

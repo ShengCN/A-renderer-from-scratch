@@ -41,8 +41,8 @@ Scene::Scene()
 	float tmSize = 50.0f;
 	for_each(meshes.begin(), meshes.end(), [&](TM *tm) {tm->PositionAndSize(tmC, tmSize); });
 
-	ppc->PositionAndOrient(V3(0.0f), tm->GetCenter(), V3(0.0f, 1.0, 0.0f));
-	wppc->PositionAndOrient(V3(0.0f, 200.0f, 400.0f) * 0.5f, ppc->C, V3(0.0f, 1.0f, 0.0f));
+	ppc->PositionAndOrient(V3(0.0f) ,tm->GetCenter(), V3(0.0f, 1.0, 0.0f));
+	wppc->PositionAndOrient(V3(0.0f, 200.0f, 400.0f) * 2.5f, ppc->C, V3(0.0f, 1.0f, 0.0f));
 
 	Render();
 	// RenderWireFrame();
@@ -226,24 +226,29 @@ bool Scene::DBGPPC()
 	 // 	Fl::check();
 	 // }
 
-	 // int stepN = 360;
-	 // for (int i = 0; i < stepN; ++i)
-	 // {
-		//  ppc->RevolveH(meshes[0]->GetCenter(), 1.0f);
-		//  Render();
-	 // 	Fl::check();
-	 // }
+	 int stepN = 360;
+	 for (int i = 0; i < stepN; ++i)
+	 {
+		 //fb->Clear(0xFFFFFFFF, 0.0f);
+		 auto mCenter = meshes[0]->GetCenter();
+		 ppc->RevolveV( mCenter, 1.0f);
+		 // for_each(meshes.begin(), meshes.end(), [&](TM *tm) {tm->Render(wppc, fb); });
+		 // fb->DrawPPC(wppc, ppc, 50.0f);
+	 	//  fb->redraw();
+		 Render();
+	 	Fl::check();
+	 }
 
-	meshes.clear();
-	V3 p0(0.0f, 50.0f, -150.0f), p1(-50.0f, 0.0f, -300.0f), p2(50.0f, 0.0f, -450.0f);
-	V3 c0(1.0f,0.0f,0.0f), c1(0.0f,1.0f,0.0f), c2(0.0f,0.0f,1.0f);
-	TM *tm1 = new TM();
-	tm1->SetTriangle(p0, c0, p1, c1, p2, c2);
-	meshes.push_back(tm1);
-	Render();
-
-
-	fb->SaveAsTiff(".//images//screenspace.tiff");
+	// meshes.clear();
+	// V3 p0(0.0f, 50.0f, -150.0f), p1(-50.0f, 0.0f, -300.0f), p2(50.0f, 0.0f, -450.0f);
+	// V3 c0(1.0f,0.0f,0.0f), c1(0.0f,1.0f,0.0f), c2(0.0f,0.0f,1.0f);
+	// TM *tm1 = new TM();
+	// tm1->SetTriangle(p0, c0, p1, c1, p2, c2);
+	// meshes.push_back(tm1);
+	// Render();
+ //
+ //
+	// fb->SaveAsTiff(".//images//screenspace.tiff");
 
 	cerr << "PPC passed \n";
 	return true;

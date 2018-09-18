@@ -88,36 +88,16 @@ void PPC::Roll(float theta)
 
 void PPC::RevolveH(V3 p, float theta)
 {
-	// float f = GetFocal();
 	V3 rC = C.RotateThisPointAboutArbitraryAxis(p, V3(0.0f, 1.0f, 0.0f), theta);
-	// V3 vd = (p - rC).UnitVector();
- //
-	// V3 ra = (vd ^ V3(0.0f, 1.0f, 0.0f)).UnitVector() * a.Length();
-	// V3 rb = (vd ^ ra).UnitVector() * b.Length();
-	// V3 rc = vd * f - ra * static_cast<float>(w) / 2.0f - rb * static_cast<float>(h) / 2.0f;
- //
-	// // update ppc intrinsic parameters
-	// C = rC;
-	// a = ra;
-	// b = rb;
-	// c = rc;
-
+	
 	PositionAndOrient(rC, p, V3(0.0f, 1.0f, 0.0f));
 }
 
 void PPC::RevolveV(V3 p, float theta)
 {
-	// view direction
-	float focal = GetFocal();
+	V3 rC = C.RotateThisPointAboutArbitraryAxis(p, V3(1.0f, 0.0f, 0.0f), theta);
 
-	V3 vd = (C - p).UnitVector();
-	vd = vd.Rotate(V3(1.0f, 0.0f, 0.0f), theta);
-
-	b = vd ^ V3(1.0f, 0.0f, 0.0f);
-	a = vd ^ (b * -1.0f);
-	// c + w / 2 * a + h / 2 * b = vd
-	c = vd - a * static_cast<float>(w) / 2.0f - b * static_cast<float>(h) / 2.0f;
-	C = p + vd * focal;
+	PositionAndOrient(rC, p, V3(0.0f, 1.0f, 0.0f));
 }
 
 void PPC::PositionAndOrient(V3 newC, V3 lap, V3 up)
