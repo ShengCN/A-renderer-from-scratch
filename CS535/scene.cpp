@@ -233,6 +233,16 @@ bool Scene::DBGPPC()
 		//  Render();
 	 // 	Fl::check();
 	 // }
+
+	meshes.clear();
+	V3 p0(0.0f, 50.0f, -150.0f), p1(-50.0f, 0.0f, -300.0f), p2(50.0f, 0.0f, -450.0f);
+	V3 c0(1.0f,0.0f,0.0f), c1(0.0f,1.0f,0.0f), c2(0.0f,0.0f,1.0f);
+	TM *tm1 = new TM();
+	tm1->SetTriangle(p0, c0, p1, c1, p2, c2);
+	meshes.push_back(tm1);
+	Render();
+
+
 	fb->SaveAsTiff(".//images//screenspace.tiff");
 
 	cerr << "PPC passed \n";
