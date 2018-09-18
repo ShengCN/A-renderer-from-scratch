@@ -94,6 +94,44 @@ void TM::Render(PPC* ppc, FrameBuffer* fb)
 	}
 }
 
+void TM::RenderAABB(PPC* ppc, FrameBuffer* fb)
+{
+	auto aabb = ComputeAABB();
+	V3 x(1.0f, 0.0f, 0.0f), y(0.0f, 1.0f, 0.0f), z(0.0f, 0.0f, 1.0f);
+	V3 lc = aabb.corners[0], rc = aabb.corners[1];	// left corner and right corner, left "smaller" than right
+	float dx = (rc - lc)*x;
+	float dy = (rc - lc)*y;
+	float dz = (rc - lc)*z;
+
+	V3 p0, p1, p2, p3;
+	V3 p4, p5, p6, p7;
+	p0 = lc;
+	p1 = lc + x * dx;
+	p2 = lc + y * dy;
+	p3 = lc + x * dx + y * dy;
+	
+	p4 = p0 + z * dz;
+	p5 = p1 + z * dz;
+	p6 = p2 + z * dz;
+	p7 = p3 + z * dz;
+
+	V3 blue(0.0f, 0.0f, 1.0f);
+	fb->Draw3DSegment(ppc, p0, blue, p1, blue);
+	fb->Draw3DSegment(ppc, p0, blue, p2, blue);
+	fb->Draw3DSegment(ppc, p1, blue, p3, blue);
+	fb->Draw3DSegment(ppc, p2, blue, p3, blue);
+	
+	fb->Draw3DSegment(ppc, p0, blue, p4, blue);
+	fb->Draw3DSegment(ppc, p1, blue, p5, blue);
+	fb->Draw3DSegment(ppc, p2, blue, p6, blue);
+	fb->Draw3DSegment(ppc, p3, blue, p7, blue);
+	
+	fb->Draw3DSegment(ppc, p4, blue, p5, blue);
+	fb->Draw3DSegment(ppc, p4, blue, p6, blue);
+	fb->Draw3DSegment(ppc, p5, blue, p7, blue);
+	fb->Draw3DSegment(ppc, p6, blue, p7, blue);
+}
+
 void TM::RotateAboutArbitraryAxis(V3 O, V3 a, float angled)
 {
 	for(int vi = 0; vi < vertsN; ++vi)

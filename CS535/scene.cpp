@@ -51,7 +51,7 @@ Scene::Scene()
 void Scene::Render()
 {
 	fb->Clear(0xFFFFFFFF, 0.0f);
-	for_each(meshes.begin(), meshes.end(), [&](TM *t) { t->Render(ppc, fb); });
+	for_each(meshes.begin(), meshes.end(), [&](TM *t) { t->Render(ppc, fb); t->RenderAABB(ppc, fb); });
 	fb->redraw();
 }
 

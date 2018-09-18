@@ -19,6 +19,7 @@ public:
 	void RenderPoints(PPC *ppc, FrameBuffer *fb);
 	void RenderWireFrame(PPC *ppc, FrameBuffer *fb);
 	void Render(PPC *ppc, FrameBuffer *fb);
+	void RenderAABB(PPC *ppc, FrameBuffer *fb);
 	void RotateAboutArbitraryAxis(V3 O, V3 a, float angled);
 	void Translate(V3 tv);
 	void Scale(float scf);		// normalize size to some scf
