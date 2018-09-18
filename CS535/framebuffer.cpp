@@ -64,7 +64,7 @@ void FrameBuffer::SetBGR(unsigned int bgr)
 	// for (int uv = 0; uv < w * h; uv++)
 	// 	pix[uv] = bgr;
 
-	memset(pix, bgr, 4 * w * h);
+	memset(pix, bgr, sizeof(unsigned int) * w * h);
 }
 
 void FrameBuffer::Set(int u, int v, int color)
@@ -203,7 +203,7 @@ void FrameBuffer::Clear(unsigned bgr, float z0)
 	SetBGR(bgr);
 	// for (int i = 0; i < w * h; ++i)
 	// 	zb[i] = z0;
-	memset(zb, 0, 4 * w * h);
+	memset(zb, 0, sizeof(float) * w * h);
 }
 
 bool FrameBuffer::Visible(int u, int v, float curz)
