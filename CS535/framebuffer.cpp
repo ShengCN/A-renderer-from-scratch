@@ -11,7 +11,8 @@
 #include "AABB.h"
 #include "MathTool.h"
 #include "m33.h"
-
+// #define SCREEN_SPACE_INTERPOLATION
+#define PERSPECTIVE_CORRECT_INTERPOLATION
 
 FrameBuffer::FrameBuffer(int u0, int v0, int _w, int _h)
 	: Fl_Gl_Window(u0, v0, _w, _h, nullptr)
@@ -401,53 +402,55 @@ void FrameBuffer::Draw3DTriangle(PPC* ppc, V3 p0, V3 c0, V3 p1, V3 c1, V3 p2, V3
 			bool s3 = InsideTriangle(pp, pp2, pp0, pp1);
 			if (s1 == true && s2 == true && s3 == true)
 			{
-				// Screen-space interpolation
-				 int u = j, v = i;
-				 V3 c;
-				 M33 m;	// Project of P based on A, B, C
-				 m[0] = V3(pp0[0], pp0[1], 1.0f);
-				 m[1] = V3(pp1[0], pp1[1], 1.0f);
-				 m[2] = V3(pp2[0], pp2[1], 1.0f);
-				 V3 vpr(c0[0],c1[0],c2[0]);
-				 V3 vpg(c0[1],c1[1],c2[1]);
-				 V3 vpb(c0[2],c1[2],c2[2]);
-				 V3 vpz(pp0[2], pp1[2], pp2[2]);
-				 M33 mInverse = m.Inverse();
-				 V3 abcR = mInverse * vpr;
-				 V3 abcG = mInverse * vpg;
-				 V3 abcB = mInverse * vpb;
-				 V3 abcZ = mInverse * vpz;
+#ifdef SCREEN_SPACE_INTERPOLATION
+				 // Screen-space interpolation
+				  int u = j, v = i;
+				  V3 c;
+				  M33 m;	// Project of P based on A, B, C
+				  m[0] = V3(pp0[0], pp0[1], 1.0f);
+				  m[1] = V3(pp1[0], pp1[1], 1.0f);
+				  m[2] = V3(pp2[0], pp2[1], 1.0f);
+				  V3 vpr(c0[0],c1[0],c2[0]);
+				  V3 vpg(c0[1],c1[1],c2[1]);
+				  V3 vpb(c0[2],c1[2],c2[2]);
+				  V3 vpz(pp0[2], pp1[2], pp2[2]);
+				  M33 mInverse = m.Inverse();
+				  V3 abcR = mInverse * vpr;
+				  V3 abcG = mInverse * vpg;
+				  V3 abcB = mInverse * vpb;
+				  V3 abcZ = mInverse * vpz;
     
-				 // Depth test
-				 float ppr = abcR * pp;
-				 float ppg = abcG * pp;
-				 float ppb = abcB * pp;
-				 float ppz = abcZ * pp;
-				 c = V3(ppr, ppg, ppb);
-				 if(Visible(u,v,ppz))
-				 	DrawPoint(u, v, c.GetColor());
+				  // Depth test
+				  float ppr = abcR * pp;
+				  float ppg = abcG * pp;
+				  float ppb = abcB * pp;
+				  float ppz = abcZ * pp;
+				  c = V3(ppr, ppg, ppb);
+				  if(Visible(u,v,ppz))
+				  	DrawPoint(u, v, c.GetColor());
+#endif
 
-				// // Perspective correct interpolation
-				// M33 abcM;
-				// abcM.SetColumn(0, ppc->a);
-				// abcM.SetColumn(1, ppc->b);
-				// abcM.SetColumn(2, ppc->c);
-				// M33 vcM;		// V1-C, V2-C, V3-C
-				// vcM.SetColumn(0, p0 - ppc->C);
-				// vcM.SetColumn(1, p1 - ppc->C);
-				// vcM.SetColumn(2, p2 - ppc->C);
-				// M33 qM = vcM.Inverse() * abcM;
-				// int u = j, v = i;
-				// float k = V3(u, v, 1.0f) * qM[1] / (qM.GetColumn(0)*V3(u, u, u) + qM.GetColumn(1)*V3(v, v, v) + qM.GetColumn(2)*V3(1.0f));
-				// float l = V3(u,v,1.0f) * qM[2] / (qM.GetColumn(0)*V3(u, u, u) + qM.GetColumn(1)*V3(v, v, v) + qM.GetColumn(2)*V3(1.0f));
-				// V3 c = c0 + (c1 - c0)*k + (c2 - c0)*l;
-				// V3 ppx = (p0 - ppc->C) + (p1 - p0) * k + (p2 - p0)*l;
-				// V3 pppx;
-				// ppc->Project(ppx, pppx);
-				// if (Visible(u, v, pppx[2]))
-				// {
-				// 	DrawPoint(u, v, c.GetColor());
-				// }
+#ifdef  PERSPECTIVE_CORRECT_INTERPOLATION
+				// Perspective correct interpolation
+				M33 abcM;
+				abcM.SetColumn(0, ppc->a);
+				abcM.SetColumn(1, ppc->b);
+				abcM.SetColumn(2, ppc->c);
+				M33 vcM;		// V1-C, V2-C, V3-C
+				vcM.SetColumn(0, p0 - ppc->C);
+				vcM.SetColumn(1, p1 - ppc->C);
+				vcM.SetColumn(2, p2 - ppc->C);
+				M33 qM = vcM.Inverse() * abcM;
+				int u = j, v = i;
+				float k = V3(u, v, 1.0f) * qM[1] / (qM.GetColumn(0)*V3(u, u, u) + qM.GetColumn(1)*V3(v, v, v) + qM.GetColumn(2)*V3(1.0f));
+				float l = V3(u,v,1.0f) * qM[2] / (qM.GetColumn(0)*V3(u, u, u) + qM.GetColumn(1)*V3(v, v, v) + qM.GetColumn(2)*V3(1.0f));
+				V3 c = c0 + (c1 - c0)*k + (c2 - c0)*l;
+				float w = qM.GetColumn(0)*V3(u, u, u) + qM.GetColumn(1)*V3(v, v, v) + qM.GetColumn(2)*V3(1.0f);
+				if (Visible(u, v, w))
+				{
+					DrawPoint(u, v, c.GetColor());
+				}
+#endif
 			}
 		}
 	}
