@@ -233,6 +233,18 @@ bool Scene::DBGPPC()
 		//  Render();
 	 // 	Fl::check();
 	 // }
+
+	meshes.clear();
+	V3 p0(-50.0f, 0.0f, -300.0f), p1(-50.0f, 50.0f, -300.0f), p2(50.0f, 50.0f, -300.0f), p3(50.0f, 0.0f, -300.0f);
+	V3 c0(0.3f), c1(0.6f), c2(0.8f), c3(1.0f);
+	TM *tm1 = new TM();
+	TM *tm2 = new TM();
+	tm1->SetTriangle(p0, c0, p1, c1, p2, c2);
+	tm2->SetTriangle(p2, c2, p0, c0, p3, c3);
+	meshes.push_back(tm1);
+	meshes.push_back(tm2);
+	Render();
+
 	cerr << "PPC passed \n";
 	return true;
 }
