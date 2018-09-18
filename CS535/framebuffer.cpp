@@ -62,9 +62,6 @@ void FrameBuffer::KeyboardHandle()
 
 void FrameBuffer::SetBGR(unsigned int bgr)
 {
-	// for (int uv = 0; uv < w * h; uv++)
-	// 	pix[uv] = bgr;
-
 	memset(pix, bgr, sizeof(unsigned int) * w * h);
 }
 
@@ -202,8 +199,6 @@ bool FrameBuffer::IsInScreen(int u, int v)
 void FrameBuffer::Clear(unsigned bgr, float z0)
 {
 	SetBGR(bgr);
-	// for (int i = 0; i < w * h; ++i)
-	// 	zb[i] = z0;
 	memset(zb, 0, sizeof(float) * w * h);
 }
 
@@ -402,7 +397,7 @@ void FrameBuffer::Draw3DTriangle(PPC* ppc, V3 p0, V3 c0, V3 p1, V3 c1, V3 p2, V3
 			bool s3 = InsideTriangle(pp, pp2, pp0, pp1);
 			if (s1 == true && s2 == true && s3 == true)
 			{
-#ifdef SCREEN_SPACE_INTERPOLATION
+#if defined(SCREEN_SPACE_INTERPOLATION)
 				 // Screen-space interpolation
 				  int u = j, v = i;
 				  V3 c;
@@ -427,10 +422,9 @@ void FrameBuffer::Draw3DTriangle(PPC* ppc, V3 p0, V3 c0, V3 p1, V3 c1, V3 p2, V3
 				  float ppz = abcZ * pp;
 				  c = V3(ppr, ppg, ppb);
 				  if(Visible(u,v,ppz))
-				  	DrawPoint(u, v, c.GetColor());
-#endif
+				  	DrawPoint(u, v, c.GetColor()); 
 
-#ifdef  PERSPECTIVE_CORRECT_INTERPOLATION
+#elif defined(PERSPECTIVE_CORRECT_INTERPOLATION)
 				// Perspective correct interpolation
 				M33 abcM;
 				abcM.SetColumn(0, ppc->a);

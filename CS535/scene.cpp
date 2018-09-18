@@ -226,22 +226,22 @@ bool Scene::DBGPPC()
 	 // 	Fl::check();
 	 // }
 
-	 // int stepN = 360;
-	 // for (int i = 0; i < stepN; ++i)
-	 // {
-		//  //fb->Clear(0xFFFFFFFF, 0.0f);
-		//  auto mCenter = meshes[0]->GetCenter();
-		//  ppc->RevolveH( mCenter, 1.0f);
-		//  // for_each(meshes.begin(), meshes.end(), [&](TM *tm) {tm->Render(wppc, fb); });
-		//  // fb->DrawPPC(wppc, ppc, 50.0f);
-	 // 	//  fb->redraw();
-		//  Render();
-	 // 	Fl::check();
-	 // }
+	 int stepN = 360;
+	 for (int i = 0; i < stepN; ++i)
+	 {
+		 //fb->Clear(0xFFFFFFFF, 0.0f);
+		 auto mCenter = meshes[0]->GetCenter();
+		 ppc->RevolveH( mCenter, 1.0f);
+		 // for_each(meshes.begin(), meshes.end(), [&](TM *tm) {tm->Render(wppc, fb); });
+		 // fb->DrawPPC(wppc, ppc, 50.0f);
+	 	//  fb->redraw();
+		 Render();
+	 	Fl::check();
+	 }
 
-	 auto mCenter = meshes[0]->GetCenter();
-	 ppc->RevolveH(mCenter, 180.0f);
-	 Render();
+	 // auto mCenter = meshes[0]->GetCenter();
+	 // ppc->RevolveH(mCenter, 180.0f);
+	 // Render();
 
 
 	// meshes.clear();
