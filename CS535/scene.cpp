@@ -242,6 +242,8 @@ bool Scene::DBGPPC()
 	 auto mCenter = meshes[0]->GetCenter();
 	 ppc->RevolveH(mCenter, 180.0f);
 	 Render();
+
+
 	// meshes.clear();
 	// V3 p0(0.0f, 50.0f, -150.0f), p1(-50.0f, 0.0f, -300.0f), p2(50.0f, 0.0f, -450.0f);
 	// V3 c0(1.0f,0.0f,0.0f), c1(0.0f,1.0f,0.0f), c2(0.0f,0.0f,1.0f);
