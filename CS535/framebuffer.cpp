@@ -279,9 +279,9 @@ void FrameBuffer::DrawRectangle(int u0, int v0, int u1, int v1, unsigned color)
 	if (!ClipToScreen(u0, v0, u1, v1))
 		return;
 
-	for (int i = u0; i < u1; ++i)
+	for (int i = u0; i <= u1; ++i)
 	{
-		for (int j = v0; j < v1; ++j)
+		for (int j = v0; j <= v1; ++j)
 		{
 			SetGuarded(i, j, color);
 		}
@@ -502,7 +502,7 @@ void FrameBuffer::VisualizeCurrView(PPC* ppc0, float currf, PPC* ppc1, FrameBuff
 			if(FloatEqual(z,0.0f))
 				continue;
 			V3 pP(0.5f + static_cast<float>(u), 0.5f + static_cast<float>(v), z);
-			V3 pixP = ppc0->Unproject(pP);
+			V3 pixP = ppc0->UnprojectPixel(pP[0], pP[1], currf);
 			V3 cv; cv.SetColor(Get(u, v));
 			fb1->Draw3DPoint(ppc1, pixP, cv.GetColor(), 1);
 		}

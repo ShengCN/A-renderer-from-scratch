@@ -69,12 +69,14 @@ V3 PPC::GetRayCenter(int u, int v)
 // input pp is the center of the pixel
 V3 PPC::Unproject(V3 pp)
 {
-	return C + (a*pp[0] + b * pp[1] + c) * (1.0f / pp[2]);
+	V3 vec = (a*pp[0] + b * pp[1] + c);
+	float w = 1.0f / pp[2];
+	return C + vec * w;
 }
 
 V3 PPC::UnprojectPixel(float uf, float vf, float currf)
 {
-	return C + (a*uf + b * vf + c)*currf * (1.0f / GetFocal());
+	return C + (a*uf + b * vf + c)* currf * (1.0f / GetFocal());
 }
 
 void PPC::Pan(float theta)

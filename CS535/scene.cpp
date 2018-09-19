@@ -99,6 +99,7 @@ void Scene::Render()
 			t->Render(ppc3, fb3);
 			t->RenderAABB(ppc3, fb3);
 		});
+
 		fb3->DrawPPC(ppc3, ppc, currf);
 		fb->VisualizeCurrView(ppc, currf, ppc3, fb3);	// using a 3rd ppc to visualize current ppc
 		fb3->redraw();
