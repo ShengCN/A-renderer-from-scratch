@@ -508,3 +508,23 @@ void FrameBuffer::VisualizeCurrView(PPC* ppc0, float currf, PPC* ppc1, FrameBuff
 		}
 	}
 }
+
+void FrameBuffer::VisualizeCurrView3D(PPC* ppc0, PPC* ppc1, FrameBuffer* fb1)
+{
+	// Iterate all the pixels drew by ppc0
+	// Unproject the pixel using z buffer
+	// Then draw again by ppc1 in 3D space
+	for (int v = 0; v < h; ++v)
+	{
+		for (int u = 0; u < w; ++u)
+		{
+			float z = GetZ(u, v);
+			if (FloatEqual(z, 0.0f))
+				continue;
+			V3 pP(0.5f + static_cast<float>(u), 0.5f + static_cast<float>(v), z);
+			V3 pixP = ppc0->Unproject(pP);
+			V3 cv; cv.SetColor(Get(u, v));
+			fb1->Draw3DPoint(ppc1, pixP, cv.GetColor(), 1);
+		}
+	}
+}

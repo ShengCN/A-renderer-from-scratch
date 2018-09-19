@@ -94,14 +94,15 @@ void Scene::Render()
 		float currf = 40.0f;
 
 		fb3->Clear(0xFFFFFFFF, 0.0f);
-		for_each(meshes.begin(), meshes.end(), [&](TM* t)
-		{
-			t->Render(ppc3, fb3);
-			t->RenderAABB(ppc3, fb3);
-		});
+		// for_each(meshes.begin(), meshes.end(), [&](TM* t)
+		// {
+		// 	t->Render(ppc3, fb3);
+		// 	t->RenderAABB(ppc3, fb3);
+		// });
 
 		fb3->DrawPPC(ppc3, ppc, currf);
 		fb->VisualizeCurrView(ppc, currf, ppc3, fb3);	// using a 3rd ppc to visualize current ppc
+		fb->VisualizeCurrView3D(ppc, ppc3, fb3);	// using a 3rd ppc to visualize current ppc
 		fb3->redraw();
 	}
 }

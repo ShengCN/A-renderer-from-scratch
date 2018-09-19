@@ -40,6 +40,7 @@ public:
 	void Draw3DTriangle(PPC* ppc, V3 p0, V3 c0, V3 p1, V3 c1, V3 p2, V3 c2);
 	void DrawPPC(PPC* wPPC, PPC* tPPC, float vf);	// visualize target PPC using wPPC
 	void VisualizeCurrView(PPC *ppc0, float currf, PPC *ppc1, FrameBuffer *fb1);
+	void VisualizeCurrView3D(PPC *ppc0, PPC *ppc1, FrameBuffer *fb1); 
 
 private:
 	void Set(int u, int v, int color);
