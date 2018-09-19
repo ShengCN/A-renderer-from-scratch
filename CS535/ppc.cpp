@@ -1,7 +1,7 @@
+#include <fstream>
 #include "PPC.h"
 #include "MathTool.h"
 #include "m33.h"
-#include <valarray>
 
 
 PPC::PPC(int _w, int _h, float hfov):w(_w), h(_h)
@@ -121,5 +121,52 @@ void PPC::Zoom(float scf)
 	float f = GetFocal();
 	float newf = f * scf;
 	c = c + vd * (newf-f);
+}
+
+void PPC::SetInterpolated(PPC* ppc0, PPC* ppc1, float fract)
+{
+	V3 ppcV = ppc1->C - ppc0->C;
+	V3 ppc0vd = (ppc0->a ^ ppc0->b).UnitVector();
+	V3 ppc1vd = (ppc1->a ^ ppc1->b).UnitVector();
+	V3 vd = ppc0vd + (ppc1vd - ppc0vd)*fract;
+	float f = ppc0->GetFocal() + (ppc1->GetFocal() - ppc0->GetFocal())*fract;
+
+	C = ppc0->C + ppcV * fract;
+	a = ppc0->a + (ppc1->a - ppc0->a)*fract;
+	b = (vd^a).UnitVector();
+	c = vd * f - a * static_cast<float>(w) / 2.0f - b * static_cast<float>(h) / 2.0f;
+}
+
+void PPC::SaveBin(std::string fname)
+{
+	ofstream of(fname.c_str(), ofstream::out | ostream::binary);
+	if (of.is_open())
+	{
+		of.write((char *)&C, sizeof(float) * 3);
+		of.write((char *)&a, sizeof(float) * 3);
+		of.write((char *)&b, sizeof(float) * 3);
+		of.write((char *)&c, sizeof(float) * 3);
+	}
+	else
+		cerr << "File " << fname.c_str() << " cannot open to write!\n";
+	
+	cerr << "File " << fname.c_str() << " written!\n";
+	of.close();
+}
+
+void PPC::LoadBin(std::string fname)
+{
+	ifstream input(fname.c_str(),ifstream::in | ifstream::binary);
+	if (input.is_open())
+	{
+		input.read((char*)&C, sizeof(float) * 3);
+		input.read((char*)&a, sizeof(float) * 3);
+		input.read((char*)&b, sizeof(float) * 3);
+		input.read((char*)&c, sizeof(float) * 3);
+	}
+	else
+		cerr << "File " << fname.c_str() << " cannot open!\n";
+	
+	input.close();
 }
 

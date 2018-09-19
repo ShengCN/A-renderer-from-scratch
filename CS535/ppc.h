@@ -29,12 +29,12 @@ public:
 	
 	// Position
 	void PositionAndOrient(V3 newC, V3 lap, V3 up);		// lap->look at point
-
-	// Internal parameters change
 	void Zoom(float theta);		// zoom in or out
-	void ChangeResolution(int _w, int _h);
+	// void ChangeResolution(int _w, int _h);
 
 	// View Interpolations
 	void SetInterpolated(PPC *ppc0, PPC *ppc1, float fract);
+	void SaveBin(std::string fname);
+	void LoadBin(std::string fname);
 };
 
