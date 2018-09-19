@@ -15,7 +15,7 @@ Scene* scene;
 
 #include <iostream>
 
-Scene::Scene()
+Scene::Scene():isRenderAABB(false)
 {
 	gui = new GUI();
 	gui->show();
@@ -25,14 +25,19 @@ Scene::Scene()
 	int w = 640;
 	int h = 480;
 	int fovf = 55.0f;
-
-	ppc = new PPC(w, h, fovf);
-	wppc = new PPC(w, h, fovf);
-
 	fb = new FrameBuffer(u0, v0, w, h);
 	fb->label("SW Framebuffer");
 	fb->show();
+
+	fb3 = new FrameBuffer(u0 + fb->w + 30, v0, w, h);
+	fb3->label("Third Person View");
+	fb3->show();
+
+	ppc = new PPC(fb->w, fb->h, fovf);
+	ppc3 = new PPC(fb3->w, fb3->h, 30.0f);
+
 	gui->uiw->position(u0, v0 + fb->h + 60);
+
 	TM* mesh1 = new TM();
 	TM* mesh2 = new TM();
 	TM* mesh3 = new TM();
@@ -45,14 +50,14 @@ Scene::Scene()
 	mesh4->LoadBin("geometry/happy4.bin");
 	mesh5->LoadBin("geometry/teapot1K.bin");
 	meshes.push_back(mesh1);
-	meshes.push_back(mesh2);
-	meshes.push_back(mesh3);
-	meshes.push_back(mesh4);
-	meshes.push_back(mesh5);
+	// meshes.push_back(mesh2);
+	// meshes.push_back(mesh3);
+	// meshes.push_back(mesh4);
+	// meshes.push_back(mesh5);
 
 	// Position  all the triangle meshes
 	V3 tmC = ppc->C + ppc->GetVD() * 100.0f;
-	float tmSize = 20.0f;
+	float tmSize = 100.0f;
 	float displace = 30.0f;
 	mesh1->PositionAndSize(tmC, tmSize);
 	mesh2->PositionAndSize(tmC + V3(displace, 0.0f, 0.0f), tmSize);
@@ -61,9 +66,9 @@ Scene::Scene()
 	mesh5->PositionAndSize(tmC + V3(0.0f, -displace, 0.0f), tmSize);
 
 
-	ppc->PositionAndOrient(V3(0.0f), mesh1->GetCenter(), V3(0.0f, 1.0, 0.0f));
-	// wppc->PositionAndOrient(V3(0.0f, 200.0f, 400.0f) * 1.0f, ppc->C, V3(0.0f, 1.0f, 0.0f));
-	wppc->PositionAndOrient(mesh1->GetCenter() + V3(0.0f, 400.0f, 0.0f), mesh1->GetCenter(), V3(-1.0f, 0.0f, 0.0f));
+	// ppc->PositionAndOrient(V3(0.0f), mesh1->GetCenter(), V3(0.0f, 1.0, 0.0f));
+	ppc3->C = ppc3->C + V3(330.0f, 150.0f, 300.0f);
+	ppc3->PositionAndOrient(ppc3->C, mesh1->GetCenter(), V3(0.0f, 1.0f, 0.0f));
 
 	Render();
 	// RenderWireFrame();
@@ -71,14 +76,51 @@ Scene::Scene()
 
 void Scene::Render()
 {
-	fb->Clear(0xFFFFFFFF, 0.0f);
-	for_each(meshes.begin(), meshes.end(), [&](TM* t)
-         {
-	         t->Render(ppc, fb);
-	         // t->RenderAABB(ppc, fb);
-         });
-	fb->redraw();
+	if (fb)
+	{
+		fb->Clear(0xFFFFFFFF, 0.0f);
+		for_each(meshes.begin(), meshes.end(), [&](TM* t)
+		{
+			t->Render(ppc, fb);
+			if(isRenderAABB) 
+				t->RenderAABB(ppc, fb);
+		});
+		fb->redraw();
+	}
+
+	// Third person view rendering
+	if(fb3)
+	{
+		float currf = 40.0f;
+
+		fb3->Clear(0xFFFFFFFF, 0.0f);
+		for_each(meshes.begin(), meshes.end(), [&](TM* t)
+		{
+			t->Render(ppc3, fb3);
+			t->RenderAABB(ppc3, fb3);
+		});
+		fb3->DrawPPC(ppc3, ppc, currf);
+		fb->VisualizeCurrView(ppc, currf, ppc3, fb3);	// using a 3rd ppc to visualize current ppc
+		fb3->redraw();
+	}
 }
+
+void Scene::Render(PPC* currPPC, FrameBuffer* currFB)
+{
+	// Third person view rendering
+	if (currFB)
+	{
+		currFB->Clear(0xFFFFFFFF, 0.0f);
+		for_each(meshes.begin(), meshes.end(), [&](TM* t)
+		{
+			t->Render(currPPC, currFB);
+			if (isRenderAABB) 
+				t->RenderAABB(currPPC, currFB);
+		});
+		currFB->redraw();
+	}
+}
+
 
 void Scene::RenderWireFrame()
 {
@@ -95,11 +137,13 @@ Scene::~Scene()
 {
 	if (ppc != nullptr)
 		delete ppc;
-	if (wppc != nullptr)
-		delete wppc;
+	if (ppc3 != nullptr)
+		delete ppc3;
 	for_each(meshes.begin(), meshes.end(), [](TM* tm) { if (tm != nullptr) tm->~TM(); });
 	if (fb != nullptr)
 		delete fb;
+	if (fb3 != nullptr)
+		delete fb3;
 }
 
 bool Scene::DBGFramebuffer()

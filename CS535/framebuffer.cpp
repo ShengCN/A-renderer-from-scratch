@@ -216,6 +216,22 @@ bool FrameBuffer::Visible(int u, int v, float curz)
 	return true;
 }
 
+float FrameBuffer::GetZ(int u, int v)
+{
+	if (!IsInScreen(u, v))
+		return 0.0f;
+
+	return zb[(h - 1 - v)*w + u];
+}
+
+unsigned FrameBuffer::Get(int u, int v)
+{
+	if (!IsInScreen(u, v))
+		return 0xFF000000;
+
+	return pix[(h - 1 - v)*w + u];
+}
+
 void FrameBuffer::DrawSegment(V3 p0, V3 c0, V3 p1, V3 c1)
 {
 	V3 v2v1 = p1 - p0;
@@ -471,4 +487,24 @@ void FrameBuffer::DrawPPC(PPC* wPPC, PPC* tPPC, float vf)
 	Draw3DSegment(wPPC, tC + tc, c, tC + tc + tb * h, c);
 	Draw3DSegment(wPPC, tC + tc + ta * w, c, tC + tc + ta * w + tb * h, c);
 	Draw3DSegment(wPPC, tC + tc + tb * h, c, tC + tc + ta * w + tb * h, c);
+}
+
+void FrameBuffer::VisualizeCurrView(PPC* ppc0, float currf, PPC* ppc1, FrameBuffer* fb1)
+{
+	// Iterate all the pixels drew by ppc0
+	// Unproject the pixel using z buffer
+	// Then draw again  by ppc1 onto the image plane
+	for(int v = 0; v < h; ++v)
+	{
+		for(int u =0; u < w; ++u)
+		{
+			float z = GetZ(u, v);
+			if(FloatEqual(z,0.0f))
+				continue;
+			V3 pP(0.5f + static_cast<float>(u), 0.5f + static_cast<float>(v), z);
+			V3 pixP = ppc0->Unproject(pP);
+			V3 cv; cv.SetColor(Get(u, v));
+			fb1->Draw3DPoint(ppc1, pixP, cv.GetColor(), 1);
+		}
+	}
 }

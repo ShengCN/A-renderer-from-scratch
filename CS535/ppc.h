@@ -12,16 +12,18 @@ public:
 	int Project(V3 P, V3 &ProjP);
 
 	// Access
-	V3 GetVD();					// view direction
-	float GetFocal();				// focal length
+	V3 GetVD();							// view direction
+	float GetFocal();					// focal length
 	float GetHorizontalFOV();
 	float GetVerticalFOV();
-	// V3 GetPrincipalPoint();	// pixel coordinates of COP project onto image plane
-	V3 GetRay(int u, int v);	// Get Ray(vector) for pixel(u,v)
-	V3 GetRayCenter(int u, int v);    // Get Ray pixel center(point)
+	// V3 GetPrincipalPoint();			// pixel coordinates of COP project onto image plane
+	V3 GetRay(int u, int v);			// Get Ray(vector) for pixel(u,v)
+	V3 GetRayCenter(int u, int v);		// Get Ray pixel center(point)
+	V3 Unproject(V3 pp);				// unproject pixel point
+	V3 UnprojectPixel(float uf, float vf, float currf);
 
 	// Navigation
-	void Pan(float theta);		// pan roataion
+	void Pan(float theta);				// pan roataion
 	void Tilt(float theta);		
 	void Roll(float theta);		
 	void RevolveH(V3 p, float theta);	// Revolve Horizontally

@@ -25,6 +25,8 @@ public:
 	bool IsInScreen(int u, int v);
 	void Clear(unsigned int bgr, float z0);
 	bool Visible(int u, int v, float z);
+	float GetZ(int u, int v);
+	unsigned int Get(int u, int v);
 
 	// Draw something
 	void DrawSegment(V3 p0, V3 c0, V3 p1, V3 c1);
@@ -37,6 +39,7 @@ public:
 	void Draw3DTriangle(PPC* ppc, V3 p1, V3 p2, V3 p3, V3 color);
 	void Draw3DTriangle(PPC* ppc, V3 p0, V3 c0, V3 p1, V3 c1, V3 p2, V3 c2);
 	void DrawPPC(PPC* wPPC, PPC* tPPC, float vf);	// visualize target PPC using wPPC
+	void VisualizeCurrView(PPC *ppc0, float currf, PPC *ppc1, FrameBuffer *fb1);
 
 private:
 	void Set(int u, int v, int color);

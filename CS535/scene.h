@@ -10,14 +10,14 @@ class Scene
 {
 public:
 	GUI* gui;
-	FrameBuffer* fb;
-	PPC* ppc;
-	PPC* wppc;	// world ppc, to track current ppc
+	FrameBuffer* fb, *fb3;
+	PPC* ppc, *ppc3;
 	vector<TM*> meshes;
 
 	Scene();
 	void DBG();
 	void Render();				// render all triangles in the scene
+	void Render(PPC *currPPC, FrameBuffer *currFB);				
 	void RenderWireFrame();
 
 	~Scene();
@@ -28,6 +28,7 @@ private:
 	bool DBGAABB();
 	bool DBGPPC();
 	void Demonstration();
+	bool isRenderAABB;
 };
 
 extern Scene* scene;
