@@ -146,7 +146,7 @@ void PPC::SetInterpolated(PPC* ppc0, PPC* ppc1, float fract)
 
 	C = ppc0->C + ppcV * fract;
 	a = ppc0->a + (ppc1->a - ppc0->a)*fract;
-	b = (vd^a).UnitVector();
+	b = ppc0->b + (ppc1->b - ppc0->b)*fract;
 	c = vd * f - a * static_cast<float>(w) / 2.0f - b * static_cast<float>(h) / 2.0f;
 }
 
