@@ -31,7 +31,7 @@ public:
 	
 	// Position
 	void PositionAndOrient(V3 newC, V3 lap, V3 up);		// lap->look at point
-	void Zoom(float theta);		// zoom in or out
+	void Zoom(float theta);		// zoom in or out, change of focal length
 	// void ChangeResolution(int _w, int _h);
 
 	// View Interpolations

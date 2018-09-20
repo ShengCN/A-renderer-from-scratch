@@ -15,7 +15,7 @@ Scene* scene;
 
 #include <iostream>
 
-Scene::Scene():isRenderAABB(false)
+Scene::Scene(): isRenderAABB(false)
 {
 	gui = new GUI();
 	gui->show();
@@ -24,6 +24,8 @@ Scene::Scene():isRenderAABB(false)
 	int v0 = 20;
 	int w = 640;
 	int h = 480;
+//	int w = 1280;
+//	int h = 720;
 	int fovf = 55.0f;
 	fb = new FrameBuffer(u0, v0, w, h);
 	fb->label("SW Framebuffer");
@@ -43,27 +45,44 @@ Scene::Scene():isRenderAABB(false)
 	TM* mesh3 = new TM();
 	TM* mesh4 = new TM();
 	TM* mesh5 = new TM();
+	TM* mesh6 = new TM();
+	TM* mesh7 = new TM();
+	TM* mesh8 = new TM();
+	TM* mesh9 = new TM();
 
 	mesh1->LoadBin("geometry/teapot1K.bin");
 	mesh2->LoadBin("geometry/teapot1K.bin");
-	mesh3->LoadBin("geometry/happy4.bin");
-	mesh4->LoadBin("geometry/happy4.bin");
+	mesh3->LoadBin("geometry/teapot1K.bin");
+	mesh4->LoadBin("geometry/teapot1K.bin");
 	mesh5->LoadBin("geometry/teapot1K.bin");
+	mesh6->LoadBin("geometry/teapot1K.bin");
+	mesh7->LoadBin("geometry/teapot1K.bin");
+	mesh8->LoadBin("geometry/teapot1K.bin");
+	mesh9->LoadBin("geometry/teapot1K.bin");
+
 	meshes.push_back(mesh1);
-	// meshes.push_back(mesh2);
-	// meshes.push_back(mesh3);
-	// meshes.push_back(mesh4);
-	// meshes.push_back(mesh5);
+	meshes.push_back(mesh2);
+	meshes.push_back(mesh3);
+	meshes.push_back(mesh4);
+	meshes.push_back(mesh5);
+	meshes.push_back(mesh6);
+	meshes.push_back(mesh7);
+	meshes.push_back(mesh8);
+	meshes.push_back(mesh9);
 
 	// Position  all the triangle meshes
 	V3 tmC = ppc->C + ppc->GetVD() * 100.0f;
-	float tmSize = 100.0f;
-	float displace = 30.0f;
+	float tmSize = 20.0f;
+	float displace = 20.0f;
 	mesh1->PositionAndSize(tmC, tmSize);
 	mesh2->PositionAndSize(tmC + V3(displace, 0.0f, 0.0f), tmSize);
 	mesh3->PositionAndSize(tmC + V3(-displace, 0.0f, 0.0f), tmSize);
 	mesh4->PositionAndSize(tmC + V3(0.0f, displace, 0.0f), tmSize);
 	mesh5->PositionAndSize(tmC + V3(0.0f, -displace, 0.0f), tmSize);
+	mesh6->PositionAndSize(tmC + V3(displace, -displace, 0.0f), tmSize);
+	mesh7->PositionAndSize(tmC + V3(-displace, -displace, 0.0f), tmSize);
+	mesh8->PositionAndSize(tmC + V3(displace, displace, 0.0f), tmSize);
+	mesh9->PositionAndSize(tmC + V3(-displace, displace, 0.0f), tmSize);
 
 
 	// ppc->PositionAndOrient(V3(0.0f), mesh1->GetCenter(), V3(0.0f, 1.0, 0.0f));
@@ -80,29 +99,23 @@ void Scene::Render()
 	{
 		fb->Clear(0xFFFFFFFF, 0.0f);
 		for_each(meshes.begin(), meshes.end(), [&](TM* t)
-		{
-			t->Render(ppc, fb);
-			if(isRenderAABB) 
-				t->RenderAABB(ppc, fb);
-		});
+	         {
+		         t->Render(ppc, fb);
+		         if (isRenderAABB)
+			         t->RenderAABB(ppc, fb);
+	         });
 		fb->redraw();
 	}
 
 	// Third person view rendering
-	if(fb3)
+	if (fb3)
 	{
 		float currf = 40.0f;
 
 		fb3->Clear(0xFFFFFFFF, 0.0f);
-		// for_each(meshes.begin(), meshes.end(), [&](TM* t)
-		// {
-		// 	t->Render(ppc3, fb3);
-		// 	t->RenderAABB(ppc3, fb3);
-		// });
-
 		fb3->DrawPPC(ppc3, ppc, currf);
-		fb->VisualizeCurrView(ppc, currf, ppc3, fb3);	// using a 3rd ppc to visualize current ppc
-		fb->VisualizeCurrView3D(ppc, ppc3, fb3);	// using a 3rd ppc to visualize current ppc
+		fb->VisualizeCurrView(ppc, currf, ppc3, fb3); // using a 3rd ppc to visualize current ppc
+		fb->VisualizeCurrView3D(ppc, ppc3, fb3); // using a 3rd ppc to visualize current ppc
 		fb3->redraw();
 	}
 }
@@ -114,11 +127,11 @@ void Scene::Render(PPC* currPPC, FrameBuffer* currFB)
 	{
 		currFB->Clear(0xFFFFFFFF, 0.0f);
 		for_each(meshes.begin(), meshes.end(), [&](TM* t)
-		{
-			t->Render(currPPC, currFB);
-			if (isRenderAABB) 
-				t->RenderAABB(currPPC, currFB);
-		});
+	         {
+		         t->Render(currPPC, currFB);
+		         if (isRenderAABB)
+			         t->RenderAABB(currPPC, currFB);
+	         });
 		currFB->redraw();
 	}
 }
@@ -282,70 +295,6 @@ bool Scene::DBGPPC()
 		return false;
 	}
 
-	//	// Test interpolation of ppc
-	//	int w = 640;
-	//	int h = 480;
-	//	int fovf = 55.0f;
-	//	PPC* ppc0 = new PPC(w, h, fovf);
-	//	PPC* ppc1 = new PPC(w, h, fovf);
-	//	auto center = meshes[0]->GetCenter();
-	//	ppc0->PositionAndOrient(V3(0.0f), center, V3(0.0f, 1.0, 0.0f));
-	//	ppc1->PositionAndOrient(V3(0.0f), center, V3(0.0f, 1.0, 0.0f));
-	//	ppc1->RevolveH(center, 90.0f);
-	//
-	//	int stepN = 100;
-	//	for (int stepi = 0; stepi < stepN; ++stepi)
-	//	{
-	//		fb->Clear(0xFFFFFFFF, 0.0f);
-	//		for_each(meshes.begin(), meshes.end(), [&](TM* tm)
-	//	         {
-	//		         tm->Render(wppc, fb);
-	//		         tm->RenderAABB(wppc, fb);
-	//	         });
-	//		fb->DrawPPC(wppc, ppc0, 50.0f);
-	//		fb->DrawPPC(wppc, ppc1, 50.0f);
-	//		float fract = static_cast<float>(stepi) / static_cast<float>(stepN - 1);
-	//		ppc->SetInterpolated(ppc0, ppc1, fract);
-	//		fb->DrawPPC(wppc, ppc, 50.0f);
-	//		fb->redraw();
-	//		string tiffName = "images//ppcinterpolate" + to_string(stepi) + ".tiff";
-	//		fb->SaveAsTiff(tiffName.c_str());
-	//		Fl::check();
-	//	}
-	//
-	//	string filename = "mydbg//testppc.ppc";
-	//	PPC* ppc2 = new PPC(w, h, fovf);
-	//	ppc2->PositionAndOrient(V3(0.0f), center, V3(0.0f, 1.0, 0.0f));
-	//
-	//	ppc0->SaveBin(filename);
-	//	ppc0->LoadBin(filename);
-	//
-	//	if (ppc2->C != ppc0->C && ppc2->a != ppc0->a && ppc2->b != ppc0->b && ppc2->c != ppc0->c)
-	//	{
-	//		cerr << "PPC file read and load not pass!\n";
-	//		return false;
-	//	}
-	//
-	//	delete ppc0;
-	//	delete ppc1;
-	//	delete ppc2;
-	//
-	// Revolve H
-	//	int stepN = 360;
-	//	for (int stepi = 0; stepi < stepN; ++stepi)
-	//	{
-	//		fb->Clear(0xFFFFFFFF, 0.0f);
-	//		auto mCenter = meshes[0]->GetCenter();
-	//		ppc->RevolveH(mCenter, 1.0f);
-	//		for_each(meshes.begin(), meshes.end(), [&](TM* tm) { tm->Render(wppc, fb); });
-	//		fb->DrawPPC(wppc, ppc, 50.0f);
-	//		fb->redraw();
-	//
-	//		string tiffName = "images//revolveh" + to_string(stepi) + ".tiff";
-	//		fb->SaveAsTiff(tiffName.c_str());
-	//		Fl::check();
-	//	}
-
 	cerr << "PPC passed \n";
 	return true;
 }
@@ -353,7 +302,7 @@ bool Scene::DBGPPC()
 void Scene::Demonstration()
 {
 	// Random axis
-	srand(static_cast<unsigned int>(time(0)));
+	srand(static_cast<unsigned int>(time(nullptr)));
 	vector<V3> axis;
 	axis.reserve(5);
 	for_each(meshes.begin(), meshes.end(), [&](TM* tm)
@@ -364,11 +313,9 @@ void Scene::Demonstration()
 	         axis.push_back(V3(x, y, z));
          });
 
-	int w = 640;
-	int h = 480;
 	int fovf = 55.0f;
-	PPC* ppc1 = new PPC(w, h, fovf);
-	PPC* ppc2 = new PPC(w, h, fovf);
+	PPC* ppc1 = new PPC(fb->w, fb->h, fovf);
+	PPC* ppc2 = new PPC(fb->w, fb->h, fovf);
 	ppc1->PositionAndOrient(V3(0.0f), meshes[0]->GetCenter(), V3(0.0f, 1.0, 0.0f));
 	ppc2->PositionAndOrient(V3(0.0f), meshes[0]->GetCenter(), V3(0.0f, 1.0, 0.0f));
 	ppc2->RevolveH(meshes[0]->GetCenter(), 90.0f);
@@ -384,7 +331,7 @@ void Scene::Demonstration()
 		int count = 0;
 		for_each(meshes.begin(), meshes.end(), [&](TM* tm)
 	         {
-		         tm->RotateAboutArbitraryAxis(tm->GetCenter(), axis[count++], static_cast<float>(rand()%10));
+		         tm->RotateAboutArbitraryAxis(tm->GetCenter(), axis[count++], static_cast<float>(rand() % 10));
 	         });
 
 		Render();

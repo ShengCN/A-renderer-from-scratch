@@ -11,8 +11,8 @@
 #include "AABB.h"
 #include "MathTool.h"
 #include "m33.h"
-// #define SCREEN_SPACE_INTERPOLATION
-#define PERSPECTIVE_CORRECT_INTERPOLATION
+#define SCREEN_SPACE_INTERPOLATION
+// #define PERSPECTIVE_CORRECT_INTERPOLATION
 
 FrameBuffer::FrameBuffer(int u0, int v0, int _w, int _h)
 	: Fl_Gl_Window(u0, v0, _w, _h, nullptr)
@@ -62,7 +62,15 @@ void FrameBuffer::KeyboardHandle()
 
 void FrameBuffer::SetBGR(unsigned int bgr)
 {
-	memset(pix, bgr, sizeof(unsigned int) * w * h);
+	// memset(pix, bgr, sizeof(unsigned int) * w * h);
+
+	for (int u = 0; u < w; ++u)
+	{
+		for (int v = 0; v < h; ++v)
+		{
+			pix[(h - 1 - v)*w + u] = bgr;
+		}
+	}
 }
 
 void FrameBuffer::Set(int u, int v, int color)
@@ -199,7 +207,14 @@ bool FrameBuffer::IsInScreen(int u, int v)
 void FrameBuffer::Clear(unsigned bgr, float z0)
 {
 	SetBGR(bgr);
-	memset(zb, 0, sizeof(float) * w * h);
+	// memset(zb, 0, sizeof(float) * w * h);
+	for(int u = 0; u < w; ++u)
+	{
+		for(int v = 0; v < h; ++v)
+		{
+			zb[(h - 1 - v)*w + u] = 0.0f;
+		}
+	}
 }
 
 bool FrameBuffer::Visible(int u, int v, float curz)
