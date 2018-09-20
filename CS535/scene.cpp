@@ -304,7 +304,7 @@ void Scene::Demonstration()
 	// Random axis
 	srand(static_cast<unsigned int>(time(nullptr)));
 	vector<V3> axis;
-	axis.reserve(5);
+	axis.reserve(9);
 	for_each(meshes.begin(), meshes.end(), [&](TM* tm)
          {
 	         float x = static_cast<float>(rand() % 10) - 5.0;
