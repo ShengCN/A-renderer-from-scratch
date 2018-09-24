@@ -3,18 +3,19 @@
 #include "framebuffer.h"
 #include "AABB.h"
 #include <memory>
+#include <vector>
+using std::vector;
 
-using std::unique_ptr;
 // Triangle Mesh
 
 class TM
 {
 public:
-	unique_ptr<V3[]> verts, colors, normals;		// vertices and colors
-	unique_ptr<unsigned int[]>  tris;		// topological index
+	vector<V3> verts, colors, normals;		// vertices and colors
+	vector<unsigned int>  tris;		// topological index
 	int vertsN, trisN;
 	
-	TM() :verts(nullptr), colors(nullptr), tris(nullptr), vertsN(0), trisN(0){};
+	TM() :vertsN(0), trisN(0){};
 	void SetRectangle(V3 O, float rw, float rh);
 	void SetTriangle(V3 p0, V3 c0, V3 p1, V3 c1, V3 p2, V3 c2);
 	void Allocate();

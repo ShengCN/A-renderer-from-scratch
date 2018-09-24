@@ -51,10 +51,10 @@ void TM::SetTriangle(V3 p0, V3 c0, V3 p1, V3 c1, V3 p2, V3 c2)
 
 void TM::Allocate()
 {
-	verts = make_unique<V3[]>(vertsN);
-	colors.reset(new V3[vertsN]);
-	normals.reset(new V3[vertsN]);
-	tris.reset(new unsigned int[3 * trisN]);		// each triangle has three topological indexs
+	verts.resize(vertsN);
+	colors.resize(vertsN);
+	normals.resize(vertsN);
+	tris.resize(3 * trisN);		// each triangle has three topological indexs
 }
 
 void TM::RenderPoints(PPC* ppc, FrameBuffer* fb)
@@ -171,24 +171,22 @@ void TM::LoadBin(char* fname)
 		cerr << "INTERNAL ERROR: there should always be vertex xyz data" << endl;
 		return;
 	}
-	if (verts)
-		verts.release();
-	verts = make_unique<V3[]>(vertsN);
+	if (verts.size()!=0)
+		verts.clear();
+	verts.resize(vertsN);
 
 	ifs.read(&yn, 1); // cols 3 floats
-	if (colors)
-		colors.release();
-	colors = nullptr;
+	if (colors.size()!=0)
+		colors.clear();
 	if (yn == 'y') {
-		colors.reset(new V3[vertsN]);
+		colors.resize(vertsN);
 	}
 
 	ifs.read(&yn, 1); // normals 3 floats
-	if (normals)
-		normals.release();
-	normals = 0;
+	if (normals.size() != 0)
+		normals.clear();
 	if (yn == 'y') {
-		normals = make_unique<V3[]>(vertsN);
+		normals.resize(vertsN);
 	}
 
 	ifs.read(&yn, 1); // texture coordinates 2 floats
@@ -200,28 +198,28 @@ void TM::LoadBin(char* fname)
 		tcs = new float[vertsN * 2];
 	}
 
-	ifs.read((char*)verts.get(), vertsN * 3 * sizeof(float)); // load verts
+	ifs.read((char*)&verts[0], vertsN * 3 * sizeof(float)); // load verts
 
-	if (colors) {
-		ifs.read((char*)colors.get(), vertsN * 3 * sizeof(float)); // load cols
+	if (colors.size() == vertsN) {
+		ifs.read((char*)&colors[0], vertsN * 3 * sizeof(float)); // load cols
 	}
 
-	if (normals)
-		ifs.read((char*)normals.get(), vertsN * 3 * sizeof(float)); // load normals
+	if (normals.size() == vertsN)
+		ifs.read((char*)&normals[0], vertsN * 3 * sizeof(float)); // load normals
 
 	if (tcs)
 		ifs.read((char*)tcs, vertsN * 2 * sizeof(float)); // load texture coordinates
 
 	ifs.read((char*)&trisN, sizeof(int));
-	if (tris)
-		tris.release();
-	tris = make_unique<unsigned int[]>(trisN * 3);
-	ifs.read((char*)tris.get(), trisN * 3 * sizeof(unsigned int)); // read tiangles
+	if (tris.size() != 0)
+		tris.clear();
+	tris.resize(trisN * 3);
+	ifs.read((char*)&tris[0], trisN * 3 * sizeof(unsigned int)); // read tiangles
 
 	ifs.close();
 
 	cerr << "INFO: loaded " << vertsN << " verts, " << trisN << " tris from " << endl << "      " << fname << endl;
-	cerr << "      xyz " << ((colors) ? "rgb " : "") << ((normals) ? "nxnynz " : "") << ((tcs) ? "tcstct " : "") << endl;
+	cerr << "      xyz " << ((colors.size()==0) ? "rgb " : "") << ((normals.size()==0) ? "nxnynz " : "") << ((tcs) ? "tcstct " : "") << endl;
 
 	delete[]tcs;
 
