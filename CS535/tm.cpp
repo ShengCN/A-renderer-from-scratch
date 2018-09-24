@@ -51,10 +51,10 @@ void TM::SetTriangle(V3 p0, V3 c0, V3 p1, V3 c1, V3 p2, V3 c2)
 
 void TM::Allocate()
 {
-	verts = new V3[vertsN];
-	colors = new V3[vertsN];
-	normals = new V3[vertsN];
-	tris = new unsigned int[3 * trisN];		// each triangle has three topological indexs
+	verts = make_unique<V3[]>(vertsN);
+	colors.reset(new V3[vertsN]);
+	normals.reset(new V3[vertsN]);
+	tris.reset(new unsigned int[3 * trisN]);		// each triangle has three topological indexs
 }
 
 void TM::RenderPoints(PPC* ppc, FrameBuffer* fb)
@@ -172,23 +172,23 @@ void TM::LoadBin(char* fname)
 		return;
 	}
 	if (verts)
-		delete verts;
-	verts = new V3[vertsN];
+		verts.release();
+	verts = make_unique<V3[]>(vertsN);
 
 	ifs.read(&yn, 1); // cols 3 floats
 	if (colors)
-		delete colors;
-	colors = 0;
+		colors.release();
+	colors = nullptr;
 	if (yn == 'y') {
-		colors = new V3[vertsN];
+		colors.reset(new V3[vertsN]);
 	}
 
 	ifs.read(&yn, 1); // normals 3 floats
 	if (normals)
-		delete normals;
+		normals.release();
 	normals = 0;
 	if (yn == 'y') {
-		normals = new V3[vertsN];
+		normals = make_unique<V3[]>(vertsN);
 	}
 
 	ifs.read(&yn, 1); // texture coordinates 2 floats
@@ -200,23 +200,23 @@ void TM::LoadBin(char* fname)
 		tcs = new float[vertsN * 2];
 	}
 
-	ifs.read((char*)verts, vertsN * 3 * sizeof(float)); // load verts
+	ifs.read((char*)verts.get(), vertsN * 3 * sizeof(float)); // load verts
 
 	if (colors) {
-		ifs.read((char*)colors, vertsN * 3 * sizeof(float)); // load cols
+		ifs.read((char*)colors.get(), vertsN * 3 * sizeof(float)); // load cols
 	}
 
 	if (normals)
-		ifs.read((char*)normals, vertsN * 3 * sizeof(float)); // load normals
+		ifs.read((char*)normals.get(), vertsN * 3 * sizeof(float)); // load normals
 
 	if (tcs)
 		ifs.read((char*)tcs, vertsN * 2 * sizeof(float)); // load texture coordinates
 
 	ifs.read((char*)&trisN, sizeof(int));
 	if (tris)
-		delete tris;
-	tris = new unsigned int[trisN * 3];
-	ifs.read((char*)tris, trisN * 3 * sizeof(unsigned int)); // read tiangles
+		tris.release();
+	tris = make_unique<unsigned int[]>(trisN * 3);
+	ifs.read((char*)tris.get(), trisN * 3 * sizeof(unsigned int)); // read tiangles
 
 	ifs.close();
 
@@ -257,10 +257,4 @@ V3 TM::GetCenter()
 
 TM::~TM()
 {
-	if (verts != nullptr)
-		delete[] verts;
-	if (verts != nullptr)
-		delete[] colors;
-	if (verts != nullptr)
-		delete[] tris;
 }

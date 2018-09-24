@@ -2,14 +2,16 @@
 #include "v3.h"
 #include "framebuffer.h"
 #include "AABB.h"
+#include <memory>
 
+using std::unique_ptr;
 // Triangle Mesh
 
 class TM
 {
 public:
-	V3 *verts, *colors, *normals;		// vertices and colors
-	unsigned int *tris;		// topological index
+	unique_ptr<V3[]> verts, colors, normals;		// vertices and colors
+	unique_ptr<unsigned int[]>  tris;		// topological index
 	int vertsN, trisN;
 	
 	TM() :verts(nullptr), colors(nullptr), tris(nullptr), vertsN(0), trisN(0){};

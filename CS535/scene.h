@@ -1,10 +1,12 @@
 #pragma once
 #include <vector>
+#include <memory>
 #include "gui.h"
 #include "framebuffer.h"
 #include "ppc.h"
 #include "TM.h"
 using std::vector;
+using std::unique_ptr;
 
 class Scene
 {
