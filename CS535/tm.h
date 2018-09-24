@@ -24,11 +24,11 @@ public:
 	TM() :vertsN(0), trisN(0){};
 	void SetRectangle(V3 O, float rw, float rh);
 	void SetTriangle(PointProperty p0, PointProperty p1, PointProperty p2);
-	void SetQuad();
+	void SetQuad(PointProperty p0, PointProperty p1, PointProperty p2, PointProperty p3);
 	void Allocate();
 	void RenderPoints(PPC *ppc, FrameBuffer *fb);
 	void RenderWireFrame(PPC *ppc, FrameBuffer *fb);
-	void Render(PPC *ppc, FrameBuffer *fb);
+	void RenderFill(PPC *ppc, FrameBuffer *fb);
 	void RenderAABB(PPC *ppc, FrameBuffer *fb);
 	void RotateAboutArbitraryAxis(V3 O, V3 a, float angled);
 	void Translate(V3 tv);

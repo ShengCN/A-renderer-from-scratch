@@ -44,9 +44,9 @@ Scene::Scene(): isRenderAABB(false)
 	TM *quad = new TM();
 	PointProperty p0(V3(-100.0f, 100.0f, -200.0f), V3(0.5f), V3(0.0f, 0.0f, 1.0f), 0.0f, 0.0f);
 	PointProperty p1(V3(100.0f, 100.0f, -200.0f), V3(0.5f), V3(0.0f, 0.0f, 1.0f), 1.0f, 0.0f);
-	PointProperty p2(V3(-100.0f, -100.0f, -200.0f), V3(0.5f), V3(0.0f, 0.0f, 1.0f), 0.0f, 1.0f);
-	PointProperty p3(V3(-100.0f, 100.0f, -200.0f), V3(0.5f), V3(0.0f, 0.0f, 1.0f), 0.0f, 0.0f);
-	quad->SetTriangle(p0, p1, p2);
+	PointProperty p2(V3(100.0f, -100.0f, -200.0f), V3(0.5f), V3(0.0f, 0.0f, 1.0f), 0.0f, 1.0f);
+	PointProperty p3(V3(-100.0f, -100.0f, -200.0f), V3(0.5f), V3(0.0f, 0.0f, 1.0f), 1.0f, 1.0f);
+	quad->SetQuad(p0, p1, p2, p3);
 	meshes.push_back(quad);
 
 	// Position  all the triangle meshes
@@ -71,7 +71,7 @@ void Scene::Render()
 		fb->Clear(0xFFFFFFFF, 0.0f);
 		for_each(meshes.begin(), meshes.end(), [&](TM* t)
 	         {
-		         t->Render(ppc, fb);
+		         t->RenderFill(ppc, fb);
 		         if (isRenderAABB)
 			         t->RenderAABB(ppc, fb);
 	         });
@@ -99,7 +99,7 @@ void Scene::Render(PPC* currPPC, FrameBuffer* currFB)
 		currFB->Clear(0xFFFFFFFF, 0.0f);
 		for_each(meshes.begin(), meshes.end(), [&](TM* t)
 	         {
-		         t->Render(currPPC, currFB);
+		         t->RenderFill(currPPC, currFB);
 		         if (isRenderAABB)
 			         t->RenderAABB(currPPC, currFB);
 	         });

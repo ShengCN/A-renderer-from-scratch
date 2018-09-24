@@ -49,6 +49,31 @@ void TM::SetTriangle(PointProperty p0, PointProperty p1, PointProperty p2)
 	tris[2] = 2;
 }
 
+void TM::SetQuad(PointProperty p0, PointProperty p1, PointProperty p2, PointProperty p3)
+{
+	vertsN = 4;
+	trisN = 2;
+	Allocate();
+
+	verts[0] = p0.p;
+	verts[1] = p1.p;
+	verts[2] = p2.p;
+	verts[3] = p3.p;
+
+	colors[0] = p0.c;
+	colors[1] = p1.c;
+	colors[2] = p2.c;
+	colors[3] = p3.c;
+
+	tris[0] = 0;
+	tris[1] = 1;
+	tris[2] = 2;
+
+	tris[3] = 2;
+	tris[4] = 3;
+	tris[5] = 0;
+}
+
 void TM::Allocate()
 {
 	verts.resize(vertsN);
@@ -80,7 +105,7 @@ void TM::RenderWireFrame(PPC* ppc, FrameBuffer* fb)
 	}
 }
 
-void TM::Render(PPC* ppc, FrameBuffer* fb)
+void TM::RenderFill(PPC* ppc, FrameBuffer* fb)
 {
 	for (int ti = 0; ti < trisN; ++ti)
 	{
