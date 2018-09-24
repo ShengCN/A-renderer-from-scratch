@@ -30,6 +30,7 @@ private:
 	bool DBGAABB();
 	bool DBGPPC();
 	void Demonstration();
+	void InitDemo();
 	bool isRenderAABB;
 };
 

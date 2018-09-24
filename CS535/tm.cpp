@@ -30,19 +30,19 @@ void TM::SetRectangle(V3 O, float rw, float rh)
 	}
 }
 
-void TM::SetTriangle(V3 p0, V3 c0, V3 p1, V3 c1, V3 p2, V3 c2)
+void TM::SetTriangle(PointProperty p0, PointProperty p1, PointProperty p2)
 {
 	vertsN = 3;
 	trisN = 1;
 	Allocate();
 
-	verts[0] = p0;
-	verts[1] = p1;
-	verts[2] = p2;
+	verts[0] = p0.p;
+	verts[1] = p1.p;
+	verts[2] = p2.p;
 
-	colors[0] = c0;
-	colors[1] = c1;
-	colors[2] = c2;
+	colors[0] = p0.c;
+	colors[1] = p1.c;
+	colors[2] = p2.c;
 
 	tris[0] = 0;
 	tris[1] = 1;
@@ -54,6 +54,7 @@ void TM::Allocate()
 	verts.resize(vertsN);
 	colors.resize(vertsN);
 	normals.resize(vertsN);
+	texture.resize(vertsN);
 	tris.resize(3 * trisN);		// each triangle has three topological indexs
 }
 

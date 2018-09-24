@@ -40,54 +40,25 @@ Scene::Scene(): isRenderAABB(false)
 
 	gui->uiw->position(u0, v0 + fb->h + 60);
 
-	TM* mesh1 = new TM();
-	TM* mesh2 = new TM();
-	TM* mesh3 = new TM();
-	TM* mesh4 = new TM();
-	TM* mesh5 = new TM();
-	TM* mesh6 = new TM();
-	TM* mesh7 = new TM();
-	TM* mesh8 = new TM();
-	TM* mesh9 = new TM();
-
-	mesh1->LoadBin("geometry/teapot1K.bin");
-	mesh2->LoadBin("geometry/teapot1K.bin");
-	mesh3->LoadBin("geometry/teapot1K.bin");
-	mesh4->LoadBin("geometry/teapot1K.bin");
-	mesh5->LoadBin("geometry/teapot1K.bin");
-	mesh6->LoadBin("geometry/teapot1K.bin");
-	mesh7->LoadBin("geometry/teapot1K.bin");
-	mesh8->LoadBin("geometry/teapot1K.bin");
-	mesh9->LoadBin("geometry/teapot1K.bin");
-
-	meshes.push_back(mesh1);
-	meshes.push_back(mesh2);
-	meshes.push_back(mesh3);
-	meshes.push_back(mesh4);
-	meshes.push_back(mesh5);
-	meshes.push_back(mesh6);
-	meshes.push_back(mesh7);
-	meshes.push_back(mesh8);
-	meshes.push_back(mesh9);
+	// Random axis
+	TM *quad = new TM();
+	PointProperty p0(V3(-100.0f, 100.0f, -200.0f), V3(0.5f), V3(0.0f, 0.0f, 1.0f), 0.0f, 0.0f);
+	PointProperty p1(V3(100.0f, 100.0f, -200.0f), V3(0.5f), V3(0.0f, 0.0f, 1.0f), 1.0f, 0.0f);
+	PointProperty p2(V3(-100.0f, -100.0f, -200.0f), V3(0.5f), V3(0.0f, 0.0f, 1.0f), 0.0f, 1.0f);
+	PointProperty p3(V3(-100.0f, 100.0f, -200.0f), V3(0.5f), V3(0.0f, 0.0f, 1.0f), 0.0f, 0.0f);
+	quad->SetTriangle(p0, p1, p2);
+	meshes.push_back(quad);
 
 	// Position  all the triangle meshes
 	V3 tmC = ppc->C + ppc->GetVD() * 100.0f;
-	float tmSize = 20.0f;
-	float displace = 20.0f;
-	mesh1->PositionAndSize(tmC, tmSize);
-	mesh2->PositionAndSize(tmC + V3(displace, 0.0f, 0.0f), tmSize);
-	mesh3->PositionAndSize(tmC + V3(-displace, 0.0f, 0.0f), tmSize);
-	mesh4->PositionAndSize(tmC + V3(0.0f, displace, 0.0f), tmSize);
-	mesh5->PositionAndSize(tmC + V3(0.0f, -displace, 0.0f), tmSize);
-	mesh6->PositionAndSize(tmC + V3(displace, -displace, 0.0f), tmSize);
-	mesh7->PositionAndSize(tmC + V3(-displace, -displace, 0.0f), tmSize);
-	mesh8->PositionAndSize(tmC + V3(displace, displace, 0.0f), tmSize);
-	mesh9->PositionAndSize(tmC + V3(-displace, displace, 0.0f), tmSize);
-
+	for(auto m:meshes)
+	{
+		m->PositionAndSize(tmC, 50.0);
+	}
 
 	// ppc->PositionAndOrient(V3(0.0f), mesh1->GetCenter(), V3(0.0f, 1.0, 0.0f));
 	ppc3->C = ppc3->C + V3(330.0f, 150.0f, 300.0f);
-	ppc3->PositionAndOrient(ppc3->C, mesh1->GetCenter(), V3(0.0f, 1.0f, 0.0f));
+	ppc3->PositionAndOrient(ppc3->C, quad->GetCenter(), V3(0.0f, 1.0f, 0.0f));
 
 	Render();
 	// RenderWireFrame();
@@ -301,47 +272,19 @@ bool Scene::DBGPPC()
 
 void Scene::Demonstration()
 {
+
+}
+
+void Scene::InitDemo()
+{
 	// Random axis
-	srand(static_cast<unsigned int>(time(nullptr)));
-	vector<V3> axis;
-	axis.reserve(9);
-	for_each(meshes.begin(), meshes.end(), [&](TM* tm)
-         {
-	         float x = static_cast<float>(rand() % 10) - 5.0;
-	         float y = static_cast<float>(rand() % 10) - 5.0;
-	         float z = static_cast<float>(rand() % 10) - 5.0;
-	         axis.push_back(V3(x, y, z));
-         });
-
-	int fovf = 55.0f;
-	PPC* ppc1 = new PPC(fb->w, fb->h, fovf);
-	PPC* ppc2 = new PPC(fb->w, fb->h, fovf);
-	ppc1->PositionAndOrient(V3(0.0f), meshes[0]->GetCenter(), V3(0.0f, 1.0, 0.0f));
-	ppc2->PositionAndOrient(V3(0.0f), meshes[0]->GetCenter(), V3(0.0f, 1.0, 0.0f));
-	ppc2->RevolveH(meshes[0]->GetCenter(), 90.0f);
-
-	int stepN = 300;
-	for (int stepi = 0; stepi < stepN; ++stepi)
-	{
-		if (stepi > 150)
-		{
-			float fract = static_cast<float>(stepi - 150) / 149.0f;
-			ppc->SetInterpolated(ppc1, ppc2, fract);
-		}
-		int count = 0;
-		for_each(meshes.begin(), meshes.end(), [&](TM* tm)
-	         {
-		         tm->RotateAboutArbitraryAxis(tm->GetCenter(), axis[count++], static_cast<float>(rand() % 10));
-	         });
-
-		Render();
-		string tiffName = "images//demonstration" + to_string(stepi) + ".tiff";
-		fb->SaveAsTiff(tiffName.c_str());
-		Fl::check();
-	}
-
-	cerr << "Finish Demo!\n";
-	delete ppc1, ppc2;
+	TM quad;
+	PointProperty p0(V3(-100.0f, 100.0f, -200.0f), V3(0.5f), V3(0.0f, 0.0f, 1.0f), 0.0f, 0.0f);
+	PointProperty p1(V3(100.0f, 100.0f, -200.0f), V3(0.5f), V3(0.0f, 0.0f, 1.0f), 1.0f, 0.0f);
+	PointProperty p2(V3(-100.0f, -100.0f, -200.0f), V3(0.5f), V3(0.0f, 0.0f, 1.0f), 0.0f, 1.0f);
+	PointProperty p3(V3(-100.0f, 100.0f, -200.0f), V3(0.5f), V3(0.0f, 0.0f, 1.0f), 0.0f, 0.0f);
+	quad.SetTriangle(p0, p1, p2);
+	// meshes.push_back(quad);
 }
 
 

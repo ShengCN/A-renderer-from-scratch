@@ -11,8 +11,8 @@
 #include "AABB.h"
 #include "MathTool.h"
 #include "m33.h"
-#define SCREEN_SPACE_INTERPOLATION
-// #define PERSPECTIVE_CORRECT_INTERPOLATION
+// #define SCREEN_SPACE_INTERPOLATION
+#define PERSPECTIVE_CORRECT_INTERPOLATION
 
 FrameBuffer::FrameBuffer(int u0, int v0, int _w, int _h)
 	: Fl_Gl_Window(u0, v0, _w, _h, nullptr)
