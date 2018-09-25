@@ -138,16 +138,12 @@ void PPC::Zoom(float scf)
 
 void PPC::SetInterpolated(PPC* ppc0, PPC* ppc1, float fract)
 {
-	V3 ppcV = ppc1->C - ppc0->C;
-	V3 ppc0vd = (ppc0->a ^ ppc0->b).UnitVector();
-	V3 ppc1vd = (ppc1->a ^ ppc1->b).UnitVector();
-	V3 vd = ppc0vd + (ppc1vd - ppc0vd)*fract;
-	float f = ppc0->GetFocal() + (ppc1->GetFocal() - ppc0->GetFocal())*fract;
+	*this = *ppc0;
 
-	C = ppc0->C + ppcV * fract;
-	a = ppc0->a + (ppc1->a - ppc0->a)*fract;
-	b = ppc0->b + (ppc1->b - ppc0->b)*fract;
-	c = vd * f - a * static_cast<float>(w) / 2.0f - b * static_cast<float>(h) / 2.0f;
+	V3 newC = ppc0->C + (ppc1->C - ppc0->C) * fract;
+	V3 newvd = ppc0->GetVD() + (ppc1->GetVD() - ppc0->GetVD())*fract;
+	V3 up = (ppc0->b + (ppc1->b - ppc0->b)*fract)*-1.0f;
+	PositionAndOrient(newC, newC + newvd, up);
 }
 
 void PPC::SaveBin(std::string fname)
@@ -159,6 +155,8 @@ void PPC::SaveBin(std::string fname)
 		of.write((char *)&a, sizeof(float) * 3);
 		of.write((char *)&b, sizeof(float) * 3);
 		of.write((char *)&c, sizeof(float) * 3);
+		of.write((char *)&w, sizeof(int));
+		of.write((char *)&h, sizeof(int));
 	}
 	else
 		cerr << "File " << fname.c_str() << " cannot open to write!\n";
@@ -176,6 +174,8 @@ void PPC::LoadBin(std::string fname)
 		input.read((char*)&a, sizeof(float) * 3);
 		input.read((char*)&b, sizeof(float) * 3);
 		input.read((char*)&c, sizeof(float) * 3);
+		input.read((char*)&w, sizeof(int));
+		input.read((char*)&h, sizeof(int));
 	}
 	else
 		cerr << "File " << fname.c_str() << " cannot open!\n";
