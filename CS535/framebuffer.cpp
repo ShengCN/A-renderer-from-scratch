@@ -106,7 +106,7 @@ void FrameBuffer::SetGuarded(int u, int v, unsigned int color)
 }
 
 // load a tiff image to pixel buffer
-void FrameBuffer::LoadTiff(char* fname)
+void FrameBuffer::LoadTiff(const char* fname)
 {
 	TIFF* in = TIFFOpen(fname, "r");
 	if (in == nullptr)

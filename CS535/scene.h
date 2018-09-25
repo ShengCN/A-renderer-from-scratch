@@ -13,6 +13,7 @@ class Scene
 public:
 	GUI* gui;
 	FrameBuffer* fb, *fb3;
+	std::vector<shared_ptr<FrameBuffer>> textures;
 	PPC* ppc, *ppc3;
 	vector<TM*> meshes;
 

@@ -272,7 +272,8 @@ bool Scene::DBGPPC()
 
 void Scene::Demonstration()
 {
-
+	string purdue_loc = "images/purdue.tiff";
+	fb->LoadTiff(purdue_loc.c_str());
 }
 
 void Scene::InitDemo()
