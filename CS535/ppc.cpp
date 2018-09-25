@@ -88,7 +88,7 @@ void PPC::Pan(float theta)
 void PPC::Tilt(float theta)
 {
 	b = b.Rotate(a.UnitVector(), theta);
-	c = c.Rotate(c.UnitVector(), theta);
+	c = c.Rotate(a.UnitVector(), theta);
 }
 
 void PPC::Roll(float theta)
