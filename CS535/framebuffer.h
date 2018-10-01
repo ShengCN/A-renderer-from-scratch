@@ -3,14 +3,21 @@
 #include <FL/Fl.H>
 #include <FL/Fl_Gl_Window.H>
 #include <GL/glut.h>
-
+#include <vector>
+#include <unordered_map>
+#include <string>
 #include "ppc.h"
 #include "v3.h"
+using std::vector;
+using std::unordered_map;
+struct PointProperty;
 
 class FrameBuffer : public Fl_Gl_Window {
 public:
 	unsigned int *pix;	// pixel 
 	float *zb;			// z buffer
+	unordered_map<std::string, vector<unsigned int>> textures; // use file name as index
+
 	int w, h;
 	FrameBuffer(int u0, int v0, int _w, int _h);
 	void draw();
@@ -27,6 +34,7 @@ public:
 	bool Visible(int u, int v, float z);
 	float GetZ(int u, int v);
 	unsigned int Get(int u, int v);
+	bool LoadTex(const std::string texFile);
 
 	// Draw something
 	void DrawSegment(V3 p0, V3 c0, V3 p1, V3 c1);
@@ -38,11 +46,13 @@ public:
 	void Draw3DPoint(PPC* ppc, V3 p, unsigned int color, int pointSize);
 	void Draw3DTriangle(PPC* ppc, V3 p1, V3 p2, V3 p3, V3 color);
 	void Draw3DTriangle(PPC* ppc, V3 p0, V3 c0, V3 p1, V3 c1, V3 p2, V3 c2);
+	void Draw3DTriangleTexture(PPC *ppc, PointProperty p0, PointProperty p1, PointProperty p2, const std::string texFile);
 	void DrawPPC(PPC* wPPC, PPC* tPPC, float vf);	// visualize target PPC using wPPC
 	void VisualizeCurrView(PPC *ppc0, float currf, PPC *ppc1, FrameBuffer *fb1);
 	void VisualizeCurrView3D(PPC *ppc0, PPC *ppc1, FrameBuffer *fb1); 
-
+	unsigned int LookupColor(std::string texFile, float s, float t);
 private:
 	void Set(int u, int v, int color);
 	bool InsideTriangle(V3 p, V3 v1, V3 v2, V3 v3);
+	float Fract(float n);
 };

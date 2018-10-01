@@ -2,7 +2,6 @@
 #include "v3.h"
 #include "framebuffer.h"
 #include "AABB.h"
-#include <memory>
 #include <vector>
 using std::vector;
 
@@ -17,23 +16,26 @@ struct PointProperty
 class TM
 {
 public:
-	vector<V3> verts, colors, normals, texture;		// vertices and colors
-	vector<unsigned int>  tris;		// topological index
+	vector<V3> verts, colors, normals, st;		// vertices and colors
+	vector<unsigned int>  tris;		// indices
 	int vertsN, trisN;
-	
+	std::string tex;
+
 	TM() :vertsN(0), trisN(0){};
 	void SetRectangle(V3 O, float rw, float rh);
 	void SetTriangle(PointProperty p0, PointProperty p1, PointProperty p2);
 	void SetQuad(PointProperty p0, PointProperty p1, PointProperty p2, PointProperty p3);
+	void SetText(std::string tf);
 	void Allocate();
 	void RenderPoints(PPC *ppc, FrameBuffer *fb);
 	void RenderWireFrame(PPC *ppc, FrameBuffer *fb);
 	void RenderFill(PPC *ppc, FrameBuffer *fb);
+	void RenderFillTexture(PPC *ppc, FrameBuffer *fb);
 	void RenderAABB(PPC *ppc, FrameBuffer *fb);
 	void RotateAboutArbitraryAxis(V3 O, V3 a, float angled);
 	void Translate(V3 tv);
 	void Scale(float scf);		// normalize size to some scf
-	void LoadBin(char *fname);
+	void LoadModelBin(char *fname);
 	AABB ComputeAABB();
 	void PositionAndSize(V3 tmC, float tmSize);
 	V3 GetCenter();

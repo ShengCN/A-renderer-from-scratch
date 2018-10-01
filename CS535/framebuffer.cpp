@@ -96,6 +96,11 @@ bool FrameBuffer::InsideTriangle(V3 p, V3 v1, V3 v2, V3 v3)
 	return res1 * res2 >= 0.0f ? true : false;
 }
 
+float FrameBuffer::Fract(float n)
+{
+	return n - static_cast<int>(n);
+}
+
 void FrameBuffer::SetGuarded(int u, int v, unsigned int color)
 {
 	// clip to window 
@@ -245,6 +250,37 @@ unsigned FrameBuffer::Get(int u, int v)
 		return 0xFF000000;
 
 	return pix[(h - 1 - v)*w + u];
+}
+
+bool FrameBuffer::LoadTex(const std::string texFile)
+{
+	const char* fname = texFile.c_str();
+	TIFF* in = TIFFOpen(fname, "r");
+	if (in == nullptr)
+	{
+		cerr << fname << " could not be opened" << endl;
+		return false;
+	}
+
+	int width, height;
+	TIFFGetField(in, TIFFTAG_IMAGEWIDTH, &width);
+	TIFFGetField(in, TIFFTAG_IMAGELENGTH, &height);
+	vector<unsigned int> texMemory(width * height);
+
+	if (TIFFReadRGBAImage(in, w, h, &texMemory[0], 0) == 0)
+	{
+		cerr << "failed to load " << fname << endl;
+		return false;
+	}
+	
+	if (textures.find(texFile) != textures.end())
+	{
+		textures.erase(texFile);
+	}
+	textures[texFile] = texMemory;
+
+	TIFFClose(in);
+	return true;
 }
 
 void FrameBuffer::DrawSegment(V3 p0, V3 c0, V3 p1, V3 c1)
@@ -418,6 +454,16 @@ void FrameBuffer::Draw3DTriangle(PPC* ppc, V3 p0, V3 c0, V3 p1, V3 c1, V3 p2, V3
 	int left = static_cast<int>(bbTri.corners[0][0] + 0.5f), right = static_cast<int>(bbTri.corners[1][0] - 0.5f);
 	int top = static_cast<int>(bbTri.corners[0][1] + 0.5f), bottom = static_cast<int>(bbTri.corners[1][1] - 0.5f);
 
+	// Q matrix
+	M33 abcM;
+	abcM.SetColumn(0, ppc->a);
+	abcM.SetColumn(1, ppc->b);
+	abcM.SetColumn(2, ppc->c);
+	M33 vcM;		// V1-C, V2-C, V3-C
+	vcM.SetColumn(0, p0 - ppc->C);
+	vcM.SetColumn(1, p1 - ppc->C);
+	vcM.SetColumn(2, p2 - ppc->C);
+	M33 qM = vcM.Inverse() * abcM;
 	for (int i = top; i <= bottom; ++i)
 	{
 		for (int j = left; j <= right; ++j)
@@ -457,25 +503,77 @@ void FrameBuffer::Draw3DTriangle(PPC* ppc, V3 p0, V3 c0, V3 p1, V3 c1, V3 p2, V3
 
 #elif defined(PERSPECTIVE_CORRECT_INTERPOLATION)
 				// Perspective correct interpolation
-				M33 abcM;
-				abcM.SetColumn(0, ppc->a);
-				abcM.SetColumn(1, ppc->b);
-				abcM.SetColumn(2, ppc->c);
-				M33 vcM;		// V1-C, V2-C, V3-C
-				vcM.SetColumn(0, p0 - ppc->C);
-				vcM.SetColumn(1, p1 - ppc->C);
-				vcM.SetColumn(2, p2 - ppc->C);
-				M33 qM = vcM.Inverse() * abcM;
 				int u = j, v = i;
 				float k = V3(u, v, 1.0f) * qM[1] / (qM.GetColumn(0)*V3(u, u, u) + qM.GetColumn(1)*V3(v, v, v) + qM.GetColumn(2)*V3(1.0f));
 				float l = V3(u,v,1.0f) * qM[2] / (qM.GetColumn(0)*V3(u, u, u) + qM.GetColumn(1)*V3(v, v, v) + qM.GetColumn(2)*V3(1.0f));
-				V3 c = c0 + (c1 - c0)*k + (c2 - c0)*l;
 				float w = qM.GetColumn(0)*V3(u, u, u) + qM.GetColumn(1)*V3(v, v, v) + qM.GetColumn(2)*V3(1.0f);
 				if (Visible(u, v, w))
 				{
+					V3 c = c0 + (c1 - c0)*k + (c2 - c0)*l;
 					DrawPoint(u, v, c.GetColor());
 				}
 #endif
+			}
+		}
+	}
+}
+
+void FrameBuffer::Draw3DTriangleTexture(PPC* ppc, PointProperty p0, PointProperty p1, PointProperty p2, const std::string texFile)
+{
+	V3 pp0, pp1, pp2;
+	if (!ppc->Project(p0.p, pp0))
+		return;
+	if (!ppc->Project(p1.p, pp1))
+		return;
+	if (!ppc->Project(p2.p, pp2))
+		return;
+
+	AABB bbTri(pp0);
+	bbTri.AddPoint(pp1);
+	bbTri.AddPoint(pp2);
+	ClipToScreen(bbTri.corners[0][0], bbTri.corners[0][1], bbTri.corners[1][0], bbTri.corners[1][1]);
+
+	M33 abcM;
+	abcM.SetColumn(0, ppc->a);
+	abcM.SetColumn(1, ppc->b);
+	abcM.SetColumn(2, ppc->c);
+	M33 vcM;
+	vcM.SetColumn(0, p0.p - ppc->C);
+	vcM.SetColumn(1, p1.p - ppc->C);
+	vcM.SetColumn(2, p2.p - ppc->C);
+	M33 qM = vcM.Inverse() * abcM;
+
+	// Rasterize bbox
+	int left = static_cast<int>(bbTri.corners[0][0] + 0.5f), right = static_cast<int>(bbTri.corners[1][0] - 0.5f);
+	int top = static_cast<int>(bbTri.corners[0][1] + 0.5f), bottom = static_cast<int>(bbTri.corners[1][1] - 0.5f);
+
+	for(int v = top; v <= bottom; ++v)
+	{
+		for(int u = left; u <= right; ++u)
+		{
+			V3 uvP(static_cast<float>(u) + 0.5f, static_cast<float>(v) + 0.5f, 1.0f);
+			bool s1 = InsideTriangle(uvP, pp0, pp1, pp2);
+			bool s2 = InsideTriangle(uvP, pp1, pp2, pp0);
+			bool s3 = InsideTriangle(uvP, pp2, pp0, pp1);
+			if(s1 == true && s2 == true && s3 == true)
+			{
+				float k = V3(u, v, 1.0f) * qM[1] / (qM.GetColumn(0)*V3(u, u, u) + qM.GetColumn(1)*V3(v, v, v) + qM.GetColumn(2)*V3(1.0f));
+				float l = V3(u, v, 1.0f) * qM[2] / (qM.GetColumn(0)*V3(u, u, u) + qM.GetColumn(1)*V3(v, v, v) + qM.GetColumn(2)*V3(1.0f));
+				float w = qM.GetColumn(0)*V3(u, u, u) + qM.GetColumn(1)*V3(v, v, v) + qM.GetColumn(2)*V3(1.0f);
+				V3 st0(p0.s, p0.t, 0.0f), st1(p1.s, p1.t, 0.0f), st2(p2.s, p2.t, 0.0f);
+				
+				if(Visible(u,v,w))
+				{
+					V3 st = st0 + (st1 - st0)*k + (st2 - st0)*l;
+					if(textures.find(texFile) != textures.end())
+					{
+						// s and t in (0.0f,1.0f)
+						float s = Fract(st[0]);
+						float t = Fract(st[1]);
+						unsigned int color = LookupColor(texFile, s, t);
+						DrawPoint(u, v, color);
+					}
+				}
 			}
 		}
 	}
@@ -542,4 +640,28 @@ void FrameBuffer::VisualizeCurrView3D(PPC* ppc0, PPC* ppc1, FrameBuffer* fb1)
 			fb1->Draw3DPoint(ppc1, pixP, cv.GetColor(), 1);
 		}
 	}
+}
+
+unsigned int FrameBuffer::LookupColor(std::string texFile, float s, float t)
+{
+	if(textures.find(texFile) == textures.end())
+	{
+		cerr << "Not found texture: " << texFile << endl;
+		return 0xFF000000;
+	}
+	// texS and textT in (0.0f,w) (0.0f,h)
+	float textS = s * static_cast<float>(this->w);
+	float textT = t * static_cast<float>(this->h);
+	int u0 = max(0, static_cast<int>(textS - 0.5f)), v0 = max(0, static_cast<int>(textT - 0.5f));
+	int u1 = min(this->w-1, u0 + 1), v1 = min(this->h-1, v0 + 1);
+	// todo
+	// Check texture coordinate here
+	float c0 = textures[texFile][(v0)*this->w + u0];
+	float c1 = textures[texFile][(v0)*this->w + u1];
+	float c2 = textures[texFile][(v1)*this->w + u0];
+	float c3 = textures[texFile][(v1)*this->w + u1];
+
+	float uf0 = static_cast<float>(u0) + 0.5f, vf0 = static_cast<float>(v0) + 0.5f;
+	float intpS = textS - uf0, intpT = textT - vf0;
+	return (1.0f - intpS)*(1.0f - intpT) * c0 + intpS * (1.0f - intpT)*c1 + (1.0f - intpS)*intpT * c2 + intpS * (1.0f - intpT) * c3;
 }

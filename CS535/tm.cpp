@@ -65,6 +65,16 @@ void TM::SetQuad(PointProperty p0, PointProperty p1, PointProperty p2, PointProp
 	colors[2] = p2.c;
 	colors[3] = p3.c;
 
+	normals[0] = p0.n;
+	normals[1] = p1.n;
+	normals[2] = p2.n;
+	normals[3] = p3.n;
+
+	st[0] = V3(p0.s, p0.t, 0.0f);
+	st[1] = V3(p1.s, p1.t, 0.0f);
+	st[2] = V3(p2.s, p2.t, 0.0f);
+	st[3] = V3(p3.s, p3.t, 0.0f);
+
 	tris[0] = 0;
 	tris[1] = 1;
 	tris[2] = 2;
@@ -74,12 +84,17 @@ void TM::SetQuad(PointProperty p0, PointProperty p1, PointProperty p2, PointProp
 	tris[5] = 0;
 }
 
+void TM::SetText(std::string tf)
+{
+	tex = tf;
+}
+
 void TM::Allocate()
 {
 	verts.resize(vertsN);
 	colors.resize(vertsN);
 	normals.resize(vertsN);
-	texture.resize(vertsN);
+	st.resize(vertsN);
 	tris.resize(3 * trisN);		// each triangle has three topological indexs
 }
 
@@ -115,8 +130,20 @@ void TM::RenderFill(PPC* ppc, FrameBuffer* fb)
 		fb->Draw3DTriangle(ppc, verts[vi0], colors[vi0], 
 								verts[vi1], colors[vi1],
 								verts[vi2], colors[vi2]);
+	}
+}
 
-//		fb->Draw3DTriangle(ppc, verts[vi0], verts[vi1], verts[vi2], V3(0.8f));
+void TM::RenderFillTexture(PPC* ppc, FrameBuffer* fb)
+{
+	for(int ti = 0; ti < trisN; ++ti)
+	{
+		int vi0 = tris[ti * 3 + 0];
+		int vi1 = tris[ti * 3 + 1];
+		int vi2 = tris[ti * 3 + 2];
+		PointProperty p0(verts[vi0], V3(0.0f), V3(0.0f), st[vi0][0], st[vi0][1]);
+		PointProperty p1(verts[vi1], V3(0.0f), V3(0.0f), st[vi1][0], st[vi1][1]);
+		PointProperty p2(verts[vi2], V3(0.0f), V3(0.0f), st[vi2][0], st[vi2][1]);
+		fb->Draw3DTriangleTexture(ppc, p0, p1, p2,tex);
 	}
 }
 
@@ -182,7 +209,7 @@ void TM::Scale(float scf)
 	}
 }
 
-void TM::LoadBin(char* fname)
+void TM::LoadModelBin(char* fname)
 {
 	ifstream ifs(fname, ios::binary);
 	if (ifs.fail()) {

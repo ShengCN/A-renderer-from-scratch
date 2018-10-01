@@ -273,7 +273,10 @@ bool Scene::DBGPPC()
 void Scene::Demonstration()
 {
 	string purdue_loc = "images/purdue.tiff";
-	fb->LoadTiff(purdue_loc.c_str());
+	fb->LoadTex(purdue_loc);
+	meshes[0]->SetText(purdue_loc);
+	meshes[0]->RenderFillTexture(ppc, fb);
+	fb->redraw();
 }
 
 void Scene::InitDemo()
