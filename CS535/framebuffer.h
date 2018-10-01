@@ -50,9 +50,10 @@ public:
 	void DrawPPC(PPC* wPPC, PPC* tPPC, float vf);	// visualize target PPC using wPPC
 	void VisualizeCurrView(PPC *ppc0, float currf, PPC *ppc1, FrameBuffer *fb1);
 	void VisualizeCurrView3D(PPC *ppc0, PPC *ppc1, FrameBuffer *fb1); 
-	unsigned int LookupColor(std::string texFile, float s, float t);
+	V3 LookupColor(std::string texFile, float s, float t);
 private:
 	void Set(int u, int v, int color);
 	bool InsideTriangle(V3 p, V3 v1, V3 v2, V3 v3);
 	float Fract(float n);
+	float Clamp(float n, float low, float high);
 };
