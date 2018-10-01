@@ -140,9 +140,9 @@ void TM::RenderFillTexture(PPC* ppc, FrameBuffer* fb)
 		int vi0 = tris[ti * 3 + 0];
 		int vi1 = tris[ti * 3 + 1];
 		int vi2 = tris[ti * 3 + 2];
-		PointProperty p0(verts[vi0], V3(0.0f), V3(0.0f), st[vi0][0], st[vi0][1]);
-		PointProperty p1(verts[vi1], V3(0.0f), V3(0.0f), st[vi1][0], st[vi1][1]);
-		PointProperty p2(verts[vi2], V3(0.0f), V3(0.0f), st[vi2][0], st[vi2][1]);
+		PointProperty p0(verts[vi0], colors[vi0], V3(0.0f), st[vi0][0], st[vi0][1]);
+		PointProperty p1(verts[vi1], colors[vi1], V3(0.0f), st[vi1][0], st[vi1][1]);
+		PointProperty p2(verts[vi2], colors[vi2], V3(0.0f), st[vi2][0], st[vi2][1]);
 		fb->Draw3DTriangleTexture(ppc, p0, p1, p2,tex);
 	}
 }

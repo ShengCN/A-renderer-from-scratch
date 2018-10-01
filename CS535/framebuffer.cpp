@@ -649,19 +649,25 @@ unsigned int FrameBuffer::LookupColor(std::string texFile, float s, float t)
 		cerr << "Not found texture: " << texFile << endl;
 		return 0xFF000000;
 	}
-	// texS and textT in (0.0f,w) (0.0f,h)
-	float textS = s * static_cast<float>(this->w);
-	float textT = t * static_cast<float>(this->h);
-	int u0 = max(0, static_cast<int>(textS - 0.5f)), v0 = max(0, static_cast<int>(textT - 0.5f));
-	int u1 = min(this->w-1, u0 + 1), v1 = min(this->h-1, v0 + 1);
-	// todo
-	// Check texture coordinate here
-	float c0 = textures[texFile][(v0)*this->w + u0];
-	float c1 = textures[texFile][(v0)*this->w + u1];
-	float c2 = textures[texFile][(v1)*this->w + u0];
-	float c3 = textures[texFile][(v1)*this->w + u1];
 
-	float uf0 = static_cast<float>(u0) + 0.5f, vf0 = static_cast<float>(v0) + 0.5f;
-	float intpS = textS - uf0, intpT = textT - vf0;
-	return (1.0f - intpS)*(1.0f - intpT) * c0 + intpS * (1.0f - intpT)*c1 + (1.0f - intpS)*intpT * c2 + intpS * (1.0f - intpT) * c3;
+	// nearest
+	int u = min(this->w - 1,static_cast<int>(s * this->w));
+	int v = min(this->h - 1,static_cast<int>(t * this->h));
+	return textures[texFile][(this->h - 1 - v)*this->w + u];
+
+	// texS and textT in (0.0f,w) (0.0f,h)
+	//float textS = s * static_cast<float>(this->w);
+	//float textT = t * static_cast<float>(this->h);
+	//int u0 = max(0, static_cast<int>(textS - 0.5f)), v0 = max(0, static_cast<int>(textT - 0.5f));
+	//int u1 = min(this->w-1, u0 + 1), v1 = min(this->h-1, v0 + 1);
+	//// todo
+	//// Check texture coordinate here
+	//float c0 = textures[texFile][(v0)*this->w + u0];
+	//float c1 = textures[texFile][(v0)*this->w + u1];
+	//float c2 = textures[texFile][(v1)*this->w + u0];
+	//float c3 = textures[texFile][(v1)*this->w + u1];
+
+	//float uf0 = static_cast<float>(u0) + 0.5f, vf0 = static_cast<float>(v0) + 0.5f;
+	//float intpS = textS - uf0, intpT = textT - vf0;
+	//return (1.0f - intpS)*(1.0f - intpT) * c0 + intpS * (1.0f - intpT)*c1 + (1.0f - intpS)*intpT * c2 + intpS * (1.0f - intpT) * c3;
 }
