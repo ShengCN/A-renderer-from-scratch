@@ -41,24 +41,60 @@ Scene::Scene(): isRenderAABB(false)
 	gui->uiw->position(u0, v0 + fb->h + 60);
 
 	// Random axis
-	TM *quad = new TM();
-	PointProperty p0(V3(-100.0f, 100.0f, -200.0f), V3(1.0f,0.0f,0.0f), V3(0.0f, 0.0f, 1.0f), 0.0f, 0.0f);
-	PointProperty p1(V3(100.0f, 100.0f, -200.0f), V3(0.0f,1.0f,0.0f), V3(0.0f, 0.0f, 1.0f), 1.0f, 0.0f);
-	PointProperty p2(V3(100.0f, -100.0f, -200.0f), V3(0.0f,0.0f,1.0f), V3(0.0f, 0.0f, 1.0f), 1.0f, 1.0f);
-	PointProperty p3(V3(-100.0f, -100.0f, -200.0f), V3(1.0f), V3(0.0f, 0.0f, 1.0f), 0.0f, 1.0f);
-	quad->SetQuad(p0, p1, p2, p3);
-	meshes.push_back(quad);
+	TM *quad0 = new TM(), *quad1 = new TM(), *quad2 = new TM(), *quad3 = new TM(), *quad4 = new TM(), *quad5 = new TM();
+	PointProperty p0(V3(-100.0f, 100.0f, 0.0f), V3(1.0f,0.0f,0.0f), V3(0.0f, 0.0f, 1.0f), 0.0f, 0.0f);
+	PointProperty p1(V3(100.0f, 100.0f, 0.0f), V3(0.0f,1.0f,0.0f), V3(0.0f, 0.0f, 1.0f), 1.0f, 0.0f);
+	PointProperty p2(V3(100.0f, -100.0f, 0.0f), V3(0.0f,0.0f,1.0f), V3(0.0f, 0.0f, 1.0f), 1.0f, 1.0f);
+	PointProperty p3(V3(-100.0f, -100.0f, 0.0f), V3(1.0f), V3(0.0f, 0.0f, 1.0f), 0.0f, 1.0f);
+	
+	quad0->SetQuad(p0, p1, p2, p3);	// front
+	quad1->SetQuad(p0, p1, p2, p3); // back
+	quad2->SetQuad(p0, p1, p2, p3); // top
+	quad3->SetQuad(p0, p1, p2, p3); // bot
+	quad4->SetQuad(p0, p1, p2, p3); // left
+	quad5->SetQuad(p0, p1, p2, p3); // right
 
-	// Position  all the triangle meshes
 	V3 tmC = ppc->C + ppc->GetVD() * 100.0f;
-	for(auto m:meshes)
-	{
-		m->PositionAndSize(tmC, 50.0);
-	}
+	float cubeLength = 200.0f / quad0->ComputeAABB().GetDiagnoalLength() * 50.0f;
+	float halfCubeLength = 0.5f * cubeLength;
+	quad0->PositionAndSize(tmC, 50.0f);
+	
+	quad1->RotateAboutArbitraryAxis(quad1->GetCenter(), V3(0.0f, 1.0f, 0.0f), 180.0f);
+	quad1->PositionAndSize(tmC + V3(0.0f,0.0f,-cubeLength), 50.0f);
+	
+	quad2->RotateAboutArbitraryAxis(quad2->GetCenter(), V3(1.0f, 0.0f, 0.0f), 90.0f);
+	quad2->PositionAndSize(tmC + V3(0.0f, halfCubeLength, -halfCubeLength), 50.0f);
 
-	// ppc->PositionAndOrient(V3(0.0f), mesh1->GetCenter(), V3(0.0f, 1.0, 0.0f));
+	quad3->RotateAboutArbitraryAxis(quad3->GetCenter(), V3(1.0f, 0.0f, 0.0f), -90.0f);
+	quad3->PositionAndSize(tmC + V3(0.0f, -halfCubeLength, -halfCubeLength), 50.0f);
+
+	quad4->RotateAboutArbitraryAxis(quad4->GetCenter(), V3(0.0f, 1.0f, 0.0f), -90.0f);
+	quad4->PositionAndSize(tmC + V3(-halfCubeLength, 0.0f, -halfCubeLength), 50.0f);
+	
+	quad5->RotateAboutArbitraryAxis(quad5->GetCenter(), V3(0.0f, 1.0f, 0.0f), 90.0f);
+	quad5->PositionAndSize(tmC + V3(halfCubeLength, 0.0f, -halfCubeLength), 50.0f);
+
+	meshes.push_back(quad0);
+	meshes.push_back(quad1);
+	meshes.push_back(quad2);
+	meshes.push_back(quad3);
+	meshes.push_back(quad4);
+	meshes.push_back(quad5);
+
+	// Position all the triangle meshes
+	V3 cubeCenter;
+	for (int i = 0; i < meshes.size(); ++i)
+	{
+		cubeCenter = cubeCenter + meshes[i]->GetCenter();
+	}
+	cubeCenter = cubeCenter / static_cast<float>(meshes.size());
+	ppc->PositionAndOrient(V3(100.0f), cubeCenter, V3(0.0f, 1.0, 0.0f));
+
+
+	// ppc->RevolveH(cubeCenter, 25.0f);
+//	ppc->RevolveV(cubeCenter, -45.0f);
 	ppc3->C = ppc3->C + V3(330.0f, 150.0f, 300.0f);
-	ppc3->PositionAndOrient(ppc3->C, quad->GetCenter(), V3(0.0f, 1.0f, 0.0f));
+	ppc3->PositionAndOrient(ppc3->C, cubeCenter, V3(0.0f, 1.0f, 0.0f));
 
 	Render();
 	// RenderWireFrame();
