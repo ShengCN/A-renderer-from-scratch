@@ -88,7 +88,9 @@ Scene::Scene(): isRenderAABB(false)
 		cubeCenter = cubeCenter + meshes[i]->GetCenter();
 	}
 	cubeCenter = cubeCenter / static_cast<float>(meshes.size());
-	ppc->PositionAndOrient(V3(100.0f), cubeCenter, V3(0.0f, 1.0, 0.0f));
+	ppc->RevolveH(cubeCenter, 45.0f);
+	ppc->RevolveV(cubeCenter, 45.0f);
+	// ppc->PositionAndOrient(V3(100.0f), cubeCenter, V3(0.0f, 1.0, 0.0f));
 
 
 	// ppc->RevolveH(cubeCenter, 25.0f);
