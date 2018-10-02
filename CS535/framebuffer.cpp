@@ -274,17 +274,20 @@ bool FrameBuffer::LoadTex(const std::string texFile)
 	TIFFGetField(in, TIFFTAG_IMAGELENGTH, &height);
 	vector<unsigned int> texMemory(width * height);
 
-	if (TIFFReadRGBAImage(in, w, h, &texMemory[0], 0) == 0)
+	if (TIFFReadRGBAImage(in, width, height, &texMemory[0], 0) == 0)
 	{
 		cerr << "failed to load " << fname << endl;
 		return false;
 	}
 	
+	// commit changes
 	if (textures.find(texFile) != textures.end())
 	{
 		textures.erase(texFile);
 	}
-	textures[texFile] = texMemory;
+	textures[texFile].texture = texMemory;
+	textures[texFile].w = width;
+	textures[texFile].h = height;
 
 	TIFFClose(in);
 	return true;
@@ -669,10 +672,11 @@ V3 FrameBuffer::LookupColor(std::string texFile, float s, float t)
 	int u1 = min(this->w-1, u0 + 1), v1 = min(this->h-1, v0 + 1);
 	
 	V3 c0, c1, c2, c3;
-	c0.SetColor(textures[texFile][(this->h - 1 - v0)*this->w + u0]);
-	c1.SetColor(textures[texFile][(this->h - 1 - v0)*this->w + u1]);
-	c2.SetColor(textures[texFile][(this->h - 1 - v1)*this->w + u0]);
-	c3.SetColor(textures[texFile][(this->h - 1 - v1)*this->w + u1]);
+	int texH = textures[texFile].h, texW = textures[texFile].w;
+	c0.SetColor(textures[texFile].texture[(texH - 1 - v0)*texW + u0]);
+	c1.SetColor(textures[texFile].texture[(texH - 1 - v0)*texW + u1]);
+	c2.SetColor(textures[texFile].texture[(texH - 1 - v1)*texW + u0]);
+	c3.SetColor(textures[texFile].texture[(texH - 1 - v1)*texW + u1]);
 
 	float uf0 = static_cast<float>(u0) + 0.5f, vf0 = static_cast<float>(v0) + 0.5f;
 	float intpS = Clamp(textS - uf0,0.0f,1.0f), intpT = Clamp(textT - vf0,0.0f,1.0f);

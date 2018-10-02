@@ -11,12 +11,18 @@
 using std::vector;
 using std::unordered_map;
 struct PointProperty;
+struct TextureInfo
+{
+	vector<unsigned int> texture;
+	int w, h;
+	TextureInfo() :w(0), h(0){};
+};
 
 class FrameBuffer : public Fl_Gl_Window {
 public:
 	unsigned int *pix;	// pixel 
 	float *zb;			// z buffer
-	unordered_map<std::string, vector<unsigned int>> textures; // use file name as index
+	unordered_map<std::string, TextureInfo> textures; // use file name as index
 
 	int w, h;
 	FrameBuffer(int u0, int v0, int _w, int _h);

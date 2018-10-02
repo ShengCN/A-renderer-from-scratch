@@ -82,7 +82,7 @@ Scene::Scene(): isRenderAABB(false)
 	meshes.push_back(quad5);
 
 	// Position all the triangle meshes
-	V3 cubeCenter;
+	V3 cubeCenter(0.0f);
 	for (int i = 0; i < meshes.size(); ++i)
 	{
 		cubeCenter = cubeCenter + meshes[i]->GetCenter();
@@ -311,10 +311,29 @@ bool Scene::DBGPPC()
 void Scene::Demonstration()
 {
 	string purdue_loc = "images/purdue.tiff";
+	string zerotwo_loc = "images/02.tiff";
 	fb->LoadTex(purdue_loc);
+	fb->LoadTex(zerotwo_loc);
 	meshes[0]->SetText(purdue_loc);
-	meshes[0]->RenderFillTexture(ppc, fb);
-	fb->redraw();
+	meshes[3]->SetText(zerotwo_loc);
+	
+	V3 meshCenter(0.0f);
+	for(auto m:meshes)
+	{
+		meshCenter = meshCenter + m->GetCenter();
+	}
+	meshCenter = meshCenter / static_cast<float>(meshes.size());
+
+	int stepN = 360;
+	for(int stepi = 0; stepi <= stepN; stepi ++)
+	{
+		fb->Clear(0xFFFFFFFF, 0.0f);
+		ppc->RevolveH(meshCenter, 1.0f);
+		meshes[0]->RenderFillTexture(ppc, fb);
+		meshes[3]->RenderFillTexture(ppc, fb);
+		fb->redraw();
+		Fl::check();
+	}
 }
 
 void Scene::InitDemo()
