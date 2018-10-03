@@ -101,13 +101,6 @@ float FrameBuffer::Fract(float n)
 	return n - static_cast<int>(n);
 }
 
-float FrameBuffer::Clamp(float n, float low, float high)
-{
-	n = max(n, low);
-	n = min(n, high);
-	return n;
-}
-
 void FrameBuffer::SetGuarded(int u, int v, unsigned int color)
 {
 	// clip to window 
@@ -660,19 +653,23 @@ V3 FrameBuffer::LookupColor(std::string texFile, float s, float t)
 		return 0xFF000000;
 	}
 
-	// nearest
-	//int u = min(this->w - 1,static_cast<int>(s * this->w));
-	//int v = min(this->h - 1,static_cast<int>(t * this->h));
-	//return textures[texFile][(this->h - 1 - v)*this->w + u];
 
-	//  texS and textT in (0.0f,w) (0.0f,h)
-	float textS = s * static_cast<float>(this->w);
-	float textT = t * static_cast<float>(this->h);
+	int texW = textures[texFile].w, texH = textures[texFile].h;
+	float textS = s * static_cast<float>(texW-1);
+	float textT = t * static_cast<float>(texH-1);
+
+	// nearest
+//	int u = int(textS);
+//	int v = int(textT);
+//	V3 c;
+//	c.SetColor(textures[texFile].texture[(texH - 1 - v)*texW + u]);
+//	return c;
+
+	// corner case
 	int u0 = max(0, static_cast<int>(textS - 0.5f)), v0 = max(0, static_cast<int>(textT - 0.5f));
-	int u1 = min(this->w-1, u0 + 1), v1 = min(this->h-1, v0 + 1);
+	int u1 = min(texW -1, static_cast<int>(textS + 0.5f)), v1 = min(texH, static_cast<int>(textT + 0.5f));
 	
 	V3 c0, c1, c2, c3;
-	int texH = textures[texFile].h, texW = textures[texFile].w;
 	c0.SetColor(textures[texFile].texture[(texH - 1 - v0)*texW + u0]);
 	c1.SetColor(textures[texFile].texture[(texH - 1 - v0)*texW + u1]);
 	c2.SetColor(textures[texFile].texture[(texH - 1 - v1)*texW + u0]);

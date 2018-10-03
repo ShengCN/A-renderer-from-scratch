@@ -61,5 +61,13 @@ private:
 	void Set(int u, int v, int color);
 	bool InsideTriangle(V3 p, V3 v1, V3 v2, V3 v3);
 	float Fract(float n);
-	float Clamp(float n, float low, float high);
+	template<typename T> T Clamp(T n, T low, T high);
 };
+
+template <typename T>
+T FrameBuffer::Clamp(T n, T low, T high)
+{
+	n = max(n, low);
+	n = min(n, high);
+	return n;
+}

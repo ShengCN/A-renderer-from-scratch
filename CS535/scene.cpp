@@ -81,6 +81,14 @@ Scene::Scene(): isRenderAABB(false)
 	meshes.push_back(quad4);
 	meshes.push_back(quad5);
 
+	// Textures
+	string purdue_loc = "images/purdue.tiff";
+	string zerotwo_loc = "images/02.tiff";
+	fb->LoadTex(purdue_loc);
+	fb->LoadTex(zerotwo_loc);
+	meshes[0]->SetText(purdue_loc);
+	meshes[3]->SetText(zerotwo_loc);
+
 	// Position all the triangle meshes
 	V3 cubeCenter(0.0f);
 	for (int i = 0; i < meshes.size(); ++i)
@@ -88,8 +96,8 @@ Scene::Scene(): isRenderAABB(false)
 		cubeCenter = cubeCenter + meshes[i]->GetCenter();
 	}
 	cubeCenter = cubeCenter / static_cast<float>(meshes.size());
-	ppc->RevolveH(cubeCenter, 45.0f);
-	ppc->RevolveV(cubeCenter, 45.0f);
+//	ppc->RevolveH(cubeCenter, 45.0f);
+//	ppc->RevolveV(cubeCenter, 45.0f);
 	// ppc->PositionAndOrient(V3(100.0f), cubeCenter, V3(0.0f, 1.0, 0.0f));
 
 
@@ -106,14 +114,7 @@ void Scene::Render()
 {
 	if (fb)
 	{
-		fb->Clear(0xFFFFFFFF, 0.0f);
-		for_each(meshes.begin(), meshes.end(), [&](TM* t)
-	         {
-		         t->RenderFill(ppc, fb);
-		         if (isRenderAABB)
-			         t->RenderAABB(ppc, fb);
-	         });
-		fb->redraw();
+		RenderTexture(ppc, fb);
 	}
 
 	// Third person view rendering
@@ -141,6 +142,22 @@ void Scene::Render(PPC* currPPC, FrameBuffer* currFB)
 		         if (isRenderAABB)
 			         t->RenderAABB(currPPC, currFB);
 	         });
+		currFB->redraw();
+	}
+}
+
+void Scene::RenderTexture(PPC* currPPC, FrameBuffer* currFB)
+{
+	// Third person view rendering
+	if (currFB)
+	{
+		currFB->Clear(0xFFFFFFFF, 0.0f);
+		for_each(meshes.begin(), meshes.end(), [&](TM* t)
+		{
+			t->RenderFillTexture(currPPC, currFB);
+			if (isRenderAABB)
+				t->RenderAABB(currPPC, currFB);
+		});
 		currFB->redraw();
 	}
 }
@@ -309,14 +326,8 @@ bool Scene::DBGPPC()
 }
 
 void Scene::Demonstration()
-{
-	string purdue_loc = "images/purdue.tiff";
-	string zerotwo_loc = "images/02.tiff";
-	fb->LoadTex(purdue_loc);
-	fb->LoadTex(zerotwo_loc);
-	meshes[0]->SetText(purdue_loc);
-	meshes[3]->SetText(zerotwo_loc);
-	
+{	
+	fb->SaveAsTiff("bilinear.tiff");
 	V3 meshCenter(0.0f);
 	for(auto m:meshes)
 	{

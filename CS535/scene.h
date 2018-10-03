@@ -20,7 +20,8 @@ public:
 	Scene();
 	void DBG();
 	void Render();				// render all triangles in the scene
-	void Render(PPC *currPPC, FrameBuffer *currFB);				
+	void Render(PPC *currPPC, FrameBuffer *currFB);
+	void RenderTexture(PPC *currPPC, FrameBuffer *currFB);
 	void RenderWireFrame();
 
 	~Scene();
