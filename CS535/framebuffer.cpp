@@ -237,6 +237,7 @@ bool FrameBuffer::Visible(int u, int v, float curz)
 	return true;
 }
 
+
 float FrameBuffer::GetZ(int u, int v)
 {
 	if (!IsInScreen(u, v))

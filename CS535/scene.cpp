@@ -40,7 +40,6 @@ Scene::Scene(): isRenderAABB(false)
 
 	gui->uiw->position(u0, v0 + fb->h + 60);
 
-	// Random axis
 	TM *quad0 = new TM(), *quad1 = new TM(), *quad2 = new TM(), *quad3 = new TM(), *quad4 = new TM(), *quad5 = new TM();
 	PointProperty p0(V3(-100.0f, 100.0f, 0.0f), V3(0.0f), V3(0.0f, 0.0f, 1.0f), 0.0f, 0.0f);
 	PointProperty p1(V3(100.0f, 100.0f, 0.0f), V3(0.0f), V3(0.0f, 0.0f, 1.0f), 1.0f, 0.0f);
@@ -171,8 +170,8 @@ void Scene::RenderTexture(PPC* currPPC, FrameBuffer* currFB)
 		currFB->Clear(0xFFFFFFFF, 0.0f);
 		for_each(meshes.begin(), meshes.end(), [&](TM* t)
 		{
-			// if has alpha value
-			fb->depthTest = (fb->texAlpha.find(t->tex) != fb->texAlpha.end()) ? false : true;
+			// Lod Level
+
 			t->RenderFillTexture(currPPC, currFB);
 			if (isRenderAABB)
 				t->RenderAABB(currPPC, currFB);

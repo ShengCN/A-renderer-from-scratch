@@ -34,6 +34,7 @@ private:
 	void Demonstration();
 	void InitDemo();
 	bool isRenderAABB;
+	int LookupLodLevel();
 };
 
 extern Scene* scene;
