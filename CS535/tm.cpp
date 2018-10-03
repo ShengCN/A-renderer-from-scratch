@@ -140,6 +140,9 @@ void TM::RenderFill(PPC* ppc, FrameBuffer* fb)
 
 void TM::RenderFillTexture(PPC* ppc, FrameBuffer* fb)
 {
+	// Lod Level
+	// todo
+
 	for(int ti = 0; ti < trisN; ++ti)
 	{
 		int vi0 = tris[ti * 3 + 0];
@@ -148,6 +151,7 @@ void TM::RenderFillTexture(PPC* ppc, FrameBuffer* fb)
 		PointProperty p0(verts[vi0], colors[vi0], V3(0.0f), tcs[vi0 * 2], tcs[vi0 * 2 + 1]);
 		PointProperty p1(verts[vi1], colors[vi1], V3(0.0f), tcs[vi1 * 2], tcs[vi1 * 2 + 1]);
 		PointProperty p2(verts[vi2], colors[vi2], V3(0.0f), tcs[vi2 * 2], tcs[vi2 * 2 + 1]);
+		
 		fb->Draw3DTriangleTexture(ppc, p0, p1, p2,tex);
 	}
 }

@@ -531,7 +531,7 @@ void FrameBuffer::Draw3DTriangle(PPC* ppc, V3 p0, V3 c0, V3 p1, V3 c1, V3 p2, V3
 	}
 }
 
-void FrameBuffer::Draw3DTriangleTexture(PPC* ppc, PointProperty p0, PointProperty p1, PointProperty p2, const std::string texFile)
+void FrameBuffer::Draw3DTriangleTexture(PPC* ppc, PointProperty p0, PointProperty p1, PointProperty p2, const std::string texFile, int LoD)
 {
 	V3 pp0, pp1, pp2;
 	if (!ppc->Project(p0.p, pp0))

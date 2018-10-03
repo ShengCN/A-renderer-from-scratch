@@ -174,8 +174,6 @@ void Scene::RenderTexture(PPC* currPPC, FrameBuffer* currFB)
 		currFB->Clear(0xFFFFFFFF, 0.0f);
 		for_each(meshes.begin(), meshes.end(), [&](TM* t)
 		{
-			// Lod Level
-
 			t->RenderFillTexture(currPPC, currFB);
 			if (isRenderAABB)
 				t->RenderAABB(currPPC, currFB);
