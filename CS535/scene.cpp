@@ -52,6 +52,9 @@ Scene::Scene(): isRenderAABB(false)
 	quad2->SetQuad(p0, p1, p2, p3); // top
 	quad3->SetQuad(p0, p1, p2, p3); // bot
 	quad4->SetQuad(p0, p1, p2, p3); // left
+	p1.s = 3.0f;
+	p2.s = p2.t = 3.0f;
+	p3.t = 3.0f;
 	quad5->SetQuad(p0, p1, p2, p3); // right
 
 	V3 tmC = ppc->C + ppc->GetVD() * 100.0f;
@@ -84,10 +87,18 @@ Scene::Scene(): isRenderAABB(false)
 	// Textures
 	string purdue_loc = "images/purdue.tiff";
 	string zerotwo_loc = "images/02.tiff";
+	string camera_loc = "images/camera.tiff";
+	string tilt_loc = "images/tilt.tiff";
 	fb->LoadTex(purdue_loc);
 	fb->LoadTex(zerotwo_loc);
+	fb->LoadTex(camera_loc);
+	fb->LoadTex(tilt_loc);
 	meshes[0]->SetText(purdue_loc);
+	meshes[1]->SetText(zerotwo_loc);
+	meshes[2]->SetText(zerotwo_loc);
 	meshes[3]->SetText(zerotwo_loc);
+	meshes[4]->SetText(camera_loc);
+	meshes[5]->SetText(tilt_loc);
 
 	// Position all the triangle meshes
 	V3 cubeCenter(0.0f);
@@ -338,11 +349,8 @@ void Scene::Demonstration()
 	int stepN = 360;
 	for(int stepi = 0; stepi <= stepN; stepi ++)
 	{
-		fb->Clear(0xFFFFFFFF, 0.0f);
 		ppc->RevolveH(meshCenter, 1.0f);
-		meshes[0]->RenderFillTexture(ppc, fb);
-		meshes[3]->RenderFillTexture(ppc, fb);
-		fb->redraw();
+		Render();
 		Fl::check();
 	}
 }
