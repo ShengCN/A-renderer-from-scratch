@@ -93,7 +93,7 @@ Scene::Scene(): isRenderAABB(false)
 
 	// Lights
 	V3 L = cubeCenter + V3(40.0f, 0.0f, 0.0f);
-	for_each(meshes.begin(), meshes.end(), [&](TM *tm) { tm->Light(V3(1.0f, 0.0f, 0.0f), L); });
+	for_each(meshes.begin(), meshes.end(), [&](TM *tm) { tm->Light(V3(1.0f, 0.0f, 0.0f),L, ppc); });
 
 	// Textures
 	string purdue_loc = "images/purdue.tiff";
@@ -360,7 +360,7 @@ void Scene::Demonstration()
 
 	meshes.clear();
 	TM *tm = new TM();
-	tm->LoadModelBin("geometry/teapot1K.bin");
+	tm->LoadModelBin("geometry/teapot57K.bin");
 	V3 tmC = ppc->C + ppc->GetVD()*100.0f;
 	float tmSize = 100.0f;
 	tm->PositionAndSize(tmC, tmSize);
@@ -371,7 +371,7 @@ void Scene::Demonstration()
 	for (int i = 0; i < 360; i++) {
 		L = tc + V3(40.0f, 0.0f, 0.0f);
 		L = L.RotateThisPointAboutArbitraryAxis(tc, V3(0.0f, 1.0f, 0.0f), (float)(i * 2));
-		meshes[0]->Light(V3(1.0f, 0.0f, 0.0f), L);
+		meshes[0]->Light(V3(1.0f, 0.0f, 0.0f),L, ppc);
 		Render(ppc,fb);
 		Fl::check();
 	}

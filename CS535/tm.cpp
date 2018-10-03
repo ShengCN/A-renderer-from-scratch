@@ -307,14 +307,16 @@ V3 TM::GetCenter()
 	return aabb.GetCenter();
 }
 
-void TM::Light(V3 mc, V3 L)
+void TM::Light(V3 mc, V3 L, PPC *ppc)
 {
 	for(int vi = 0; vi < vertsN; ++vi)
 	{
 		float ka = 0.5f;
 		float kd = (L - verts[vi]).UnitVector() * normals[vi].UnitVector();
+		float ks = (ppc->C - verts[vi]).UnitVector() * (L-verts[vi]).UnitVector().Reflect(normals[vi].UnitVector());
 		kd = max(kd, 0.0f);
-		colors[vi] = mc * (ka + (1.0f - ka)*kd);
+		ks = pow(max(ks, 0.0f), 4);
+		colors[vi] = mc * (ka + (1.0f - ka)*kd) + ks;
 	}
 }
 

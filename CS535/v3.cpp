@@ -94,6 +94,14 @@ V3 V3::RotateThisPointAboutArbitraryAxis(V3 O, V3 a, float angled)
 	return OP + O;
 }
 
+V3 V3::Reflect(V3 n)
+{
+	V3 v = *this, ret(0.0f);
+	n = n.UnitVector();
+	ret  = n * (v*n)*2.0f - v;
+	return ret;
+}
+
 float& V3::operator[](int i)
 {
 	return xyz[i];
@@ -124,6 +132,15 @@ V3 V3::operator+(V3 v1)
 	ret[1] = v0[1] + v1[1];
 	ret[2] = v0[2] + v1[2];
 	return ret;
+}
+
+V3 V3::operator+(float f)
+{
+	V3 &v = *this;
+	v[0] += f;
+	v[1] += f;
+	v[2] += f;
+	return v;
 }
 
 V3 V3::operator-(V3 v1)
