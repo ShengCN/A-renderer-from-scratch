@@ -93,7 +93,7 @@ Scene::Scene(): isRenderAABB(false)
 
 	// Lights
 	V3 L = cubeCenter + V3(40.0f, 0.0f, 0.0f);
-	for_each(meshes.begin(), meshes.end(), [&](TM *tm) { tm->Light(V3(1.0f, 0.0f, 0.0f),L, ppc); });
+	fb->L = L;
 
 	// Textures
 	string purdue_loc = "images/purdue.tiff";
@@ -371,14 +371,11 @@ void Scene::Demonstration()
 	for (int i = 0; i < 360; i++) {
 		L = tc + V3(40.0f, 0.0f, 0.0f);
 		L = L.RotateThisPointAboutArbitraryAxis(tc, V3(0.0f, 1.0f, 0.0f), (float)(i * 2));
-		meshes[0]->Light(V3(1.0f, 0.0f, 0.0f),L, ppc);
-		Render(ppc,fb);
+		fb->L = L;
+		// Render(ppc,fb);
+		Render();
 		Fl::check();
 	}
-	return;
-
-
-	Render(ppc,fb);
 }
 
 void Scene::InitDemo()

@@ -567,16 +567,21 @@ void FrameBuffer::Draw3DTriangleTexture(PPC* ppc, PointProperty p0, PointPropert
 				
 				if(Visible(u,v,w))
 				{
+					uvP[2] = w;
 					V3 st = st0 + (st1 - st0)*k + (st2 - st0)*l;
 					V3 pc = p0.c + (p1.c - p0.c)*k + (p2.c - p0.c)*l;
+					V3 pn = p0.n + (p1.n - p0.n)*k + (p2.n - p0.n)*l;
+					PointProperty pointProperty(ppc->Unproject(uvP),pc,pn,st[0],st[1]);
+					V3 color = Light(pointProperty,L,ppc);
 					if(textures.find(texFile) != textures.end())
 					{
 						// s and t in (0.0f,1.0f)
 						float s = Clamp(Fract(st[0]),0.0f,1.0f);
 						float t = Clamp(Fract(st[1]),0.0f,1.0f);
-						V3 color = LookupColor(texFile, s, t) + pc;
-						DrawPoint(u, v, color.GetColor());
+						color = color + LookupColor(texFile, s, t);
 					}
+
+					DrawPoint(u, v, color.GetColor());
 				}
 			}
 		}
@@ -679,4 +684,16 @@ V3 FrameBuffer::LookupColor(std::string texFile, float s, float t)
 	float uf0 = static_cast<float>(u0) + 0.5f, vf0 = static_cast<float>(v0) + 0.5f;
 	float intpS = Clamp(textS - uf0,0.0f,1.0f), intpT = Clamp(textT - vf0,0.0f,1.0f);
 	return c0 *(1.0f - intpS)*(1.0f - intpT) + c1 *intpS * (1.0f - intpT) + c2 *(1.0f - intpS)*intpT + c3 * intpS *intpT;
+}
+
+V3 FrameBuffer::Light(PointProperty pp, V3 L, PPC* ppc)
+{
+	V3 ret(0.0f);
+	float ka = 0.5f;
+	float kd = (L - pp.p).UnitVector() * pp.n.UnitVector();
+	float ks = (ppc->C - pp.p).UnitVector() * (L - pp.p).UnitVector().Reflect(pp.n.UnitVector());
+	kd = max(kd, 0.0f);
+	ks = pow(max(ks, 0.0f), 8);
+	ret = pp.c * (ka + (1.0f - ka)*kd) + ks;
+	return ret;
 }

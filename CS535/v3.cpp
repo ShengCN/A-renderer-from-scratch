@@ -19,7 +19,7 @@ V3::V3(float x, float y, float z) {
 V3 V3::UnitVector()
 {
 	V3 v = *this;
-	return v / Length();
+	return (FloatEqual(Length(), 0.0f)) ? 0.0f : v / Length();
 }
 
 float V3::Length()

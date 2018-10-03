@@ -23,8 +23,9 @@ public:
 	unsigned int *pix;	// pixel 
 	float *zb;			// z buffer
 	unordered_map<std::string, TextureInfo> textures; // use file name as index
-
 	int w, h;
+	V3 L;		// light position, prepare for mulitple light
+
 	FrameBuffer(int u0, int v0, int _w, int _h);
 	void draw();
 	void KeyboardHandle();
@@ -57,6 +58,8 @@ public:
 	void VisualizeCurrView(PPC *ppc0, float currf, PPC *ppc1, FrameBuffer *fb1);
 	void VisualizeCurrView3D(PPC *ppc0, PPC *ppc1, FrameBuffer *fb1); 
 	V3 LookupColor(std::string texFile, float s, float t);
+	V3 Light(PointProperty pp, V3 L, PPC *ppc);	// point property, ppc
+
 private:
 	void Set(int u, int v, int color);
 	bool InsideTriangle(V3 p, V3 v1, V3 v2, V3 v3);

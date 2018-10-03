@@ -16,7 +16,8 @@ struct PointProperty
 class TM
 {
 public:
-	vector<V3> verts, colors, normals, st;		// vertices and colors
+	vector<V3> verts, colors, normals;		// vertices and colors
+	vector<float> tcs;
 	vector<unsigned int>  tris;		// indices
 	int vertsN, trisN;
 	std::string tex;

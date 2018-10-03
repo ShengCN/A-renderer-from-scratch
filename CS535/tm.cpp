@@ -71,10 +71,14 @@ void TM::SetQuad(PointProperty p0, PointProperty p1, PointProperty p2, PointProp
 	normals[2] = p2.n;
 	normals[3] = p3.n;
 
-	st[0] = V3(p0.s, p0.t, 0.0f);
-	st[1] = V3(p1.s, p1.t, 0.0f);
-	st[2] = V3(p2.s, p2.t, 0.0f);
-	st[3] = V3(p3.s, p3.t, 0.0f);
+	tcs[0] = p0.s;
+	tcs[1] = p0.t;
+	tcs[2] = p1.s;
+	tcs[3] = p1.t;
+	tcs[4] = p2.s;
+	tcs[5] = p2.t;
+	tcs[6] = p3.s;
+	tcs[7] = p3.t;
 
 	tris[0] = 0;
 	tris[1] = 1;
@@ -95,7 +99,7 @@ void TM::Allocate()
 	verts.resize(vertsN);
 	colors.resize(vertsN);
 	normals.resize(vertsN);
-	st.resize(vertsN);
+	tcs.resize(2 * vertsN);
 	tris.resize(3 * trisN);		// each triangle has three topological indexs
 }
 
@@ -141,9 +145,9 @@ void TM::RenderFillTexture(PPC* ppc, FrameBuffer* fb)
 		int vi0 = tris[ti * 3 + 0];
 		int vi1 = tris[ti * 3 + 1];
 		int vi2 = tris[ti * 3 + 2];
-		PointProperty p0(verts[vi0], colors[vi0], V3(0.0f), st[vi0][0], st[vi0][1]);
-		PointProperty p1(verts[vi1], colors[vi1], V3(0.0f), st[vi1][0], st[vi1][1]);
-		PointProperty p2(verts[vi2], colors[vi2], V3(0.0f), st[vi2][0], st[vi2][1]);
+		PointProperty p0(verts[vi0], colors[vi0], V3(0.0f), tcs[vi0 * 2], tcs[vi0 * 2 + 1]);
+		PointProperty p1(verts[vi1], colors[vi1], V3(0.0f), tcs[vi1 * 2], tcs[vi1 * 2 + 1]);
+		PointProperty p2(verts[vi2], colors[vi2], V3(0.0f), tcs[vi2 * 2], tcs[vi2 * 2 + 1]);
 		fb->Draw3DTriangleTexture(ppc, p0, p1, p2,tex);
 	}
 }
@@ -244,12 +248,12 @@ void TM::LoadModelBin(char* fname)
 	}
 
 	ifs.read(&yn, 1); // texture coordinates 2 floats
-	float *tcs = 0; // don't have texture coordinates for now
-	if (tcs)
-		delete tcs;
-	tcs = 0;
+	
+	if (tcs.size() != 0)
+		tcs.clear();
+	
 	if (yn == 'y') {
-		tcs = new float[vertsN * 2];
+		tcs.resize(vertsN * 2);
 	}
 
 	ifs.read((char*)&verts[0], vertsN * 3 * sizeof(float)); // load verts
@@ -261,8 +265,8 @@ void TM::LoadModelBin(char* fname)
 	if (normals.size() == vertsN)
 		ifs.read((char*)&normals[0], vertsN * 3 * sizeof(float)); // load normals
 
-	if (tcs)
-		ifs.read((char*)tcs, vertsN * 2 * sizeof(float)); // load texture coordinates
+	if (tcs.size() != 0)
+		ifs.read((char*)&tcs[0], vertsN * 2 * sizeof(float)); // load texture coordinates
 
 	ifs.read((char*)&trisN, sizeof(int));
 	if (tris.size() != 0)
@@ -273,10 +277,7 @@ void TM::LoadModelBin(char* fname)
 	ifs.close();
 
 	cerr << "INFO: loaded " << vertsN << " verts, " << trisN << " tris from " << endl << "      " << fname << endl;
-	cerr << "      xyz " << ((colors.size()==0) ? "rgb " : "") << ((normals.size()==0) ? "nxnynz " : "") << ((tcs) ? "tcstct " : "") << endl;
-
-	delete[]tcs;
-
+	cerr << "      xyz " << ((colors.size()==0) ? "rgb " : "") << ((normals.size()==0) ? "nxnynz " : "") << ((tcs.size()==0) ? "tcstct " : "") << endl;
 }
 
 AABB TM::ComputeAABB()
@@ -315,7 +316,7 @@ void TM::Light(V3 mc, V3 L, PPC *ppc)
 		float kd = (L - verts[vi]).UnitVector() * normals[vi].UnitVector();
 		float ks = (ppc->C - verts[vi]).UnitVector() * (L-verts[vi]).UnitVector().Reflect(normals[vi].UnitVector());
 		kd = max(kd, 0.0f);
-		ks = pow(max(ks, 0.0f), 4);
+		ks = pow(max(ks, 0.0f), 8);
 		colors[vi] = mc * (ka + (1.0f - ka)*kd) + ks;
 	}
 }
