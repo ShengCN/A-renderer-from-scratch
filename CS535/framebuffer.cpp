@@ -280,9 +280,11 @@ bool FrameBuffer::LoadTex(const std::string texFile)
 	{
 		textures.erase(texFile);
 	}
-	textures[texFile].texture = texMemory;
-	textures[texFile].w = width;
-	textures[texFile].h = height;
+	TextureInfo newTex;
+	newTex.texture = texMemory;
+	newTex.w = width;
+	newTex.h = height;
+	textures[texFile].push_back(newTex);
 
 	TIFFClose(in);
 	return true;
@@ -577,20 +579,21 @@ void FrameBuffer::Draw3DTriangleTexture(PPC* ppc, PointProperty p0, PointPropert
 					V3 pn = p0.n + (p1.n - p0.n)*k + (p2.n - p0.n)*l;
 					PointProperty pointProperty(ppc->Unproject(uvP),pc,pn,st[0],st[1]);
 					V3 color = Light(pointProperty,L,ppc);
+					float alpha = 1.0f;
 					if(textures.find(texFile) != textures.end())
 					{
 						// s and t in (0.0f,1.0f)
 						float s = Clamp(Fract(st[0]),0.0f,1.0f);
 						float t = Clamp(Fract(st[1]),0.0f,1.0f);
-						color = color + LookupColor(texFile, s, t);
+						color = color + LookupColor(texFile, s, t, alpha);
 					}
 
 					// alpha blending 
-					if (texAlpha.find(texFile) != texAlpha.end())
+					if (!FloatEqual(1.0f,alpha))
 					{
 						V3 pxC(0.0f);
 						pxC.SetColor(pix[(h - 1 - v)*w + u]);
-						color = color * texAlpha[texFile] + pxC	* (1.0f - texAlpha[texFile]);
+						color = color * alpha + pxC	* (1.0f - alpha);
 					}
 					DrawPoint(u, v, color.GetColor());
 				}
@@ -667,11 +670,11 @@ V3 FrameBuffer::LookupColor(std::string texFile, float s, float t)
 	if(textures.find(texFile) == textures.end())
 	{
 		cerr << "Not found texture: " << texFile << endl;
-		return 0xFF000000;
+		return V3(0.0f);
 	}
 
 
-	int texW = textures[texFile].w, texH = textures[texFile].h;
+	int texW = textures[texFile][0].w, texH = textures[texFile][0].h;
 	float textS = s * static_cast<float>(texW-1);
 	float textT = t * static_cast<float>(texH-1);
 
@@ -687,14 +690,70 @@ V3 FrameBuffer::LookupColor(std::string texFile, float s, float t)
 	int u1 = min(texW -1, static_cast<int>(textS + 0.5f)), v1 = min(texH, static_cast<int>(textT + 0.5f));
 	
 	V3 c0, c1, c2, c3;
-	c0.SetColor(textures[texFile].texture[(texH - 1 - v0)*texW + u0]);
-	c1.SetColor(textures[texFile].texture[(texH - 1 - v0)*texW + u1]);
-	c2.SetColor(textures[texFile].texture[(texH - 1 - v1)*texW + u0]);
-	c3.SetColor(textures[texFile].texture[(texH - 1 - v1)*texW + u1]);
+	c0.SetColor(textures[texFile][0].texture[(texH - 1 - v0)*texW + u0]);
+	c1.SetColor(textures[texFile][0].texture[(texH - 1 - v0)*texW + u1]);
+	c2.SetColor(textures[texFile][0].texture[(texH - 1 - v1)*texW + u0]);
+	c3.SetColor(textures[texFile][0].texture[(texH - 1 - v1)*texW + u1]);
 
 	float uf0 = static_cast<float>(u0) + 0.5f, vf0 = static_cast<float>(v0) + 0.5f;
 	float intpS = Clamp(textS - uf0,0.0f,1.0f), intpT = Clamp(textT - vf0,0.0f,1.0f);
 	return c0 *(1.0f - intpS)*(1.0f - intpT) + c1 *intpS * (1.0f - intpT) + c2 *(1.0f - intpS)*intpT + c3 * intpS *intpT;
+}
+
+V3 FrameBuffer::LookupColor(std::string texFile, float s, float t, float &alpha)
+{
+	if (textures.find(texFile) == textures.end())
+	{
+		cerr << "Not found texture: " << texFile << endl;
+		return V3(0.0f);
+	}
+
+
+	int texW = textures[texFile][0].w, texH = textures[texFile][0].h;
+	float textS = s * static_cast<float>(texW - 1);
+	float textT = t * static_cast<float>(texH - 1);
+
+	// nearest
+//	int u = int(textS);
+//	int v = int(textT);
+//	V3 c;
+//	c.SetColor(textures[texFile].texture[(texH - 1 - v)*texW + u]);
+//	return c;
+
+	// corner case
+	int u0 = max(0, static_cast<int>(textS - 0.5f)), v0 = max(0, static_cast<int>(textT - 0.5f));
+	int u1 = min(texW - 1, static_cast<int>(textS + 0.5f)), v1 = min(texH, static_cast<int>(textT + 0.5f));
+
+	unsigned int ori0 = textures[texFile][0].texture[(texH - 1 - v0)*texW + u0];
+	unsigned int ori1 = textures[texFile][0].texture[(texH - 1 - v0)*texW + u0];
+	unsigned int ori2 = textures[texFile][0].texture[(texH - 1 - v0)*texW + u0];
+	unsigned int ori3 = textures[texFile][0].texture[(texH - 1 - v0)*texW + u0];
+	V3 c0, c1, c2, c3;
+	c0.SetColor(ori0);
+	c1.SetColor(ori1);
+	c2.SetColor(ori2);
+	c3.SetColor(ori3);
+
+	auto GetAlpha = [&](unsigned int c)
+	{
+		float alpha = 0.0f;
+		unsigned char*rgba = (unsigned char*)&c;
+		alpha = static_cast<float>(rgba[3]) / 255.0f;
+		return alpha;
+	};
+
+	float a0, a1, a2, a3; // alpha
+	a0 = GetAlpha(ori0);
+	a1 = GetAlpha(ori1);
+	a2 = GetAlpha(ori2);
+	a3 = GetAlpha(ori3);
+
+	float uf0 = static_cast<float>(u0) + 0.5f, vf0 = static_cast<float>(v0) + 0.5f;
+	float intpS = Clamp(textS - uf0, 0.0f, 1.0f), intpT = Clamp(textT - vf0, 0.0f, 1.0f);
+
+	// commit result
+	alpha = a0 * (1.0f - intpS)*(1.0f - intpT) + a1 * intpS * (1.0f - intpT) + a2 * (1.0f - intpS)*intpT + a3 * intpS *intpT;
+	return c0 * (1.0f - intpS)*(1.0f - intpT) + c1 * intpS * (1.0f - intpT) + c2 * (1.0f - intpS)*intpT + c3 * intpS *intpT;
 }
 
 V3 FrameBuffer::Light(PointProperty pp, V3 L, PPC* ppc)
@@ -705,6 +764,6 @@ V3 FrameBuffer::Light(PointProperty pp, V3 L, PPC* ppc)
 	float ks = (ppc->C - pp.p).UnitVector() * (L - pp.p).UnitVector().Reflect(pp.n.UnitVector());
 	kd = max(kd, 0.0f);
 	ks = 0.5f * pow(max(ks, 0.0f), 16);
-	ret = pp.c * (ka + (1.0f - ka)*kd) + pp.c * ks;
+	ret = pp.c * (ka + (1.0f - ka)*kd + ks);
 	return ret;
 }

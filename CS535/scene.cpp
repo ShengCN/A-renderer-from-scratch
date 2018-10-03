@@ -104,7 +104,6 @@ Scene::Scene(): isRenderAABB(false)
 	fb->LoadTex(zerotwo_loc);
 	fb->LoadTex(camera_loc);
 	fb->LoadTex(tilt_loc);
-	fb->texAlpha[purdue_loc] = 0.3f;
 	meshes[0]->SetText(zerotwo_loc);
 	meshes[1]->SetText(zerotwo_loc);
 	meshes[2]->SetText(zerotwo_loc);

@@ -22,8 +22,7 @@ class FrameBuffer : public Fl_Gl_Window {
 public:
 	unsigned int *pix;	// pixel 
 	float *zb;			// z buffer
-	unordered_map<std::string, TextureInfo> textures; // use file name as index
-	unordered_map<std::string, float> texAlpha; // use file name as index
+	unordered_map<std::string, vector<TextureInfo>> textures; // use file name as index, different Lod, 0 is default
 	bool depthTest;
 	int w, h;
 	V3 L;		// light position, prepare for mulitple light
@@ -60,8 +59,11 @@ public:
 	void VisualizeCurrView(PPC *ppc0, float currf, PPC *ppc1, FrameBuffer *fb1);
 	void VisualizeCurrView3D(PPC *ppc0, PPC *ppc1, FrameBuffer *fb1); 
 	V3 LookupColor(std::string texFile, float s, float t);
+	V3 LookupColor(std::string texFile, float s, float t, float &alpha);
 	V3 Light(PointProperty pp, V3 L, PPC *ppc);	// point property, ppc
 
+	// Texture downsampling
+	
 private:
 	void Set(int u, int v, int color);
 	bool InsideTriangle(V3 p, V3 v1, V3 v2, V3 v3);
