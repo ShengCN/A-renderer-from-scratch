@@ -568,12 +568,13 @@ void FrameBuffer::Draw3DTriangleTexture(PPC* ppc, PointProperty p0, PointPropert
 				if(Visible(u,v,w))
 				{
 					V3 st = st0 + (st1 - st0)*k + (st2 - st0)*l;
+					V3 pc = p0.c + (p1.c - p0.c)*k + (p2.c - p0.c)*l;
 					if(textures.find(texFile) != textures.end())
 					{
 						// s and t in (0.0f,1.0f)
 						float s = Clamp(Fract(st[0]),0.0f,1.0f);
 						float t = Clamp(Fract(st[1]),0.0f,1.0f);
-						V3 color = LookupColor(texFile, s, t);
+						V3 color = LookupColor(texFile, s, t) + pc;
 						DrawPoint(u, v, color.GetColor());
 					}
 				}

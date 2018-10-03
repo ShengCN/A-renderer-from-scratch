@@ -39,6 +39,7 @@ public:
 	AABB ComputeAABB();
 	void PositionAndSize(V3 tmC, float tmSize);
 	V3 GetCenter();
+	void Light(V3 mc, V3 L);	// per vertex light
 
 	~TM();
 };

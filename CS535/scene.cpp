@@ -42,11 +42,11 @@ Scene::Scene(): isRenderAABB(false)
 
 	// Random axis
 	TM *quad0 = new TM(), *quad1 = new TM(), *quad2 = new TM(), *quad3 = new TM(), *quad4 = new TM(), *quad5 = new TM();
-	PointProperty p0(V3(-100.0f, 100.0f, 0.0f), V3(1.0f,0.0f,0.0f), V3(0.0f, 0.0f, 1.0f), 0.0f, 0.0f);
-	PointProperty p1(V3(100.0f, 100.0f, 0.0f), V3(0.0f,1.0f,0.0f), V3(0.0f, 0.0f, 1.0f), 1.0f, 0.0f);
-	PointProperty p2(V3(100.0f, -100.0f, 0.0f), V3(0.0f,0.0f,1.0f), V3(0.0f, 0.0f, 1.0f), 1.0f, 1.0f);
-	PointProperty p3(V3(-100.0f, -100.0f, 0.0f), V3(1.0f), V3(0.0f, 0.0f, 1.0f), 0.0f, 1.0f);
-	
+	PointProperty p0(V3(-100.0f, 100.0f, 0.0f), V3(0.0f), V3(0.0f, 0.0f, 1.0f), 0.0f, 0.0f);
+	PointProperty p1(V3(100.0f, 100.0f, 0.0f), V3(0.0f), V3(0.0f, 0.0f, 1.0f), 1.0f, 0.0f);
+	PointProperty p2(V3(100.0f, -100.0f, 0.0f), V3(0.0f), V3(0.0f, 0.0f, 1.0f), 1.0f, 1.0f);
+	PointProperty p3(V3(-100.0f, -100.0f, 0.0f), V3(0.0f), V3(0.0f, 0.0f, 1.0f), 0.0f, 1.0f);
+
 	quad0->SetQuad(p0, p1, p2, p3);	// front
 	quad1->SetQuad(p0, p1, p2, p3); // back
 	quad2->SetQuad(p0, p1, p2, p3); // top
@@ -83,6 +83,17 @@ Scene::Scene(): isRenderAABB(false)
 	meshes.push_back(quad3);
 	meshes.push_back(quad4);
 	meshes.push_back(quad5);
+	// Position all the triangle meshes
+	V3 cubeCenter(0.0f);
+	for (int i = 0; i < meshes.size(); ++i)
+	{
+		cubeCenter = cubeCenter + meshes[i]->GetCenter();
+	}
+	cubeCenter = cubeCenter / static_cast<float>(meshes.size());
+
+	// Lights
+	V3 L = cubeCenter + V3(40.0f, 0.0f, 0.0f);
+	for_each(meshes.begin(), meshes.end(), [&](TM *tm) { tm->Light(V3(1.0f, 0.0f, 0.0f), L); });
 
 	// Textures
 	string purdue_loc = "images/purdue.tiff";
@@ -100,13 +111,6 @@ Scene::Scene(): isRenderAABB(false)
 	meshes[4]->SetText(camera_loc);
 	meshes[5]->SetText(tilt_loc);
 
-	// Position all the triangle meshes
-	V3 cubeCenter(0.0f);
-	for (int i = 0; i < meshes.size(); ++i)
-	{
-		cubeCenter = cubeCenter + meshes[i]->GetCenter();
-	}
-	cubeCenter = cubeCenter / static_cast<float>(meshes.size());
 //	ppc->RevolveH(cubeCenter, 45.0f);
 //	ppc->RevolveV(cubeCenter, 45.0f);
 	// ppc->PositionAndOrient(V3(100.0f), cubeCenter, V3(0.0f, 1.0, 0.0f));
@@ -338,21 +342,43 @@ bool Scene::DBGPPC()
 
 void Scene::Demonstration()
 {	
-	fb->SaveAsTiff("bilinear.tiff");
-	V3 meshCenter(0.0f);
-	for(auto m:meshes)
-	{
-		meshCenter = meshCenter + m->GetCenter();
-	}
-	meshCenter = meshCenter / static_cast<float>(meshes.size());
+//	fb->SaveAsTiff("bilinear.tiff");
+//	V3 meshCenter(0.0f);
+//	for(auto m:meshes)
+//	{
+//		meshCenter = meshCenter + m->GetCenter();
+//	}
+//	meshCenter = meshCenter / static_cast<float>(meshes.size());
+//
+//	int stepN = 360;
+//	for(int stepi = 0; stepi <= stepN; stepi ++)
+//	{
+//		ppc->RevolveH(meshCenter, 1.0f);
+//		Render();
+//		Fl::check();
+//	}
 
-	int stepN = 360;
-	for(int stepi = 0; stepi <= stepN; stepi ++)
-	{
-		ppc->RevolveH(meshCenter, 1.0f);
-		Render();
+	meshes.clear();
+	TM *tm = new TM();
+	tm->LoadModelBin("geometry/teapot1K.bin");
+	V3 tmC = ppc->C + ppc->GetVD()*100.0f;
+	float tmSize = 100.0f;
+	tm->PositionAndSize(tmC, tmSize);
+	meshes.push_back(tm);
+
+	V3 tc = meshes[0]->GetCenter();
+	V3 L = tc + V3(40.0f, 0.0f, 0.0f);
+	for (int i = 0; i < 360; i++) {
+		L = tc + V3(40.0f, 0.0f, 0.0f);
+		L = L.RotateThisPointAboutArbitraryAxis(tc, V3(0.0f, 1.0f, 0.0f), (float)(i * 2));
+		meshes[0]->Light(V3(1.0f, 0.0f, 0.0f), L);
+		Render(ppc,fb);
 		Fl::check();
 	}
+	return;
+
+
+	Render(ppc,fb);
 }
 
 void Scene::InitDemo()

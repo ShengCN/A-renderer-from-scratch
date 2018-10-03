@@ -1,5 +1,6 @@
 #include "TM.h"
 #include <fstream>
+#include <algorithm>
 using namespace std;
 
 void TM::SetRectangle(V3 O, float rw, float rh)
@@ -304,6 +305,17 @@ V3 TM::GetCenter()
 	AABB aabb(verts[0]);
 	aabb = ComputeAABB();
 	return aabb.GetCenter();
+}
+
+void TM::Light(V3 mc, V3 L)
+{
+	for(int vi = 0; vi < vertsN; ++vi)
+	{
+		float ka = 0.5f;
+		float kd = (L - verts[vi]).UnitVector() * normals[vi].UnitVector();
+		kd = max(kd, 0.0f);
+		colors[vi] = mc * (ka + (1.0f - ka)*kd);
+	}
 }
 
 TM::~TM()
