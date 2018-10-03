@@ -21,7 +21,10 @@ FrameBuffer::FrameBuffer(int u0, int v0, int _w, int _h)
 	h = _h;
 	pix = new unsigned int[w * h];
 	zb = new float[w*h];
+	
+	// Rendering parameters
 	depthTest = true;
+	lodTexture = true;
 }
 
 
@@ -285,8 +288,11 @@ bool FrameBuffer::LoadTex(const std::string texFile)
 	newTex.w = width;
 	newTex.h = height;
 	textures[texFile].push_back(newTex);
-
 	TIFFClose(in);
+
+	// Preprocess Lod textures
+	PrepareTextureLoD(texFile);
+
 	return true;
 }
 
@@ -766,4 +772,55 @@ V3 FrameBuffer::Light(PointProperty pp, V3 L, PPC* ppc)
 	ks = 0.5f * pow(max(ks, 0.0f), 16);
 	ret = pp.c * (ka + (1.0f - ka)*kd + ks);
 	return ret;
+}
+
+void FrameBuffer::PrepareTextureLoD(string texFile)
+{
+	if (textures.find(texFile) == textures.end())
+		return;
+
+	// continue downsampling to logn = 1
+	// Assumption: square image
+	auto curTex = textures[texFile][0];
+	int count = 0;
+	while(curTex.w > 0)
+	{
+		int nextW = curTex.w / 2;
+		TextureInfo newTex;
+		newTex.w = nextW;
+		newTex.h = nextW;
+		newTex.texture.resize(nextW * nextW);
+
+		auto GetPixColor = [&](vector<unsigned int> &pix,int w, int h, int u, int v)
+		{
+			return pix[(h - 1 - v)*w + u];
+		};
+
+		auto SetPixColor = [&](vector<unsigned int> &pix, V3 c, int w, int h, int u, int v)
+		{
+			pix[(h - 1 - v)*w + u] = c.GetColor();
+		};
+		
+		// filtering original image to get new texture
+		for(int ustep = 0; ustep < curTex.w / 2; ++ustep)
+		{
+			for(int vstep = 0; vstep < curTex.h / 2; ++vstep)
+			{
+				int u0 = ustep * 2 + 0, u1 = ustep * 2 + 1;
+				int v0 = vstep * 2 + 0, v1 = vstep * 2 + 1;
+				V3 c0(0.0f), c1(0.0f), c2(0.0f), c3(0.0f);
+				c0.SetColor(GetPixColor(curTex.texture, curTex.w, curTex.h, u0, v0));
+				c1.SetColor(GetPixColor(curTex.texture, curTex.w, curTex.h, u0, v1));
+				c2.SetColor(GetPixColor(curTex.texture, curTex.w, curTex.h, u1, v0));
+				c3.SetColor(GetPixColor(curTex.texture, curTex.w, curTex.h, u1, v1));
+				V3 c = (c0 + c1 + c2 + c3)*0.25f;
+				SetPixColor(newTex.texture, c, newTex.w, newTex.h, ustep, vstep);
+			}
+		}
+
+		// Commit result and Update current
+		textures[texFile].push_back(newTex);
+		curTex = textures[texFile][++count];
+		cerr << "Current tex: " << texFile << " While count: " << count << endl;
+	}
 }

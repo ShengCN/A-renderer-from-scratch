@@ -23,7 +23,7 @@ public:
 	unsigned int *pix;	// pixel 
 	float *zb;			// z buffer
 	unordered_map<std::string, vector<TextureInfo>> textures; // use file name as index, different Lod, 0 is default
-	bool depthTest;
+	bool depthTest, lodTexture;
 	int w, h;
 	V3 L;		// light position, prepare for mulitple light
 
@@ -63,7 +63,8 @@ public:
 	V3 Light(PointProperty pp, V3 L, PPC *ppc);	// point property, ppc
 
 	// Texture downsampling
-	
+	void PrepareTextureLoD(string texFile);
+
 private:
 	void Set(int u, int v, int color);
 	bool InsideTriangle(V3 p, V3 v1, V3 v2, V3 v3);

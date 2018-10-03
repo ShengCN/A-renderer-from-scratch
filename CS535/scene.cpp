@@ -81,7 +81,7 @@ Scene::Scene(): isRenderAABB(false)
 	meshes.push_back(quad3);
 	meshes.push_back(quad4);
 	meshes.push_back(quad5);
-	meshes.push_back(quad0);	// alpha
+	meshes.push_back(quad0);	// alpha purdue
 
 	// Position all the triangle meshes
 	V3 cubeCenter(0.0f);
@@ -99,14 +99,19 @@ Scene::Scene(): isRenderAABB(false)
 	string purdue_loc = "images/purdue.tiff";
 	string zerotwo_loc = "images/02.tiff";
 	string camera_loc = "images/camera.tiff";
+	string reflect_loc = "images/Reflection.tiff";
+	string sky_loc = "images/sky.tiff";
 	string tilt_loc = "images/tilt.tiff";
 	fb->LoadTex(purdue_loc);
 	fb->LoadTex(zerotwo_loc);
 	fb->LoadTex(camera_loc);
 	fb->LoadTex(tilt_loc);
+	fb->LoadTex(sky_loc);
+	fb->LoadTex(reflect_loc);
+
 	meshes[0]->SetText(zerotwo_loc);
-	meshes[1]->SetText(zerotwo_loc);
-	meshes[2]->SetText(zerotwo_loc);
+	meshes[1]->SetText(sky_loc);
+	meshes[2]->SetText(reflect_loc);
 	meshes[3]->SetText(camera_loc);
 	meshes[4]->SetText(tilt_loc);
 	meshes[5]->SetText(purdue_loc);
