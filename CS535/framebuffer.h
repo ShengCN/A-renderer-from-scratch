@@ -23,6 +23,8 @@ public:
 	unsigned int *pix;	// pixel 
 	float *zb;			// z buffer
 	unordered_map<std::string, TextureInfo> textures; // use file name as index
+	unordered_map<std::string, float> texAlpha; // use file name as index
+	bool depthTest;
 	int w, h;
 	V3 L;		// light position, prepare for mulitple light
 

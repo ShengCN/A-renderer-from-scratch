@@ -53,6 +53,7 @@ unsigned int V3::GetColor()
 	return ret;
 }
 
+
 V3 V3::cross(V3 v1)
 {
 	V3 v0 = *this;

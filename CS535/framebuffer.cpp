@@ -21,6 +21,7 @@ FrameBuffer::FrameBuffer(int u0, int v0, int _w, int _h)
 	h = _h;
 	pix = new unsigned int[w * h];
 	zb = new float[w*h];
+	depthTest = true;
 }
 
 
@@ -562,12 +563,14 @@ void FrameBuffer::Draw3DTriangleTexture(PPC* ppc, PointProperty p0, PointPropert
 			{
 				float k = V3(u, v, 1.0f) * qM[1] / (qM.GetColumn(0)*V3(u, u, u) + qM.GetColumn(1)*V3(v, v, v) + qM.GetColumn(2)*V3(1.0f));
 				float l = V3(u, v, 1.0f) * qM[2] / (qM.GetColumn(0)*V3(u, u, u) + qM.GetColumn(1)*V3(v, v, v) + qM.GetColumn(2)*V3(1.0f));
-				float w = qM.GetColumn(0)*V3(u, u, u) + qM.GetColumn(1)*V3(v, v, v) + qM.GetColumn(2)*V3(1.0f);
+				float wv = qM.GetColumn(0)*V3(u, u, u) + qM.GetColumn(1)*V3(v, v, v) + qM.GetColumn(2)*V3(1.0f);
 				V3 st0(p0.s, p0.t, 0.0f), st1(p1.s, p1.t, 0.0f), st2(p2.s, p2.t, 0.0f);
 				
-				if(Visible(u,v,w))
+				if(depthTest && ! Visible(u,v,wv))
+					continue;
+				else
 				{
-					uvP[2] = w;
+					uvP[2] = wv;
 					V3 st = st0 + (st1 - st0)*k + (st2 - st0)*l;
 					V3 pc = p0.c + (p1.c - p0.c)*k + (p2.c - p0.c)*l;
 					V3 pn = p0.n + (p1.n - p0.n)*k + (p2.n - p0.n)*l;
@@ -581,6 +584,13 @@ void FrameBuffer::Draw3DTriangleTexture(PPC* ppc, PointProperty p0, PointPropert
 						color = color + LookupColor(texFile, s, t);
 					}
 
+					// alpha blending 
+					if (texAlpha.find(texFile) != texAlpha.end())
+					{
+						V3 pxC(0.0f);
+						pxC.SetColor(pix[(h - 1 - v)*w + u]);
+						color = color * texAlpha[texFile] + pxC	* (1.0f - texAlpha[texFile]);
+					}
 					DrawPoint(u, v, color.GetColor());
 				}
 			}
@@ -693,7 +703,7 @@ V3 FrameBuffer::Light(PointProperty pp, V3 L, PPC* ppc)
 	float kd = (L - pp.p).UnitVector() * pp.n.UnitVector();
 	float ks = (ppc->C - pp.p).UnitVector() * (L - pp.p).UnitVector().Reflect(pp.n.UnitVector());
 	kd = max(kd, 0.0f);
-	ks = pow(max(ks, 0.0f), 8);
-	ret = pp.c * (ka + (1.0f - ka)*kd) + ks;
+	ks = 0.5f * pow(max(ks, 0.0f), 16);
+	ret = pp.c * (ka + (1.0f - ka)*kd) + pp.c * ks;
 	return ret;
 }

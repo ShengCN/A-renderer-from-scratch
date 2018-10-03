@@ -24,8 +24,8 @@ Scene::Scene(): isRenderAABB(false)
 	int v0 = 20;
 	int w = 640;
 	int h = 480;
-//	int w = 1280;
-//	int h = 720;
+	//	int w = 1280;
+	//	int h = 720;
 	int fovf = 55.0f;
 	fb = new FrameBuffer(u0, v0, w, h);
 	fb->label("SW Framebuffer");
@@ -47,7 +47,7 @@ Scene::Scene(): isRenderAABB(false)
 	PointProperty p2(V3(100.0f, -100.0f, 0.0f), V3(0.0f), V3(0.0f, 0.0f, 1.0f), 1.0f, 1.0f);
 	PointProperty p3(V3(-100.0f, -100.0f, 0.0f), V3(0.0f), V3(0.0f, 0.0f, 1.0f), 0.0f, 1.0f);
 
-	quad0->SetQuad(p0, p1, p2, p3);	// front
+	quad0->SetQuad(p0, p1, p2, p3); // front
 	quad1->SetQuad(p0, p1, p2, p3); // back
 	quad2->SetQuad(p0, p1, p2, p3); // top
 	quad3->SetQuad(p0, p1, p2, p3); // bot
@@ -57,14 +57,14 @@ Scene::Scene(): isRenderAABB(false)
 	p3.t = 3.0f;
 	quad5->SetQuad(p0, p1, p2, p3); // right
 
-	V3 tmC = ppc->C + ppc->GetVD() * 100.0f;
+	V3 tmC = ppc->C + ppc->GetVD() * 50.0f;
 	float cubeLength = 200.0f / quad0->ComputeAABB().GetDiagnoalLength() * 50.0f;
 	float halfCubeLength = 0.5f * cubeLength;
 	quad0->PositionAndSize(tmC, 50.0f);
-	
+
 	quad1->RotateAboutArbitraryAxis(quad1->GetCenter(), V3(0.0f, 1.0f, 0.0f), 180.0f);
-	quad1->PositionAndSize(tmC + V3(0.0f,0.0f,-cubeLength), 50.0f);
-	
+	quad1->PositionAndSize(tmC + V3(0.0f, 0.0f, -cubeLength), 50.0f);
+
 	quad2->RotateAboutArbitraryAxis(quad2->GetCenter(), V3(1.0f, 0.0f, 0.0f), 90.0f);
 	quad2->PositionAndSize(tmC + V3(0.0f, halfCubeLength, -halfCubeLength), 50.0f);
 
@@ -73,16 +73,17 @@ Scene::Scene(): isRenderAABB(false)
 
 	quad4->RotateAboutArbitraryAxis(quad4->GetCenter(), V3(0.0f, 1.0f, 0.0f), -90.0f);
 	quad4->PositionAndSize(tmC + V3(-halfCubeLength, 0.0f, -halfCubeLength), 50.0f);
-	
+
 	quad5->RotateAboutArbitraryAxis(quad5->GetCenter(), V3(0.0f, 1.0f, 0.0f), 90.0f);
 	quad5->PositionAndSize(tmC + V3(halfCubeLength, 0.0f, -halfCubeLength), 50.0f);
 
-	meshes.push_back(quad0);
 	meshes.push_back(quad1);
 	meshes.push_back(quad2);
 	meshes.push_back(quad3);
 	meshes.push_back(quad4);
 	meshes.push_back(quad5);
+	meshes.push_back(quad0);	// alpha
+
 	// Position all the triangle meshes
 	V3 cubeCenter(0.0f);
 	for (int i = 0; i < meshes.size(); ++i)
@@ -104,20 +105,21 @@ Scene::Scene(): isRenderAABB(false)
 	fb->LoadTex(zerotwo_loc);
 	fb->LoadTex(camera_loc);
 	fb->LoadTex(tilt_loc);
-	meshes[0]->SetText(purdue_loc);
+	fb->texAlpha[purdue_loc] = 0.3f;
+	meshes[0]->SetText(zerotwo_loc);
 	meshes[1]->SetText(zerotwo_loc);
 	meshes[2]->SetText(zerotwo_loc);
-	meshes[3]->SetText(zerotwo_loc);
-	meshes[4]->SetText(camera_loc);
-	meshes[5]->SetText(tilt_loc);
+	meshes[3]->SetText(camera_loc);
+	meshes[4]->SetText(tilt_loc);
+	meshes[5]->SetText(purdue_loc);
 
-//	ppc->RevolveH(cubeCenter, 45.0f);
-//	ppc->RevolveV(cubeCenter, 45.0f);
+	//	ppc->RevolveH(cubeCenter, 45.0f);
+	//	ppc->RevolveV(cubeCenter, 45.0f);
 	// ppc->PositionAndOrient(V3(100.0f), cubeCenter, V3(0.0f, 1.0, 0.0f));
 
 
 	// ppc->RevolveH(cubeCenter, 25.0f);
-//	ppc->RevolveV(cubeCenter, -45.0f);
+	//	ppc->RevolveV(cubeCenter, -45.0f);
 	ppc3->C = ppc3->C + V3(330.0f, 150.0f, 300.0f);
 	ppc3->PositionAndOrient(ppc3->C, cubeCenter, V3(0.0f, 1.0f, 0.0f));
 
@@ -132,17 +134,17 @@ void Scene::Render()
 		RenderTexture(ppc, fb);
 	}
 
-	// Third person view rendering
-	if (fb3)
-	{
-		float currf = 40.0f;
-
-		fb3->Clear(0xFFFFFFFF, 0.0f);
-		fb3->DrawPPC(ppc3, ppc, currf);
-		fb->VisualizeCurrView(ppc, currf, ppc3, fb3); // using a 3rd ppc to visualize current ppc
-		fb->VisualizeCurrView3D(ppc, ppc3, fb3); // using a 3rd ppc to visualize current ppc
-		fb3->redraw();
-	}
+	 // Third person view rendering
+	 if (fb3)
+	 {
+	 	float currf = 40.0f;
+ 
+	 	fb3->Clear(0xFFFFFFFF, 0.0f);
+	 	fb3->DrawPPC(ppc3, ppc, currf);
+	 	fb->VisualizeCurrView(ppc, currf, ppc3, fb3); // using a 3rd ppc to visualize current ppc
+	 	fb->VisualizeCurrView3D(ppc, ppc3, fb3); // using a 3rd ppc to visualize current ppc
+	 	fb3->redraw();
+	 }
 }
 
 void Scene::Render(PPC* currPPC, FrameBuffer* currFB)
@@ -152,11 +154,11 @@ void Scene::Render(PPC* currPPC, FrameBuffer* currFB)
 	{
 		currFB->Clear(0xFFFFFFFF, 0.0f);
 		for_each(meshes.begin(), meshes.end(), [&](TM* t)
-	         {
-		         t->RenderFill(currPPC, currFB);
-		         if (isRenderAABB)
-			         t->RenderAABB(currPPC, currFB);
-	         });
+		{
+			t->RenderFill(currPPC, currFB);
+			if (isRenderAABB)
+				t->RenderAABB(currPPC, currFB);
+		});
 		currFB->redraw();
 	}
 }
@@ -169,6 +171,8 @@ void Scene::RenderTexture(PPC* currPPC, FrameBuffer* currFB)
 		currFB->Clear(0xFFFFFFFF, 0.0f);
 		for_each(meshes.begin(), meshes.end(), [&](TM* t)
 		{
+			// if has alpha value
+			fb->depthTest = (fb->texAlpha.find(t->tex) != fb->texAlpha.end()) ? false : true;
 			t->RenderFillTexture(currPPC, currFB);
 			if (isRenderAABB)
 				t->RenderAABB(currPPC, currFB);
@@ -341,41 +345,41 @@ bool Scene::DBGPPC()
 }
 
 void Scene::Demonstration()
-{	
-//	fb->SaveAsTiff("bilinear.tiff");
-//	V3 meshCenter(0.0f);
-//	for(auto m:meshes)
-//	{
-//		meshCenter = meshCenter + m->GetCenter();
-//	}
-//	meshCenter = meshCenter / static_cast<float>(meshes.size());
-//
-//	int stepN = 360;
-//	for(int stepi = 0; stepi <= stepN; stepi ++)
-//	{
-//		ppc->RevolveH(meshCenter, 1.0f);
-//		Render();
-//		Fl::check();
-//	}
+{
+	  V3 meshCenter(0.0f);
+	  for(auto m:meshes)
+	  {
+	  	meshCenter = meshCenter + m->GetCenter();
+	  }
+	  meshCenter = meshCenter / static_cast<float>(meshes.size());
+	 
+	  int stepN = 360;
+	  for(int stepi = 0; stepi <= stepN; stepi ++)
+	  {
+	  	ppc->RevolveH(meshCenter, 1.0f);
+	  	Render();
+	  	Fl::check();
+	  }
 
-	meshes.clear();
-	TM *tm = new TM();
-	tm->LoadModelBin("geometry/teapot57K.bin");
-	V3 tmC = ppc->C + ppc->GetVD()*100.0f;
-	float tmSize = 100.0f;
-	tm->PositionAndSize(tmC, tmSize);
-	meshes.push_back(tm);
-
-	V3 tc = meshes[0]->GetCenter();
-	V3 L = tc + V3(40.0f, 0.0f, 0.0f);
-	for (int i = 0; i < 360; i++) {
-		L = tc + V3(40.0f, 0.0f, 0.0f);
-		L = L.RotateThisPointAboutArbitraryAxis(tc, V3(0.0f, 1.0f, 0.0f), (float)(i * 2));
-		fb->L = L;
-		// Render(ppc,fb);
-		Render();
-		Fl::check();
-	}
+	 // meshes.clear();
+	 // TM* tm = new TM();
+	 // tm->LoadModelBin("geometry/teapot57K.bin");
+	 // V3 tmC = ppc->C + ppc->GetVD() * 100.0f;
+	 // float tmSize = 100.0f;
+	 // tm->PositionAndSize(tmC, tmSize);
+	 // meshes.push_back(tm);
+  //
+	 // V3 tc = meshes[0]->GetCenter();
+	 // V3 L = tc + V3(40.0f, 0.0f, 0.0f);
+	 // for (int i = 0; i < 360; i++)
+	 // {
+	 // 	L = tc + V3(40.0f, 0.0f, 0.0f);
+	 // 	L = L.RotateThisPointAboutArbitraryAxis(tc, V3(0.0f, 1.0f, 0.0f), (float)(i * 2));
+	 // 	fb->L = L;
+	 // 	// Render(ppc,fb);
+	 // 	Render();
+	 // 	Fl::check();
+	 // }
 }
 
 void Scene::InitDemo()
