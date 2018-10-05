@@ -140,8 +140,15 @@ void TM::RenderFill(PPC* ppc, FrameBuffer* fb)
 
 void TM::RenderFillTexture(PPC* ppc, FrameBuffer* fb)
 {
-	// Lod Level
-	// todo
+	// Lod Level, use bbox to estimate how many pixels do we need
+	// Assume square texture
+	auto aabb = ComputeAABB();
+	V3 paabb0(0.0f), paabb1(0.0f);
+	ppc->Project(aabb.corners[0], paabb0);
+	ppc->Project(aabb.corners[1], paabb1);
+	V3 paabbV = paabb1 - paabb0;
+	pixelSz = max(abs(paabbV[0]), abs(paabbV[1]));
+	cerr << "Current LoD: " << log2(pixelSz) << endl;
 
 	for(int ti = 0; ti < trisN; ++ti)
 	{
@@ -152,7 +159,8 @@ void TM::RenderFillTexture(PPC* ppc, FrameBuffer* fb)
 		PointProperty p1(verts[vi1], colors[vi1], V3(0.0f), tcs[vi1 * 2], tcs[vi1 * 2 + 1]);
 		PointProperty p2(verts[vi2], colors[vi2], V3(0.0f), tcs[vi2 * 2], tcs[vi2 * 2 + 1]);
 		
-		fb->Draw3DTriangleTexture(ppc, p0, p1, p2,tex);
+		// According to loD, do trilinear in texture look up
+		fb->Draw3DTriangleTexture(ppc, p0, p1, p2, tex, pixelSz);
 	}
 }
 

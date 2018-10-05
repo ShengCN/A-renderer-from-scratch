@@ -56,7 +56,7 @@ Scene::Scene(): isRenderAABB(false)
 	p3.t = 3.0f;
 	quad5->SetQuad(p0, p1, p2, p3); // right
 
-	V3 tmC = ppc->C + ppc->GetVD() * 50.0f;
+	V3 tmC = ppc->C + ppc->GetVD() * 500.0f;
 	float cubeLength = 200.0f / quad0->ComputeAABB().GetDiagnoalLength() * 50.0f;
 	float halfCubeLength = 0.5f * cubeLength;
 	quad0->PositionAndSize(tmC, 50.0f);
@@ -347,6 +347,7 @@ bool Scene::DBGPPC()
 
 void Scene::Demonstration()
 {
+
 	  V3 meshCenter(0.0f);
 	  for(auto m:meshes)
 	  {
@@ -362,25 +363,25 @@ void Scene::Demonstration()
 	  	Fl::check();
 	  }
 
-	 // meshes.clear();
-	 // TM* tm = new TM();
-	 // tm->LoadModelBin("geometry/teapot57K.bin");
-	 // V3 tmC = ppc->C + ppc->GetVD() * 100.0f;
-	 // float tmSize = 100.0f;
-	 // tm->PositionAndSize(tmC, tmSize);
-	 // meshes.push_back(tm);
-  //
-	 // V3 tc = meshes[0]->GetCenter();
-	 // V3 L = tc + V3(40.0f, 0.0f, 0.0f);
-	 // for (int i = 0; i < 360; i++)
-	 // {
-	 // 	L = tc + V3(40.0f, 0.0f, 0.0f);
-	 // 	L = L.RotateThisPointAboutArbitraryAxis(tc, V3(0.0f, 1.0f, 0.0f), (float)(i * 2));
-	 // 	fb->L = L;
-	 // 	// Render(ppc,fb);
-	 // 	Render();
-	 // 	Fl::check();
-	 // }
+//	  meshes.clear();
+//	  TM* tm = new TM();
+//	  tm->LoadModelBin("geometry/teapot57K.bin");
+//	  V3 tmC = ppc->C + ppc->GetVD() * 100.0f;
+//	  float tmSize = 100.0f;
+//	  tm->PositionAndSize(tmC, tmSize);
+//	  meshes.push_back(tm);
+//  
+//	  V3 tc = meshes[0]->GetCenter();
+//	  V3 L = tc + V3(40.0f, 0.0f, 0.0f);
+//	  for (int i = 0; i < 360; i++)
+//	  {
+//	  	L = tc + V3(40.0f, 0.0f, 0.0f);
+//	  	L = L.RotateThisPointAboutArbitraryAxis(tc, V3(0.0f, 1.0f, 0.0f), (float)(i * 2));
+//	  	fb->L = L;
+//	  	// Render(ppc,fb);
+//	  	Render();
+//	  	Fl::check();
+//	  }
 }
 
 void Scene::InitDemo()

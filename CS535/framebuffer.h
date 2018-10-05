@@ -35,6 +35,7 @@ public:
 	void SetGuarded(int u, int v, unsigned int color);
 	void LoadTiff(const char* fname);
 	void SaveAsTiff(const char* fname);
+	void SaveTextureAsTiff(string fname, const string textureName, int loD);
 	int ClipToScreen(int& u0, int& v0, int& u1, int& v1);
 	int ClipToScreen(float& u0, float& v0, float& u1, float& v1);
 	bool IsInScreen(int u, int v);
@@ -54,12 +55,13 @@ public:
 	void Draw3DPoint(PPC* ppc, V3 p, unsigned int color, int pointSize);
 	void Draw3DTriangle(PPC* ppc, V3 p1, V3 p2, V3 p3, V3 color);
 	void Draw3DTriangle(PPC* ppc, V3 p0, V3 c0, V3 p1, V3 c1, V3 p2, V3 c2);
-	void Draw3DTriangleTexture(PPC *ppc, PointProperty p0, PointProperty p1, PointProperty p2, const std::string texFile, int LoD = 0);
+	void Draw3DTriangleTexture(PPC *ppc, PointProperty p0, PointProperty p1, PointProperty p2, const std::string texFile, int pixelSz = -1);
 	void DrawPPC(PPC* wPPC, PPC* tPPC, float vf);	// visualize target PPC using wPPC
 	void VisualizeCurrView(PPC *ppc0, float currf, PPC *ppc1, FrameBuffer *fb1);
 	void VisualizeCurrView3D(PPC *ppc0, PPC *ppc1, FrameBuffer *fb1); 
 	V3 LookupColor(std::string texFile, float s, float t);
-	V3 LookupColor(std::string texFile, float s, float t, float &alpha);
+	V3 LookupColor(std::string texFile, float s, float t, float &alpha, int pixelSz = -1);
+	V3 BilinearLookupColor(TextureInfo &tex, float s, float t, float &alpha);
 	V3 Light(PointProperty pp, V3 L, PPC *ppc);	// point property, ppc
 
 	// Texture downsampling

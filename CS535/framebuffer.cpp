@@ -66,15 +66,7 @@ void FrameBuffer::KeyboardHandle()
 
 void FrameBuffer::SetBGR(unsigned int bgr)
 {
-	// memset(pix, bgr, sizeof(unsigned int) * w * h);
-
-	for (int u = 0; u < w; ++u)
-	{
-		for (int v = 0; v < h; ++v)
-		{
-			pix[(h - 1 - v)*w + u] = bgr;
-		}
-	}
+	memset(pix, bgr, sizeof(unsigned int) * w * h);
 }
 
 void FrameBuffer::Set(int u, int v, int color)
@@ -173,6 +165,39 @@ void FrameBuffer::SaveAsTiff(const char* fname)
 	TIFFClose(out);
 }
 
+void FrameBuffer::SaveTextureAsTiff(string fname, const string textureName, int loD)
+{
+	if (textures.find(textureName) == textures.end())
+	{
+		cerr << "Cannot find texture: " << textureName << endl;
+		return;
+	}
+
+	auto tex = textures[textureName][loD];
+
+	TIFF* out = TIFFOpen(fname.c_str(), "w");
+	if (out == nullptr)
+	{
+		cerr << fname << " could not be opened" << endl;
+		return;
+	}
+
+	TIFFSetField(out, TIFFTAG_IMAGEWIDTH, tex.w);
+	TIFFSetField(out, TIFFTAG_IMAGELENGTH, tex.h);
+	TIFFSetField(out, TIFFTAG_SAMPLESPERPIXEL, 4);
+	TIFFSetField(out, TIFFTAG_BITSPERSAMPLE, 8);
+	TIFFSetField(out, TIFFTAG_ORIENTATION, ORIENTATION_TOPLEFT);
+	TIFFSetField(out, TIFFTAG_PLANARCONFIG, PLANARCONFIG_CONTIG);
+	TIFFSetField(out, TIFFTAG_PHOTOMETRIC, PHOTOMETRIC_RGB);
+
+	for (uint32 row = 0; row < (unsigned int)tex.h; row++)
+	{
+		TIFFWriteScanline(out, &tex.texture[(tex.h - row - 1) * tex.w], row);
+	}
+
+	TIFFClose(out);
+}
+
 int FrameBuffer::ClipToScreen(int& u0, int& v0, int& u1, int& v1)
 {
 	// Out of screen 
@@ -216,14 +241,7 @@ bool FrameBuffer::IsInScreen(int u, int v)
 void FrameBuffer::Clear(unsigned bgr, float z0)
 {
 	SetBGR(bgr);
-	// memset(zb, 0, sizeof(float) * w * h);
-	for(int u = 0; u < w; ++u)
-	{
-		for(int v = 0; v < h; ++v)
-		{
-			zb[(h - 1 - v)*w + u] = 0.0f;
-		}
-	}
+	memset(zb, 0, sizeof(float) * w * h);
 }
 
 bool FrameBuffer::Visible(int u, int v, float curz)
@@ -531,7 +549,7 @@ void FrameBuffer::Draw3DTriangle(PPC* ppc, V3 p0, V3 c0, V3 p1, V3 c1, V3 p2, V3
 	}
 }
 
-void FrameBuffer::Draw3DTriangleTexture(PPC* ppc, PointProperty p0, PointProperty p1, PointProperty p2, const std::string texFile, int LoD)
+void FrameBuffer::Draw3DTriangleTexture(PPC* ppc, PointProperty p0, PointProperty p1, PointProperty p2, const std::string texFile, int pixelSz)
 {
 	V3 pp0, pp1, pp2;
 	if (!ppc->Project(p0.p, pp0))
@@ -583,16 +601,21 @@ void FrameBuffer::Draw3DTriangleTexture(PPC* ppc, PointProperty p0, PointPropert
 					V3 st = st0 + (st1 - st0)*k + (st2 - st0)*l;
 					V3 pc = p0.c + (p1.c - p0.c)*k + (p2.c - p0.c)*l;
 					V3 pn = p0.n + (p1.n - p0.n)*k + (p2.n - p0.n)*l;
-					PointProperty pointProperty(ppc->Unproject(uvP),pc,pn,st[0],st[1]);
-					V3 color = Light(pointProperty,L,ppc);
+					V3 color(0.0f);
 					float alpha = 1.0f;
-					if(textures.find(texFile) != textures.end())
+					if (textures.find(texFile) != textures.end())
 					{
 						// s and t in (0.0f,1.0f)
-						float s = Clamp(Fract(st[0]),0.0f,1.0f);
-						float t = Clamp(Fract(st[1]),0.0f,1.0f);
-						color = color + LookupColor(texFile, s, t, alpha);
+						float s = Clamp(Fract(st[0]), 0.0f, 1.0f);
+						float t = Clamp(Fract(st[1]), 0.0f, 1.0f);
+						color = LookupColor(texFile, s, t, alpha, pixelSz);
 					}
+					else
+						color = pc;
+
+					// Do lighting after texture mapping
+					PointProperty pointProperty(ppc->Unproject(uvP), color, pn, st[0], st[1]);
+					color = Light(pointProperty, L, ppc);
 
 					// alpha blending 
 					if (!FloatEqual(1.0f,alpha))
@@ -706,7 +729,7 @@ V3 FrameBuffer::LookupColor(std::string texFile, float s, float t)
 	return c0 *(1.0f - intpS)*(1.0f - intpT) + c1 *intpS * (1.0f - intpT) + c2 *(1.0f - intpS)*intpT + c3 * intpS *intpT;
 }
 
-V3 FrameBuffer::LookupColor(std::string texFile, float s, float t, float &alpha)
+V3 FrameBuffer::LookupColor(std::string texFile, float s, float t, float &alpha, int pixelSz)
 {
 	if (textures.find(texFile) == textures.end())
 	{
@@ -714,8 +737,34 @@ V3 FrameBuffer::LookupColor(std::string texFile, float s, float t, float &alpha)
 		return V3(0.0f);
 	}
 
+	// Default, look up highest quality texture
+	int maxLoD = static_cast<int>(textures[texFile].size() - 1);
+	int curLoD = 0, nextLoD = 0;
+	if(pixelSz == -1)
+	{
+		curLoD = maxLoD;
+		nextLoD = min(curLoD + 1, maxLoD);
+	}
+	else
+	{
+		curLoD = static_cast<int>(log2(pixelSz));
+		nextLoD = min(curLoD + 1, maxLoD);
+	}
 
-	int texW = textures[texFile][0].w, texH = textures[texFile][0].h;
+	// corner case
+	if(nextLoD == curLoD)
+		return BilinearLookupColor(textures[texFile][curLoD], s, t, alpha);
+
+
+	V3 c0 = BilinearLookupColor(textures[texFile][curLoD], s, t, alpha);
+	V3 c1 = BilinearLookupColor(textures[texFile][nextLoD], s, t, alpha);
+	float fract = static_cast<float>(log2(pixelSz) - curLoD);
+	return c0 * (1.0f - fract) + c1 * fract;
+}
+
+V3 FrameBuffer::BilinearLookupColor(TextureInfo &tex, float s, float t, float& alpha)
+{
+	int texW = tex.w, texH = tex.h;
 	float textS = s * static_cast<float>(texW - 1);
 	float textT = t * static_cast<float>(texH - 1);
 
@@ -730,10 +779,10 @@ V3 FrameBuffer::LookupColor(std::string texFile, float s, float t, float &alpha)
 	int u0 = max(0, static_cast<int>(textS - 0.5f)), v0 = max(0, static_cast<int>(textT - 0.5f));
 	int u1 = min(texW - 1, static_cast<int>(textS + 0.5f)), v1 = min(texH, static_cast<int>(textT + 0.5f));
 
-	unsigned int ori0 = textures[texFile][0].texture[(texH - 1 - v0)*texW + u0];
-	unsigned int ori1 = textures[texFile][0].texture[(texH - 1 - v0)*texW + u0];
-	unsigned int ori2 = textures[texFile][0].texture[(texH - 1 - v0)*texW + u0];
-	unsigned int ori3 = textures[texFile][0].texture[(texH - 1 - v0)*texW + u0];
+	unsigned int ori0 = tex.texture[(texH - 1 - v0)*texW + u0];
+	unsigned int ori1 = tex.texture[(texH - 1 - v0)*texW + u0];
+	unsigned int ori2 = tex.texture[(texH - 1 - v0)*texW + u0];
+	unsigned int ori3 = tex.texture[(texH - 1 - v0)*texW + u0];
 	V3 c0, c1, c2, c3;
 	c0.SetColor(ori0);
 	c1.SetColor(ori1);
@@ -765,7 +814,7 @@ V3 FrameBuffer::LookupColor(std::string texFile, float s, float t, float &alpha)
 V3 FrameBuffer::Light(PointProperty pp, V3 L, PPC* ppc)
 {
 	V3 ret(0.0f);
-	float ka = 0.5f;
+	float ka = 0.7f;
 	float kd = (L - pp.p).UnitVector() * pp.n.UnitVector();
 	float ks = (ppc->C - pp.p).UnitVector() * (L - pp.p).UnitVector().Reflect(pp.n.UnitVector());
 	kd = max(kd, 0.0f);
@@ -782,10 +831,16 @@ void FrameBuffer::PrepareTextureLoD(string texFile)
 	// continue downsampling to logn = 1
 	// Assumption: square image
 	auto curTex = textures[texFile][0];
-	int count = 0;
-	while(curTex.w > 0)
+	int loDMax = static_cast<int>(log2(curTex.w)), curLoD = loDMax;
+	textures[texFile].clear();
+	textures[texFile].resize(loDMax + 1);
+	textures[texFile][curLoD] = curTex;
+	string texSaveName = texFile + to_string(curLoD) + ".tiff";
+	// See the Lod Preprocess result
+	SaveTextureAsTiff(texSaveName, texFile, curLoD);
+	while(curTex.w >= 2)
 	{
-		int nextW = curTex.w / 2;
+		int nextW = curTex.w / 2, newLoD = curLoD - 1;
 		TextureInfo newTex;
 		newTex.w = nextW;
 		newTex.h = nextW;
@@ -819,8 +874,12 @@ void FrameBuffer::PrepareTextureLoD(string texFile)
 		}
 
 		// Commit result and Update current
-		textures[texFile].push_back(newTex);
-		curTex = textures[texFile][++count];
-		cerr << "Current tex: " << texFile << " While count: " << count << endl;
+		textures[texFile][newLoD] = newTex;
+		curTex = newTex;
+		curLoD = newLoD;
+		string texSaveName = texFile + to_string(newLoD) + ".tiff";
+		// See the Lod Preprocess result
+		SaveTextureAsTiff(texSaveName, texFile, newLoD);
+		cerr << "Current tex: " << texFile << " While count: " << newLoD << endl;
 	}
 }

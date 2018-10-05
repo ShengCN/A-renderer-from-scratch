@@ -21,8 +21,9 @@ public:
 	vector<unsigned int>  tris;		// indices
 	int vertsN, trisN;
 	std::string tex;
+	int pixelSz;		// approximate projected aabb size
 
-	TM() :vertsN(0), trisN(0){};
+	TM() :vertsN(0), trisN(0), pixelSz(0) {};
 	void SetRectangle(V3 O, float rw, float rh);
 	void SetTriangle(PointProperty p0, PointProperty p1, PointProperty p2);
 	void SetQuad(PointProperty p0, PointProperty p1, PointProperty p2, PointProperty p3);
