@@ -768,7 +768,7 @@ V3 FrameBuffer::BilinearLookupColor(TextureInfo &tex, float s, float t, float& a
 	float textS = s * static_cast<float>(texW - 1);
 	float textT = t * static_cast<float>(texH - 1);
 
-//	// nearest
+	// nearest
 //	int u = int(textS);
 //	int v = int(textT);
 //	V3 c;

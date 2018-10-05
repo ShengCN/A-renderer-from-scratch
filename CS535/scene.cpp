@@ -96,7 +96,7 @@ Scene::Scene(): isRenderAABB(false)
 	fb->L = L;
 
 	// Textures
-	string purdue_loc = "images/purdue.tiff";
+	string purdue_loc = "images/texture_filtering.tiff";
 	string zerotwo_loc = "images/02.tiff";
 	string camera_loc = "images/camera.tiff";
 	string reflect_loc = "images/Reflection.tiff";
@@ -347,7 +347,7 @@ bool Scene::DBGPPC()
 
 void Scene::Demonstration()
 {
-	fb->SaveAsTiff("images/trilinear.tiff");
+	fb->SaveAsTiff("images/bilinear.tiff");
 
 	V3 meshCenter(0.0f);
 	for (auto m : meshes)
