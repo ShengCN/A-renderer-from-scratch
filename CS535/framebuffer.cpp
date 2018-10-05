@@ -768,11 +768,11 @@ V3 FrameBuffer::BilinearLookupColor(TextureInfo &tex, float s, float t, float& a
 	float textS = s * static_cast<float>(texW - 1);
 	float textT = t * static_cast<float>(texH - 1);
 
-	// nearest
+//	// nearest
 //	int u = int(textS);
 //	int v = int(textT);
 //	V3 c;
-//	c.SetColor(textures[texFile].texture[(texH - 1 - v)*texW + u]);
+//	c.SetColor(tex.texture[(texH - 1 - v)*texW + u]);
 //	return c;
 
 	// corner case
@@ -780,9 +780,9 @@ V3 FrameBuffer::BilinearLookupColor(TextureInfo &tex, float s, float t, float& a
 	int u1 = min(texW - 1, static_cast<int>(textS + 0.5f)), v1 = min(texH, static_cast<int>(textT + 0.5f));
 
 	unsigned int ori0 = tex.texture[(texH - 1 - v0)*texW + u0];
-	unsigned int ori1 = tex.texture[(texH - 1 - v0)*texW + u0];
-	unsigned int ori2 = tex.texture[(texH - 1 - v0)*texW + u0];
-	unsigned int ori3 = tex.texture[(texH - 1 - v0)*texW + u0];
+	unsigned int ori1 = tex.texture[(texH - 1 - v0)*texW + u1];
+	unsigned int ori2 = tex.texture[(texH - 1 - v1)*texW + u0];
+	unsigned int ori3 = tex.texture[(texH - 1 - v1)*texW + u1];
 	V3 c0, c1, c2, c3;
 	c0.SetColor(ori0);
 	c1.SetColor(ori1);
