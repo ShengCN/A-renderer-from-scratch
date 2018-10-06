@@ -15,3 +15,8 @@ float Rad2Deg(float rad)
 {
 	return rad / PI * 180.0f;
 }
+
+float Fract(float n)
+{
+	return n - static_cast<int>(n);
+}

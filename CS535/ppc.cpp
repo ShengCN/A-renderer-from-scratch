@@ -109,8 +109,18 @@ void PPC::RevolveH(V3 p, float theta)
 void PPC::RevolveV(V3 p, float theta)
 {
 	V3 rC = C.RotateThisPointAboutArbitraryAxis(p, V3(1.0f, 0.0f, 0.0f), theta);
+	
+	V3 newa, newb, newc;
+	V3 newvd = (p - rC).UnitVector();
+	float f = GetFocal();
+	newb = (newvd ^ V3(1.0f, 0.0f, 0.0f)).UnitVector() * b.Length();
+	newa = (newb ^ newvd).UnitVector() * a.Length();
+	newc = (newvd * f) - newa * static_cast<float>(w) / 2.0f - newb * static_cast<float>(h) / 2.0f;
 
-	PositionAndOrient(rC, p, V3(0.0f, 1.0f, 0.0f));
+	a = newa;
+	b = newb;
+	c = newc;
+	C = rC;
 }
 
 void PPC::PositionAndOrient(V3 newC, V3 lap, V3 up)

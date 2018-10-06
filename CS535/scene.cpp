@@ -96,9 +96,9 @@ Scene::Scene(): isRenderAABB(false)
 	fb->L = L;
 
 	// Textures
-	string purdue_loc = "images/texture_filtering.tiff";
+	string purdue_loc = "images/purdue.tiff";
 	string zerotwo_loc = "images/02.tiff";
-	string camera_loc = "images/camera.tiff";
+	string camera_loc = "images/complex.tiff";
 	string reflect_loc = "images/Reflection.tiff";
 	string sky_loc = "images/sky.tiff";
 	string tilt_loc = "images/tilt.tiff";
@@ -347,8 +347,6 @@ bool Scene::DBGPPC()
 
 void Scene::Demonstration()
 {
-	fb->SaveAsTiff("images/bilinear.tiff");
-
 	V3 meshCenter(0.0f);
 	for (auto m : meshes)
 	{
@@ -356,33 +354,35 @@ void Scene::Demonstration()
 	}
 	meshCenter = meshCenter / static_cast<float>(meshes.size());
 
+	int count = 0;
 	int stepN = 360;
-	for (int stepi = 0; stepi <= stepN; stepi ++)
+	for (int stepi = 0; stepi < stepN; stepi ++)
 	{
-		ppc->RevolveH(meshCenter, 1.0f);
+		//string fname = "images/demo-" + to_string(count++) + ".tiff";
+		char csName[50];
+		sprintf(csName, "images/demo-%03d.tiff", stepi);
+		string fname(csName);
+		fb->SaveAsTiff(fname.c_str());
+		ppc->RevolveV(meshCenter, 1.0f);
+		auto ppcvd = ppc->GetVD().UnitVector() * 2.0f;
+		ppc->Translate(V3(0.0f) - ppcvd);
 		Render();
 		Fl::check();
 	}
 
-	//	  meshes.clear();
-	//	  TM* tm = new TM();
-	//	  tm->LoadModelBin("geometry/teapot57K.bin");
-	//	  V3 tmC = ppc->C + ppc->GetVD() * 100.0f;
-	//	  float tmSize = 100.0f;
-	//	  tm->PositionAndSize(tmC, tmSize);
-	//	  meshes.push_back(tm);
-	//  
-	//	  V3 tc = meshes[0]->GetCenter();
-	//	  V3 L = tc + V3(40.0f, 0.0f, 0.0f);
-	//	  for (int i = 0; i < 360; i++)
-	//	  {
-	//	  	L = tc + V3(40.0f, 0.0f, 0.0f);
-	//	  	L = L.RotateThisPointAboutArbitraryAxis(tc, V3(0.0f, 1.0f, 0.0f), (float)(i * 2));
-	//	  	fb->L = L;
-	//	  	// Render(ppc,fb);
-	//	  	Render();
-	//	  	Fl::check();
-	//	  }
+	for (int stepi = 0; stepi < stepN; stepi++)
+	{
+		char csName[50];
+		sprintf(csName, "images/demo-%03d.tiff", 360 + stepi);
+		string fname(csName);
+
+		fb->SaveAsTiff(fname.c_str());
+		ppc->RevolveH(meshCenter, 1.0f);
+		auto ppcvd = ppc->GetVD().UnitVector() * 2.0f;
+		ppc->Translate(ppcvd);
+		Render();
+		Fl::check();
+	}
 }
 
 void Scene::InitDemo()

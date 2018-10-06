@@ -92,11 +92,6 @@ bool FrameBuffer::InsideTriangle(V3 p, V3 v1, V3 v2, V3 v3)
 	return res1 * res2 >= 0.0f ? true : false;
 }
 
-float FrameBuffer::Fract(float n)
-{
-	return n - static_cast<int>(n);
-}
-
 void FrameBuffer::SetGuarded(int u, int v, unsigned int color)
 {
 	// clip to window 
@@ -613,7 +608,7 @@ void FrameBuffer::Draw3DTriangleTexture(PPC* ppc, PointProperty p0, PointPropert
 					else
 						color = pc;
 
-					// Do lighting after texture mapping
+					// Per pixel lighting after texture mapping
 					PointProperty pointProperty(ppc->Unproject(uvP), color, pn, st[0], st[1]);
 					color = Light(pointProperty, L, ppc);
 
@@ -747,15 +742,18 @@ V3 FrameBuffer::LookupColor(std::string texFile, float s, float t, float &alpha,
 	}
 	else
 	{
-		curLoD = static_cast<int>(log2(pixelSz));
+		// deal with pixelSz == 0
+		curLoD = Clamp(static_cast<int>(log2(pixelSz)),1,maxLoD);
 		nextLoD = min(curLoD + 1, maxLoD);
 	}
+
+	// Debug
+	//cerr << "Selected LoD: " << curLoD << "\t" << nextLoD << endl;
 
 	// corner case
 	if(nextLoD == curLoD)
 		return BilinearLookupColor(textures[texFile][curLoD], s, t, alpha);
-
-
+	
 	V3 c0 = BilinearLookupColor(textures[texFile][curLoD], s, t, alpha);
 	V3 c1 = BilinearLookupColor(textures[texFile][nextLoD], s, t, alpha);
 	float fract = static_cast<float>(log2(pixelSz) - curLoD);
@@ -818,7 +816,7 @@ V3 FrameBuffer::Light(PointProperty pp, V3 L, PPC* ppc)
 	float kd = (L - pp.p).UnitVector() * pp.n.UnitVector();
 	float ks = (ppc->C - pp.p).UnitVector() * (L - pp.p).UnitVector().Reflect(pp.n.UnitVector());
 	kd = max(kd, 0.0f);
-	ks = 0.5f * pow(max(ks, 0.0f), 16);
+	ks = 0.6f * pow(max(ks, 0.0f), 16);
 	ret = pp.c * (ka + (1.0f - ka)*kd + ks);
 	return ret;
 }

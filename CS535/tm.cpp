@@ -1,6 +1,9 @@
-#include "TM.h"
 #include <fstream>
 #include <algorithm>
+
+#include "TM.h"
+#include "MathTool.h"
+
 using namespace std;
 
 void TM::SetRectangle(V3 O, float rw, float rh)
@@ -148,6 +151,7 @@ void TM::RenderFillTexture(PPC* ppc, FrameBuffer* fb)
 	ppc->Project(aabb.corners[1], paabb1);
 	V3 paabbV = paabb1 - paabb0;
 	pixelSz = max(abs(paabbV[0]), abs(paabbV[1]));
+	pixelSz = Clamp(pixelSz, 0, fb->w);
 	cerr << "Current LoD: " << log2(pixelSz) << endl;
 
 	for(int ti = 0; ti < trisN; ++ti)
