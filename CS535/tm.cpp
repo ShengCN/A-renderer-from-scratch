@@ -152,19 +152,28 @@ void TM::RenderFillTexture(PPC* ppc, FrameBuffer* fb)
 	V3 paabbV = paabb1 - paabb0;
 	pixelSz = max(abs(paabbV[0]), abs(paabbV[1]));
 	pixelSz = Clamp(pixelSz, 0, fb->w);
-	cerr << "Current LoD: " << log2(pixelSz) << endl;
+	// cerr << "Current LoD: " << log2(pixelSz) << endl;
 
-	for(int ti = 0; ti < trisN; ++ti)
+	if (tcs.size() == verts.size() * 2)
 	{
-		int vi0 = tris[ti * 3 + 0];
-		int vi1 = tris[ti * 3 + 1];
-		int vi2 = tris[ti * 3 + 2];
-		PointProperty p0(verts[vi0], colors[vi0], V3(0.0f), tcs[vi0 * 2], tcs[vi0 * 2 + 1]);
-		PointProperty p1(verts[vi1], colors[vi1], V3(0.0f), tcs[vi1 * 2], tcs[vi1 * 2 + 1]);
-		PointProperty p2(verts[vi2], colors[vi2], V3(0.0f), tcs[vi2 * 2], tcs[vi2 * 2 + 1]);
-		
-		// According to loD, do trilinear in texture look up
-		fb->Draw3DTriangleTexture(ppc, p0, p1, p2, tex, pixelSz);
+		for (int ti = 0; ti < trisN; ++ti)
+		{
+			int vi0 = tris[ti * 3 + 0];
+			int vi1 = tris[ti * 3 + 1];
+			int vi2 = tris[ti * 3 + 2];
+
+			PointProperty p0(verts[vi0], colors[vi0], V3(0.0f), tcs[vi0 * 2], tcs[vi0 * 2 + 1]);
+			PointProperty p1(verts[vi1], colors[vi1], V3(0.0f), tcs[vi1 * 2], tcs[vi1 * 2 + 1]);
+			PointProperty p2(verts[vi2], colors[vi2], V3(0.0f), tcs[vi2 * 2], tcs[vi2 * 2 + 1]);
+
+			// According to loD, do trilinear in texture look up
+			fb->Draw3DTriangleTexture(ppc, p0, p1, p2, tex, pixelSz);
+		}
+	}
+	else
+	{
+		// no texture
+		RenderFill(ppc, fb);
 	}
 }
 

@@ -1,12 +1,13 @@
-#include "framebuffer.h"
-#include "math.h"
 #include <iostream>
 #include <algorithm>
 #include <fstream>
 #include "scene.h"
-#include "v3.h"
 #include <iostream>
+#include <algorithm>
 
+#include "framebuffer.h"
+#include "math.h"
+#include "v3.h"
 #include "tiffio.h"
 #include "AABB.h"
 #include "MathTool.h"
@@ -58,6 +59,33 @@ void FrameBuffer::KeyboardHandle()
 			cerr << "INFO: pressed ," << endl;
 			break;
 		}
+	case 'w':
+		{
+
+		break;
+		}
+	case 'a':
+	{
+		break;
+	}
+	case 's':
+	{
+		break;
+	}
+	case 'd':
+	{
+		break;
+	}
+	case 'j':
+	{
+		// RevolveH 
+		break;
+	}
+	case 'k':
+	{
+		// RevolveV
+		break;
+	}
 	default:
 		cerr << "INFO: do not understand keypress" << endl;
 	}
@@ -816,7 +844,7 @@ V3 FrameBuffer::Light(PointProperty pp, V3 L, PPC* ppc)
 	float kd = (L - pp.p).UnitVector() * pp.n.UnitVector();
 	float ks = (ppc->C - pp.p).UnitVector() * (L - pp.p).UnitVector().Reflect(pp.n.UnitVector());
 	kd = max(kd, 0.0f);
-	ks = 0.6f * pow(max(ks, 0.0f), 16);
+	ks = 0.3f * pow(max(ks, 0.0f), 32);
 	ret = pp.c * (ka + (1.0f - ka)*kd + ks);
 	return ret;
 }

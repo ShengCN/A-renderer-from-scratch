@@ -40,91 +40,28 @@ Scene::Scene(): isRenderAABB(false)
 
 	gui->uiw->position(u0, v0 + fb->h + 60);
 
-	TM *quad0 = new TM(), *quad1 = new TM(), *quad2 = new TM(), *quad3 = new TM(), *quad4 = new TM(), *quad5 = new TM();
-	PointProperty p0(V3(-100.0f, 100.0f, 0.0f), V3(0.0f), V3(0.0f, 0.0f, 1.0f), 0.0f, 0.0f);
-	PointProperty p1(V3(100.0f, 100.0f, 0.0f), V3(0.0f), V3(0.0f, 0.0f, 1.0f), 1.0f, 0.0f);
-	PointProperty p2(V3(100.0f, -100.0f, 0.0f), V3(0.0f), V3(0.0f, 0.0f, 1.0f), 1.0f, 1.0f);
-	PointProperty p3(V3(-100.0f, -100.0f, 0.0f), V3(0.0f), V3(0.0f, 0.0f, 1.0f), 0.0f, 1.0f);
+	// Ground Quad
+	float groundSz = 1000.0f;
+	V3 y(0.0f, 1.0f, 0.0f), gColor(0.0f);
+	V3 p0(-groundSz, 0.0f, -groundSz), p1(-groundSz, 0.0f, groundSz), p2(groundSz, 0.0f, groundSz), p3(groundSz, 0.0f, -groundSz);
+	PointProperty pp0(p0, gColor, y, 0.0f, 0.0f), pp1(p1, gColor, y, 0.0f, 1.0f), pp2(p2, gColor, y, 1.0f, 1.0f), pp3(p3, gColor, y, 1.0f, 0.0f);
 
-	quad0->SetQuad(p0, p1, p2, p3); // front
-	quad1->SetQuad(p0, p1, p2, p3); // back
-	quad2->SetQuad(p0, p1, p2, p3); // top
-	quad3->SetQuad(p0, p1, p2, p3); // bot
-	quad4->SetQuad(p0, p1, p2, p3); // left
-	p1.s = 3.0f;
-	p2.s = p2.t = 3.0f;
-	p3.t = 3.0f;
-	quad5->SetQuad(p0, p1, p2, p3); // right
+	TM *audi = new TM();
+	TM *ground = new TM();
+	ground->SetQuad(pp0, pp1, pp2, pp3);
+	audi->LoadModelBin("./geometry/bunny.bin");
+	V3 tmC = ppc->C + ppc->GetVD() * 100.0f;
+	audi->PositionAndSize(tmC, 50.0f);
+	meshes.push_back(audi);
+	meshes.push_back(ground);
 
-	V3 tmC = ppc->C + ppc->GetVD() * 50.0f;
-	float cubeLength = 200.0f / quad0->ComputeAABB().GetDiagnoalLength() * 50.0f;
-	float halfCubeLength = 0.5f * cubeLength;
-	quad0->PositionAndSize(tmC, 50.0f);
-
-	quad1->RotateAboutArbitraryAxis(quad1->GetCenter(), V3(0.0f, 1.0f, 0.0f), 180.0f);
-	quad1->PositionAndSize(tmC + V3(0.0f, 0.0f, -cubeLength), 50.0f);
-
-	quad2->RotateAboutArbitraryAxis(quad2->GetCenter(), V3(1.0f, 0.0f, 0.0f), 90.0f);
-	quad2->PositionAndSize(tmC + V3(0.0f, halfCubeLength, -halfCubeLength), 50.0f);
-
-	quad3->RotateAboutArbitraryAxis(quad3->GetCenter(), V3(1.0f, 0.0f, 0.0f), -90.0f);
-	quad3->PositionAndSize(tmC + V3(0.0f, -halfCubeLength, -halfCubeLength), 50.0f);
-
-	quad4->RotateAboutArbitraryAxis(quad4->GetCenter(), V3(0.0f, 1.0f, 0.0f), -90.0f);
-	quad4->PositionAndSize(tmC + V3(-halfCubeLength, 0.0f, -halfCubeLength), 50.0f);
-
-	quad5->RotateAboutArbitraryAxis(quad5->GetCenter(), V3(0.0f, 1.0f, 0.0f), 90.0f);
-	quad5->PositionAndSize(tmC + V3(halfCubeLength, 0.0f, -halfCubeLength), 50.0f);
-
-	meshes.push_back(quad1);
-	meshes.push_back(quad2);
-	meshes.push_back(quad3);
-	meshes.push_back(quad4);
-	meshes.push_back(quad5);
-	meshes.push_back(quad0); // alpha purdue
-
-	// Position all the triangle meshes
-	V3 cubeCenter(0.0f);
-	for (int i = 0; i < meshes.size(); ++i)
-	{
-		cubeCenter = cubeCenter + meshes[i]->GetCenter();
-	}
-	cubeCenter = cubeCenter / static_cast<float>(meshes.size());
-
-	// Lights
-	V3 L = cubeCenter + V3(40.0f, 0.0f, 0.0f);
-	fb->L = L;
-
-	// Textures
-	string purdue_loc = "images/purdue.tiff";
-	string zerotwo_loc = "images/02.tiff";
-	string camera_loc = "images/complex.tiff";
-	string reflect_loc = "images/Reflection.tiff";
-	string sky_loc = "images/sky.tiff";
-	string tilt_loc = "images/tilt.tiff";
-	fb->LoadTex(purdue_loc);
-	fb->LoadTex(zerotwo_loc);
-	fb->LoadTex(camera_loc);
-	fb->LoadTex(tilt_loc);
-	fb->LoadTex(sky_loc);
-	fb->LoadTex(reflect_loc);
-
-	meshes[0]->SetText(zerotwo_loc);
-	meshes[1]->SetText(sky_loc);
-	meshes[2]->SetText(reflect_loc);
-	meshes[3]->SetText(camera_loc);
-	meshes[4]->SetText(tilt_loc);
-	meshes[5]->SetText(purdue_loc);
-
-	//	ppc->RevolveH(cubeCenter, 45.0f);
-	//	ppc->RevolveV(cubeCenter, 45.0f);
-	// ppc->PositionAndOrient(V3(100.0f), cubeCenter, V3(0.0f, 1.0, 0.0f));
-
-
-	// ppc->RevolveH(cubeCenter, 25.0f);
-	//	ppc->RevolveV(cubeCenter, -45.0f);
 	ppc3->C = ppc3->C + V3(330.0f, 150.0f, 300.0f);
-	ppc3->PositionAndOrient(ppc3->C, cubeCenter, V3(0.0f, 1.0f, 0.0f));
+	ppc3->PositionAndOrient(ppc3->C, audi->GetCenter(), V3(0.0f, 1.0f, 0.0f));
+
+	// Lighting
+	V3 L = audi->GetCenter() + V3(40.0f, 0.0f, 0.0f);
+	fb->L = L;
+	fb3->L = L;
 
 	Render();
 	// RenderWireFrame();
@@ -347,39 +284,16 @@ bool Scene::DBGPPC()
 
 void Scene::Demonstration()
 {
-	V3 meshCenter(0.0f);
-	for (auto m : meshes)
-	{
-		meshCenter = meshCenter + m->GetCenter();
-	}
-	meshCenter = meshCenter / static_cast<float>(meshes.size());
-
 	int count = 0;
 	int stepN = 360;
 	for (int stepi = 0; stepi < stepN; stepi ++)
 	{
 		//string fname = "images/demo-" + to_string(count++) + ".tiff";
 		char csName[50];
-		sprintf(csName, "images/demo-%03d.tiff", stepi);
+		sprintf_s(csName, "images/demo-%03d.tiff", stepi);
 		string fname(csName);
-		fb->SaveAsTiff(fname.c_str());
-		ppc->RevolveV(meshCenter, 1.0f);
-		auto ppcvd = ppc->GetVD().UnitVector() * 2.0f;
-		ppc->Translate(V3(0.0f) - ppcvd);
-		Render();
-		Fl::check();
-	}
-
-	for (int stepi = 0; stepi < stepN; stepi++)
-	{
-		char csName[50];
-		sprintf(csName, "images/demo-%03d.tiff", 360 + stepi);
-		string fname(csName);
-
-		fb->SaveAsTiff(fname.c_str());
-		ppc->RevolveH(meshCenter, 1.0f);
-		auto ppcvd = ppc->GetVD().UnitVector() * 2.0f;
-		ppc->Translate(ppcvd);
+// 		fb->SaveAsTiff(fname.c_str());
+		ppc->RevolveH(meshes[0]->GetCenter(), 1.0f);
 		Render();
 		Fl::check();
 	}
