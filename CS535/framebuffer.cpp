@@ -4,9 +4,9 @@
 #include "scene.h"
 #include <iostream>
 #include <algorithm>
+#include <cmath>
 
 #include "framebuffer.h"
-#include "math.h"
 #include "v3.h"
 #include "tiffio.h"
 #include "AABB.h"
@@ -637,14 +637,7 @@ void FrameBuffer::Draw3DTriangleTexture(PPC* ppc, PointProperty p0, PointPropert
 
 				// Per pixel lighting after texture mapping
 				PointProperty pointProperty(ppc->Unproject(uvP), color, pn, st[0], st[1]);
-				V3 lightColor(0.0f);
-				// intergral all the lights results
-				for (auto l : Ls)
-				{
-					lightColor = lightColor + Light(pointProperty, l, ppc);
-				}
-
-				color = lightColor;
+				color = Light(pointProperty,Ls,ppc);
 
 				// alpha blending 
 				if (!FloatEqual(1.0f, alpha))
@@ -854,6 +847,28 @@ V3 FrameBuffer::Light(PointProperty pp, V3 L, PPC* ppc)
 	float kd = max((L - pp.p).UnitVector() * pp.n.UnitVector(), 0.0f);
 	float ks = (ppc->C - pp.p).UnitVector() * (L - pp.p).UnitVector().Reflect(pp.n.UnitVector());
 	ks = 0.5f * pow(max(ks, 0.0f), 32);
+	ret = pp.c * (ka + (1.0f - ka) * kd) + ks;
+	return ret;
+}
+
+V3 FrameBuffer::Light(PointProperty pp, std::vector<V3> Ls, PPC* ppc)
+{
+	V3 ret(0.0f);
+	float ka = 0.2f;
+
+	// iterate all lights diffuse and specular
+	float kd = 0.0f, ks = 0.0f;
+	for(auto l:Ls)
+	{
+		kd += max((l - pp.p).UnitVector() * pp.n.UnitVector(), 0.0f);
+		float tks = (ppc->C - pp.p).UnitVector() * (l - pp.p).UnitVector().Reflect(pp.n.UnitVector());
+		ks += 0.5f * pow(max(tks, 0.0f), 32);
+	}
+
+	ka = std::clamp(ka, 0.0f, 1.0f);
+	kd = std::clamp(kd, 0.0f, 1.0f);
+	ks = std::clamp(ks, 0.0f, 1.0f);
+
 	ret = pp.c * (ka + (1.0f - ka) * kd) + ks;
 	return ret;
 }

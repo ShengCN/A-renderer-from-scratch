@@ -42,10 +42,10 @@ Scene::Scene(): isRenderAABB(false)
 
 	// Ground Quad
 	TM *auditorium = new TM();
-	auditorium->LoadModelBin("./geometry/auditorium.bin");
+	auditorium->LoadModelBin("./geometry/bunny.bin");
 
 	float obsz = 30.0f;
-	V3 tmC = ppc->C + ppc->GetVD() * 10.0f;
+	V3 tmC = ppc->C + ppc->GetVD() * 100.0f;
 	auditorium->PositionAndSize(tmC, obsz);
 	meshes.push_back(auditorium);
 
@@ -85,7 +85,6 @@ void Scene::Render()
 
 void Scene::Render(PPC* currPPC, FrameBuffer* currFB)
 {
-	// Third person view rendering
 	if (currFB)
 	{
 		currFB->Clear(0xFFFFFFFF, 0.0f);
@@ -101,10 +100,9 @@ void Scene::Render(PPC* currPPC, FrameBuffer* currFB)
 
 void Scene::RenderTexture(PPC* currPPC, FrameBuffer* currFB)
 {
-	// Third person view rendering
 	if (currFB)
 	{
-		currFB->Clear(0xFFFFFFFF, 0.0f);
+		currFB->Clear(0xFF999999, 0.0f);
 		for_each(meshes.begin(), meshes.end(), [&](TM* t)
 	         {
 		         t->RenderFillTexture(currPPC, currFB);
@@ -310,17 +308,24 @@ void Scene::InitializeLights()
 	float lightsz = 1.0f, height = 0.0f;
 	V3 p0(-lightsz, -height, -lightsz), p1(-lightsz, -height, lightsz), p2(lightsz, -height, lightsz), p3(lightsz, -height, -lightsz);
 	PointProperty pp0(p0, gColor, y, 0.0f, 0.0f), pp1(p1, gColor, y, 0.0f, 1.0f), pp2(p2, gColor, y, 1.0f, 1.0f), pp3(p3, gColor, y, 1.0f, 0.0f);
-	TM *light = new TM();
-	light->SetQuad(pp0, pp1, pp2, pp3);
-	meshes.push_back(light);
+	TM *lightms0 = new TM();
+	TM *lightms1 = new TM();
+	lightms0->SetQuad(pp0, pp1, pp2, pp3);
+	lightms1->SetQuad(pp0, pp1, pp2, pp3);
+	meshes.push_back(lightms0);
+	meshes.push_back(lightms1);
 
-	V3 L = meshes[0]->GetCenter() + V3(40.0f, 0.0f, 0.0f);
-	light->PositionAndSize(L, 10.0f);
+	V3 L0 = meshes[0]->GetCenter() + V3(40.0f, 0.0f, 0.0f);
+	V3 L1 = meshes[0]->GetCenter() + V3(0.0f, 0.0f, 40.0f);
+	lightms0->PositionAndSize(L0, 10.0f);
+	lightms1->PositionAndSize(L1, 10.0f);
 
 
 	// commit to framebuffer
-	fb->Ls.push_back(L);
-	fb3->Ls.push_back(L);
+	fb->Ls.push_back(L0);
+	fb->Ls.push_back(L1);
+	fb3->Ls.push_back(L0);
+	fb3->Ls.push_back(L1);
 }
 
 void Scene::Demonstration()

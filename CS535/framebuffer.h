@@ -63,6 +63,7 @@ public:
 	V3 LookupColor(std::string texFile, float s, float t, float &alpha, int pixelSz = -1);
 	V3 BilinearLookupColor(TextureInfo &tex, float s, float t, float &alpha);
 	V3 Light(PointProperty pp, V3 L, PPC *ppc);	// point property, ppc
+	V3 Light(PointProperty pp, std::vector<V3> Ls, PPC *ppc);
 
 	// Texture downsampling
 	void PrepareTextureLoD(string texFile);
