@@ -41,21 +41,24 @@ Scene::Scene(): isRenderAABB(false)
 	gui->uiw->position(u0, v0 + fb->h + 60);
 
 	// Ground Quad
-	float groundSz = 100.0f, height = 0.0f;
-	V3 y(0.0f, 1.0f, 0.0f), gColor(0.0f);
+	float groundSz = 1.0f, height = 0.0f;
+	V3 y(0.0f, 1.0f, 0.0f), gColor(0.5f);
 	V3 p0(-groundSz, -height, -groundSz), p1(-groundSz, -height, groundSz), p2(groundSz, -height, groundSz), p3(groundSz, -height, -groundSz);
 	PointProperty pp0(p0, gColor, y, 0.0f, 0.0f), pp1(p1, gColor, y, 0.0f, 1.0f), pp2(p2, gColor, y, 1.0f, 1.0f), pp3(p3, gColor, y, 1.0f, 0.0f);
 
 	TM *audi = new TM();
 	TM *ground = new TM();
+	TM *light = new TM();
+	light->SetQuad(pp0, pp1, pp2, pp3);
 	ground->SetQuad(pp0, pp1, pp2, pp3);
-	audi->LoadModelBin("./geometry/bunny.bin");
+	audi->LoadModelBin("./geometry/teapot1K.bin");
 	V3 tmC = ppc->C + ppc->GetVD() * 100.0f;
 	audi->PositionAndSize(tmC, 50.0f);
-	ground->PositionAndSize(audi->GetCenter() - y * audi->ComputeAABB().GetDiagnoalLength() * 0.5f, 250.0f);
+	ground->PositionAndSize(tmC - y * audi->ComputeAABB().GetDiagnoalLength() * 0.2f, 200.0f);
 
-	// meshes.push_back(audi);
+	meshes.push_back(audi);
 	meshes.push_back(ground);
+	meshes.push_back(light);
 
 	ppc->C = ppc->C + V3(0.0f, 5.0f, 0.0f);
 	ppc->PositionAndOrient(ppc->C, audi->GetCenter(), V3(0.0f, 1.0f, 0.0f));
@@ -63,8 +66,11 @@ Scene::Scene(): isRenderAABB(false)
 
 	ppc3->C = ppc3->C + V3(330.0f, 150.0f, 300.0f);
 	ppc3->PositionAndOrient(ppc3->C, audi->GetCenter(), V3(0.0f, 1.0f, 0.0f));
+	
 	// Lighting
 	V3 L = audi->GetCenter() + V3(40.0f, 0.0f, 0.0f);
+	light->PositionAndSize(L, 10.0f);
+
 	fb->L = L;
 	fb3->L = L;
 
@@ -287,21 +293,17 @@ bool Scene::DBGPPC()
 	return true;
 }
 
-void Scene::Demonstration()
+void Scene::DBG()
 {
-	int count = 0;
-	int stepN = 360;
-	for (int stepi = 0; stepi < stepN; stepi ++)
-	{
-		//string fname = "images/demo-" + to_string(count++) + ".tiff";
-		char csName[50];
-		sprintf_s(csName, "images/demo-%03d.tiff", stepi);
-		string fname(csName);
-// 		fb->SaveAsTiff(fname.c_str());
-		ppc->RevolveH(meshes[0]->GetCenter(), 1.0f);
-		Render();
-		Fl::check();
-	}
+	// cerr << "INFO: pressed DBG" << endl;
+	cerr << "Begin DBG\n";
+	if (DBGV3() && DBGM3() && DBGFramebuffer() && DBGAABB() && DBGPPC()) // && DBGTM())
+		cerr << "All pased! \n";
+	else
+		cerr << "Not pass!\n";
+
+	Demonstration();
+	fb->redraw();
 }
 
 void Scene::InitDemo()
@@ -316,16 +318,21 @@ void Scene::InitDemo()
 	// meshes.push_back(quad);
 }
 
-
-void Scene::DBG()
+void Scene::Demonstration()
 {
-	// cerr << "INFO: pressed DBG" << endl;
-	cerr << "Begin DBG\n";
-	if (DBGV3() && DBGM3() && DBGFramebuffer() && DBGAABB() && DBGPPC()) // && DBGTM())
-		cerr << "All pased! \n";
-	else
-		cerr << "Not pass!\n";
-
-	Demonstration();
-	fb->redraw();
+	int count = 0;
+	int stepN = 360;
+	for (int stepi = 0; stepi < stepN; stepi++)
+	{
+		//string fname = "images/demo-" + to_string(count++) + ".tiff";
+		char csName[50];
+		sprintf_s(csName, "mydbg/test-%03d.tiff", stepi);
+		string fname(csName);
+		// fb->SaveAsTiff(fname.c_str());
+		// meshes[2]->RotateAboutArbitraryAxis(meshes[0]->GetCenter(),V3(0.0f,1.0f,0.0f) ,1.0f);
+		// fb->L = meshes[2]->GetCenter();
+		ppc->RevolveH(meshes[0]->GetCenter(), 1.0f);
+		Render();
+		Fl::check();
+	}
 }

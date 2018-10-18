@@ -104,20 +104,14 @@ void FrameBuffer::Set(int u, int v, int color)
 
 bool FrameBuffer::InsideTriangle(V3 p, V3 v1, V3 v2, V3 v3)
 {
-	float x[3], y[3];
-	x[1] = v1[0];
-	x[2] = v2[0];
-	y[1] = v1[1];
-	y[2] = v2[1];
-
-	float xCo = y[2] - y[1];
-	float yCo = x[2] - x[1];
-	float x1y2 = x[1] * y[2];
-	float y1x2 = y[1] * x[2];
-	float res1 = p[0] * xCo - p[1] * yCo - x1y2 + y1x2;
-	float res2 = v3[0] * xCo - v3[1] * yCo - x1y2 + y1x2;
-
-	return res1 * res2 >= 0.0f ? true : false;
+	 float x1 = v1[0], x2 = v2[0], y1 = v1[1], y2 = v2[1];
+ 
+	 V3 coeff(y2 - y1, x1 - x2, x2 * y1 - x1 * y2);
+ 
+	 float res1 = coeff * V3(p[0], p[1], 1.0f);
+	 float res2 = coeff * V3(v3[0], v3[1], 1.0f);
+ 
+	 return res1 * res2 > 0.0f;
 }
 
 void FrameBuffer::SetGuarded(int u, int v, unsigned int color)
@@ -467,10 +461,10 @@ void FrameBuffer::Draw3DTriangle(PPC* camera, V3 p1, V3 p2, V3 p3, V3 color)
 		for(int j = left; j <= right; ++j)
 		{
 			V3 p(j,i, 0.0f);
-			bool s1 = InsideTriangle(p, pp0, pp1,pp2);
-			bool s2 = InsideTriangle(p, pp1, pp2,pp0);
-			bool s3 = InsideTriangle(p, pp2, pp0,pp1);
-			if (s1 == true && s2 == true && s3 == true)
+			bool s1 = InsideTriangle(p, pp0, pp1, pp2);
+			bool s2 = InsideTriangle(p, pp1, pp2, pp0);
+			bool s3 = InsideTriangle(p, pp2, pp0, pp1);
+			if (s1 && s2 && s3)
 			{
 				// DrawPoint(j, i, color.GetColor());
 				int u = j, v = i;
@@ -609,6 +603,7 @@ void FrameBuffer::Draw3DTriangleTexture(PPC* ppc, PointProperty p0, PointPropert
 			bool s1 = InsideTriangle(uvP, pp0, pp1, pp2);
 			bool s2 = InsideTriangle(uvP, pp1, pp2, pp0);
 			bool s3 = InsideTriangle(uvP, pp2, pp0, pp1);
+
 			if(s1 == true && s2 == true && s3 == true)
 			{
 				float k = V3(u, v, 1.0f) * qM[1] / (qM.GetColumn(0)*V3(u, u, u) + qM.GetColumn(1)*V3(v, v, v) + qM.GetColumn(2)*V3(1.0f));
@@ -840,12 +835,11 @@ V3 FrameBuffer::BilinearLookupColor(TextureInfo &tex, float s, float t, float& a
 V3 FrameBuffer::Light(PointProperty pp, V3 L, PPC* ppc)
 {
 	V3 ret(0.0f);
-	float ka = 0.7f;
-	float kd = (L - pp.p).UnitVector() * pp.n.UnitVector();
+	float ka = 0.5f;
+	float kd = max((L - pp.p).UnitVector() * pp.n.UnitVector(),0.0f);
 	float ks = (ppc->C - pp.p).UnitVector() * (L - pp.p).UnitVector().Reflect(pp.n.UnitVector());
-	kd = max(kd, 0.0f);
-	ks = 0.3f * pow(max(ks, 0.0f), 32);
-	ret = pp.c * (ka + (1.0f - ka)*kd + ks);
+	ks = 0.5f * pow(max(ks, 0.0f), 32);
+	ret = pp.c * (ka + (1.0f - ka)*kd) + ks;
 	return ret;
 }
 
