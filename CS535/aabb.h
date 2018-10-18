@@ -8,7 +8,9 @@ public:
 	AABB(V3 firstPoint);
 	void AddPoint(V3 p);
 	V3 GetCenter();
+	V3 GetDiagnolVector();
 	float GetDiagnoalLength();
+
 
 	friend ostream& operator<<(ostream& ist, AABB bbox);
 };

@@ -46,29 +46,39 @@ Scene::Scene(): isRenderAABB(false)
 	V3 p0(-groundSz, -height, -groundSz), p1(-groundSz, -height, groundSz), p2(groundSz, -height, groundSz), p3(groundSz, -height, -groundSz);
 	PointProperty pp0(p0, gColor, y, 0.0f, 0.0f), pp1(p1, gColor, y, 0.0f, 1.0f), pp2(p2, gColor, y, 1.0f, 1.0f), pp3(p3, gColor, y, 1.0f, 0.0f);
 
-	TM *audi = new TM();
+	TM *teapot0 = new TM();
+	TM *budda = new TM();
+	TM *bunny = new TM();
 	TM *ground = new TM();
 	TM *light = new TM();
 	light->SetQuad(pp0, pp1, pp2, pp3);
 	ground->SetQuad(pp0, pp1, pp2, pp3);
-	audi->LoadModelBin("./geometry/teapot1K.bin");
-	V3 tmC = ppc->C + ppc->GetVD() * 100.0f;
-	audi->PositionAndSize(tmC, 50.0f);
-	ground->PositionAndSize(tmC - y * audi->ComputeAABB().GetDiagnoalLength() * 0.2f, 200.0f);
+	teapot0->LoadModelBin("./geometry/teapot1K.bin");
+	budda->LoadModelBin("./geometry/happy4.bin");
+	bunny->LoadModelBin("geometry/bunny.bin");
 
-	meshes.push_back(audi);
+	float obsz = 30.0f;
+	V3 tmC = ppc->C + ppc->GetVD() * 100.0f;
+	teapot0->PositionAndSize(tmC, obsz);
+	budda->PositionAndSize(tmC + ppc->a * 20.0f - ppc->b * 5.0f, obsz);
+	bunny->PositionAndSize(tmC - ppc->a * 20.0f - ppc->b * 5.0f, obsz);
+	ground->PositionAndSize(tmC - y * (y * teapot0->ComputeAABB().GetDiagnolVector() * 0.5f), 200.0f);
+
+	meshes.push_back(teapot0);
+	meshes.push_back(budda);
+	meshes.push_back(bunny);
 	meshes.push_back(ground);
 	meshes.push_back(light);
 
-	ppc->C = ppc->C + V3(0.0f, 5.0f, 0.0f);
-	ppc->PositionAndOrient(ppc->C, audi->GetCenter(), V3(0.0f, 1.0f, 0.0f));
+	ppc->C = ppc->C + V3(0.0f, 10.0f, 0.0f);
+	ppc->PositionAndOrient(ppc->C, teapot0->GetCenter(), V3(0.0f, 1.0f, 0.0f));
 //	ppc->RevolveH(ground->GetCenter(), 40.0f);
 
 	ppc3->C = ppc3->C + V3(330.0f, 150.0f, 300.0f);
-	ppc3->PositionAndOrient(ppc3->C, audi->GetCenter(), V3(0.0f, 1.0f, 0.0f));
+	ppc3->PositionAndOrient(ppc3->C, teapot0->GetCenter(), V3(0.0f, 1.0f, 0.0f));
 	
 	// Lighting
-	V3 L = audi->GetCenter() + V3(40.0f, 0.0f, 0.0f);
+	V3 L = teapot0->GetCenter() + V3(40.0f, 0.0f, 0.0f);
 	light->PositionAndSize(L, 10.0f);
 
 	fb->L = L;

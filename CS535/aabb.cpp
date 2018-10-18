@@ -21,6 +21,11 @@ V3 AABB::GetCenter()
 	return (corners[0] + corners[1]) * 0.5f;
 }
 
+V3 AABB::GetDiagnolVector()
+{
+	return corners[1] - corners[0];
+}
+
 float AABB::GetDiagnoalLength()
 {
 	V3 diagonalV = corners[1] - corners[0];
