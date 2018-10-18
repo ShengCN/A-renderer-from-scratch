@@ -25,7 +25,7 @@ public:
 	unordered_map<std::string, vector<TextureInfo>> textures; // use file name as index, different Lod, 0 is default
 	bool depthTest, lodTexture;
 	int w, h;
-	V3 L;		// light position, prepare for mulitple light
+	std::vector<V3> Ls;		// light position, prepare for mulitple light
 
 	FrameBuffer(int u0, int v0, int _w, int _h);
 	void draw();

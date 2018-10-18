@@ -14,6 +14,8 @@ public:
 	GUI* gui;
 	FrameBuffer* fb, *fb3;
 	std::vector<shared_ptr<FrameBuffer>> textures;
+	std::vector<shared_ptr<PPC>> lightPPCs;
+	std::vector<shared_ptr<FrameBuffer>> shadowMaps;
 	PPC* ppc, *ppc3;
 	vector<TM*> meshes;
 
@@ -34,7 +36,7 @@ private:
 	void Demonstration();
 	void InitDemo();
 	bool isRenderAABB;
-	int LookupLodLevel();
+	void InitializeLights();
 };
 
 extern Scene* scene;
