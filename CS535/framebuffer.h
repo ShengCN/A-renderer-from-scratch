@@ -44,6 +44,7 @@ public:
 	float GetZ(int u, int v);
 	unsigned int Get(int u, int v);
 	bool LoadTex(const std::string texFile);
+	bool IsPixelInShadow(int u, int v);		// iterate all lights in scene
 
 	// Draw something
 	void DrawSegment(V3 p0, V3 c0, V3 p1, V3 c1);

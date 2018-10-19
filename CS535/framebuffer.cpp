@@ -346,6 +346,55 @@ bool FrameBuffer::LoadTex(const std::string texFile)
 	return true;
 }
 
+bool FrameBuffer::IsPixelInShadow(int u, int v)
+{
+	auto gv = GlobalVariables::Instance();
+	float uf = static_cast<float>(u) + 0.5f, vf = static_cast<float>(v) + 0.5f;
+	
+	// Check for all shadow maps
+	for (size_t li = 0; li < gv->curScene->lightPPCs.size(); ++li)
+	{
+		auto ppc1 = gv->curScene->ppc;
+		auto ppc2 = gv->curScene->lightPPCs[li];
+		auto SM = gv->curScene->shadowMaps[li];
+
+		// Current image plane ppc matrix
+		M33 abc1;
+		abc1.SetColumn(0, ppc1->a);
+		abc1.SetColumn(1, ppc1->b);
+		abc1.SetColumn(2, ppc1->c);
+
+		M33 abc2;
+		abc2.SetColumn(0, ppc2->a);
+		abc2.SetColumn(1, ppc2->b);
+		abc2.SetColumn(2, ppc2->c);
+		auto abc2Inv = abc2.Inverse();
+
+		// Prepare q
+		V3 qC1C2 = abc2Inv * (ppc1->C - ppc2->C);
+		M33 qM = abc2Inv * abc1;
+		auto w1Inverse = GetZ(u, v);
+
+		// map u1,v1 to u2, v2
+		V3 uv1(uf, vf, 1.0f);
+		V3 v1w = uv1 * (1.0f / w1Inverse);
+		float w2 = qC1C2[2] + qM[2] * v1w;
+		float u2 = (qC1C2[0] + qM[0] * v1w) / w2;
+		float v2 = (qC1C2[1] + qM[2] * v1w) / w2;
+		V3 uv2 = V3(u2, v2, 1.0f / w2);
+
+		// compare shadow maps w
+		if (SM->GetZ(static_cast<int>(u2), static_cast<int>(v2)) > uv2[2] + 1e-5)
+		{
+			// in shadow
+			return true;
+		}
+	}
+
+	// not in shadow
+	return false;
+}
+
 void FrameBuffer::DrawSegment(V3 p0, V3 c0, V3 p1, V3 c1)
 {
 	V3 v2v1 = p1 - p0;
@@ -640,6 +689,14 @@ void FrameBuffer::Draw3DTriangleTexture(PPC* ppc, PointProperty p0, PointPropert
 				V3 pc = p0.c + (p1.c - p0.c) * k + (p2.c - p0.c) * l;
 				V3 pn = p0.n + (p1.n - p0.n) * k + (p2.n - p0.n) * l;
 				V3 color(0.0f);
+				// First, detect shadow
+				if (IsPixelInShadow(u, v))	// in shadow
+				{
+					DrawPoint(u, v, color.GetColor());
+					continue;
+				}
+
+				// Not in shadow
 				float alpha = 1.0f;
 				if (textures.find(texFile) != textures.end())
 				{

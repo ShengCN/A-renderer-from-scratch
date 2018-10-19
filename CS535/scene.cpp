@@ -20,6 +20,8 @@ Scene::Scene(): isRenderAABB(false)
 {
 	gui = new GUI();
 	gui->show();
+	auto gv = GlobalVariables::Instance();
+	gv->curScene = this;
 
 	int u0 = 20;
 	int v0 = 20;
@@ -68,9 +70,6 @@ Scene::Scene(): isRenderAABB(false)
 	// Lighting
 	InitializeLights();
 
-	// Commit some global variables
-	auto gv = GlobalVariables::Instance();
-	gv->curScene = this;
 	Render();
 	// RenderWireFrame();
 }
