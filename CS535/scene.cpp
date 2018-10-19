@@ -46,21 +46,25 @@ Scene::Scene(): isRenderAABB(false)
 	// Ground Quad
 	TM *auditorium = new TM();
 	TM *ground = new TM();
-	auditorium->LoadModelBin("./geometry/bunny.bin");
+	TM *teapot = new TM();
+	auditorium->LoadModelBin("./geometry/teapot1K.bin");
+	teapot->LoadModelBin("geometry/teapot1K.bin");
 	float groundsz = 1.0f;
 	V3 gColor(0.9f), y(0.0f,1.0f,0.0f);
 	V3 p0(-groundsz, 0.0f, -groundsz), p1(-groundsz, 0.0f, groundsz), p2(groundsz, 0.0f, groundsz), p3(groundsz, 0.0f, -groundsz);
 	PointProperty pp0(p0, gColor, y, 0.0f, 0.0f), pp1(p1, gColor, y, 0.0f, 1.0f), pp2(p2, gColor, y, 1.0f, 1.0f), pp3(p3, gColor, y, 1.0f, 0.0f);
 	ground->SetQuad(pp0, pp1, pp2, pp3);
 
-	float obsz = 30.0f;
-	V3 tmC = ppc->C + ppc->GetVD() * 100.0f;
+	float obsz = 40.0f;
+	V3 tmC = ppc->C + ppc->GetVD() * 60.0f;
 	auditorium->PositionAndSize(tmC, obsz);
-	ground->PositionAndSize(tmC - y * (auditorium->ComputeAABB().GetDiagnolVector() * y) * 0.5f, 50.0f);
+	ground->PositionAndSize(tmC - y * (auditorium->ComputeAABB().GetDiagnolVector() * y) * 0.5f, 150.0f);
+	teapot->PositionAndSize(tmC + V3(20.0f, 10.0f, 0.0f), obsz);
 	meshes.push_back(auditorium);
+	meshes.push_back(teapot);
 	meshes.push_back(ground);
 
-	ppc->C = ppc->C + V3(0.0f, 10.0f, 0.0f);
+	ppc->C = ppc->C + V3(0.0f, 50.0f, 0.0f);
 	ppc->PositionAndOrient(ppc->C, auditorium->GetCenter(), V3(0.0f, 1.0f, 0.0f));
 //	ppc->RevolveH(ground->GetCenter(), 40.0f);
 
@@ -120,6 +124,7 @@ void Scene::RenderTexture(PPC* currPPC, FrameBuffer* currFB)
 		         if (isRenderAABB)
 			         t->RenderAABB(currPPC, currFB);
 	         });
+
 		currFB->redraw();
 	}
 }
@@ -136,16 +141,11 @@ void Scene::RenderWireFrame()
 	fb->redraw();
 }
 
-void Scene::RenderSM(shared_ptr<PPC> lightPPC, shared_ptr<FrameBuffer> lfb)
+void Scene::UpdateSM()
 {
-	if (lfb)
+	for(size_t li = 0; li < lightPPCs.size(); ++li)
 	{
-		lfb->Clear(0xFF999999, 0.0f);
-		for_each(meshes.begin(), meshes.end(), [&](TM* t)
-		{
-			t->RenderFillZ(lightPPC.get(), lfb.get());
-		});
-		lfb->redraw();
+		Render(lightPPCs[li].get(), shadowMaps[li].get());
 	}
 }
 
@@ -343,65 +343,67 @@ void Scene::InitializeLights()
 	float lightsz = 1.0f, height = 0.0f;
 	V3 p0(-lightsz, -height, -lightsz), p1(-lightsz, -height, lightsz), p2(lightsz, -height, lightsz), p3(lightsz, -height, -lightsz);
 	PointProperty pp0(p0, gColor, y, 0.0f, 0.0f), pp1(p1, gColor, y, 0.0f, 1.0f), pp2(p2, gColor, y, 1.0f, 1.0f), pp3(p3, gColor, y, 1.0f, 0.0f);
-	TM *lightms0 = new TM();
-	TM *lightms1 = new TM();
-	lightms0->SetQuad(pp0, pp1, pp2, pp3);
-	lightms1->SetQuad(pp0, pp1, pp2, pp3);
-	meshes.push_back(lightms0);
 	// meshes.push_back(lightms1);
 
-	V3 L0 = meshes[0]->GetCenter() + V3(80.0f, 0.0f, 0.0f);
-	V3 L1 = meshes[0]->GetCenter() + V3(0.0f, 0.0f, 80.0f);
-	lightms0->PositionAndSize(L0, 10.0f);
-	lightms1->PositionAndSize(L1, 10.0f);
+	V3 L0 = meshes[0]->GetCenter() + V3(0.0f, 80.0f, 0.0f);
 
 	// Shadow maps
-	int u0 = 20, v0 = 20, sz = 480;
+	int u0 = 20, v0 = 20;
 	float fovf = 55.0f;
 	int w = 640;
 	int h = 480;
 	shared_ptr<PPC> l0PPC = make_shared<PPC>(w, h, fovf);
 	shared_ptr<PPC> l1PPC = make_shared<PPC>(w, h, fovf);
-	shared_ptr<FrameBuffer> l1SM = make_shared<FrameBuffer>(u0 + fb->w + 30, v0, w, h);
+	shared_ptr<PPC> l2PPC = make_shared<PPC>(w, h, fovf);
+	shared_ptr<PPC> l3PPC = make_shared<PPC>(w, h, fovf);
+	shared_ptr<FrameBuffer> l0SM = make_shared<FrameBuffer>(u0 + fb->w + 30, v0, w, h);
+	shared_ptr<FrameBuffer> l1SM = make_shared<FrameBuffer>(u0 + fb->w * 2, v0, w, h);
 	shared_ptr<FrameBuffer> l2SM = make_shared<FrameBuffer>(u0 + fb->w * 2, v0, w, h);
-	l1SM->label("Light 1 Shadows");
-	l1SM->show();
-	l2SM->label("Light 2 Shadows");
-	l2SM->show();
+	shared_ptr<FrameBuffer> l3SM = make_shared<FrameBuffer>(u0 + fb->w * 2, v0, w, h);
+	l0SM->label("Light 1 Shadows");
+	l0SM->show();
+
+	l0SM->Clear(0xFFFFFFFF, 0.0f);
 	l1SM->Clear(0xFFFFFFFF, 0.0f);
 	l2SM->Clear(0xFFFFFFFF, 0.0f);
-	l0PPC->PositionAndOrient(L0, meshes[0]->GetCenter(), V3(0.0f,1.0f,0.0f));
-	l1PPC->PositionAndOrient(L1, meshes[0]->GetCenter(), V3(0.0f, 1.0f, 0.0f));
+	l3SM->Clear(0xFFFFFFFF, 0.0f);
+	l0PPC->PositionAndOrient(L0, meshes[0]->GetCenter(), V3(1.0f, 0.0f,0.0f));
+	l1PPC->PositionAndOrient(L0, meshes[0]->GetCenter(), V3(1.0f, 0.0f, 0.0f));
+	l2PPC->PositionAndOrient(L0, meshes[0]->GetCenter(), V3(1.0f, 0.0f, 0.0f));
+	l3PPC->PositionAndOrient(L0, meshes[0]->GetCenter(), V3(1.0f, 0.0f, 0.0f));
 	
-	// Render Shadow map
-	RenderSM(l0PPC, l1SM);
-	// RenderSM(l1PPC.get(), l2SM.get());
-
 	// commit to framebuffer
+	shadowMaps.push_back(l0SM);
 	shadowMaps.push_back(l1SM);
-	// shadowMaps.push_back(l2SM);
+	shadowMaps.push_back(l2SM);
+	shadowMaps.push_back(l3SM);
 	lightPPCs.push_back(l0PPC);
-	// lightPPCs.push_back(l1PPC);
-	fb->Ls.push_back(L0);
-	fb->Ls.push_back(L1);
-	fb3->Ls.push_back(L0);
-	fb3->Ls.push_back(L1);
+	lightPPCs.push_back(l1PPC);
+	lightPPCs.push_back(l2PPC);
+	lightPPCs.push_back(l3PPC);
+	UpdateSM();
 }
 
 void Scene::Demonstration()
 {
 	int count = 0;
 	int stepN = 360;
+	V3 startPos = lightPPCs[0]->C;
 	for (int stepi = 0; stepi < stepN; stepi++)
 	{
-		//string fname = "images/demo-" + to_string(count++) + ".tiff";
-		char csName[50];
-		sprintf_s(csName, "mydbg/test-%03d.tiff", stepi);
-		string fname(csName);
-		// fb->SaveAsTiff(fname.c_str());
-		// meshes[2]->RotateAboutArbitraryAxis(meshes[0]->GetCenter(),V3(0.0f,1.0f,0.0f) ,1.0f);
-		// fb->L = meshes[2]->GetCenter();
-		ppc->RevolveH(meshes[0]->GetCenter(), 1.0f);
+		//  Moving objects
+		float radius = static_cast<float>(stepi) * 3.0f;
+		for(size_t li = 0; li < lightPPCs.size(); ++li)
+		{
+			float fract = static_cast<float>(li) / static_cast<float>(lightPPCs.size());
+			float rotDeg = 360.0f * fract;
+			V3 transV = V3(1.0f, 0.0f, 0.0f) * radius;
+			transV = transV.RotateThisPointAboutArbitraryAxis(V3(0.0f), V3(0.0f, 1.0f, 0.0f), rotDeg);
+			lightPPCs[li]->PositionAndOrient(startPos + transV, meshes[0]->GetCenter(), V3(1.0f,0.0f,0.0f));
+		}
+
+		// Render
+		UpdateSM();
 		Render();
 		Fl::check();
 	}

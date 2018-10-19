@@ -346,8 +346,9 @@ bool FrameBuffer::LoadTex(const std::string texFile)
 	return true;
 }
 
-bool FrameBuffer::IsPixelInShadow(int u, int v)
+float FrameBuffer::IsPixelInShadow(int u, int v, float z)
 {
+	float ret = 1.0f;	// shadow effect
 	auto gv = GlobalVariables::Instance();
 	float uf = static_cast<float>(u) + 0.5f, vf = static_cast<float>(v) + 0.5f;
 	
@@ -358,41 +359,44 @@ bool FrameBuffer::IsPixelInShadow(int u, int v)
 		auto ppc2 = gv->curScene->lightPPCs[li];
 		auto SM = gv->curScene->shadowMaps[li];
 
-		// Current image plane ppc matrix
-		M33 abc1;
-		abc1.SetColumn(0, ppc1->a);
-		abc1.SetColumn(1, ppc1->b);
-		abc1.SetColumn(2, ppc1->c);
-
-		M33 abc2;
-		abc2.SetColumn(0, ppc2->a);
-		abc2.SetColumn(1, ppc2->b);
-		abc2.SetColumn(2, ppc2->c);
-		auto abc2Inv = abc2.Inverse();
-
-		// Prepare q
-		V3 qC1C2 = abc2Inv * (ppc1->C - ppc2->C);
-		M33 qM = abc2Inv * abc1;
-		auto w1Inverse = GetZ(u, v);
-
-		// map u1,v1 to u2, v2
-		V3 uv1(uf, vf, 1.0f);
-		V3 v1w = uv1 * (1.0f / w1Inverse);
-		float w2 = qC1C2[2] + qM[2] * v1w;
-		float u2 = (qC1C2[0] + qM[0] * v1w) / w2;
-		float v2 = (qC1C2[1] + qM[2] * v1w) / w2;
-		V3 uv2 = V3(u2, v2, 1.0f / w2);
+		V3 v2 = MappingPx(V3(uf, vf, z), ppc1, ppc2.get());
 
 		// compare shadow maps w
-		if (!gv->curScene->shadowMaps[li]->Visible(static_cast<int>(u2), static_cast<int>(v2),uv2[2] + 1e-5))
+		float eps = 0.1f;
+		if (SM->GetZ(v2[0],v2[1]) - v2[2] > eps )
 		{
 			// in shadow
-			return true;
+			ret *= 0.2f;
 		}
 	}
 
-	// not in shadow
-	return false;
+	return ret;
+}
+
+V3 FrameBuffer::MappingPx(V3 px1, PPC* ppc1, PPC* ppc2)
+{
+	// Current image plane ppc matrix
+	M33 abc1;
+	abc1.SetColumn(0, ppc1->a);
+	abc1.SetColumn(1, ppc1->b);
+	abc1.SetColumn(2, ppc1->c);
+
+	M33 abc2;
+	abc2.SetColumn(0, ppc2->a);
+	abc2.SetColumn(1, ppc2->b);
+	abc2.SetColumn(2, ppc2->c);
+	auto abc2Inv = abc2.Inverse();
+
+	auto qC = abc2Inv * (ppc1->C - ppc2->C);
+	auto qM = abc2Inv * abc1;
+
+	float w1 = 1.0f / px1[2];
+	V3 px = V3(px1[0], px1[1], 1.0f) * w1;
+	float w2 = 1.0f / (qC[2] + qM[2] * px);
+	float u2 = (qC[0] + qM[0] * px) * w2;
+	float v2 = (qC[1] + qM[1] * px) * w2;
+
+	return V3(u2, v2, w2);
 }
 
 void FrameBuffer::DrawSegment(V3 p0, V3 c0, V3 p1, V3 c1)
@@ -503,91 +507,6 @@ void FrameBuffer::Draw3DPoint(PPC* camera, V3 p, unsigned color, int pointSize)
 	int v = static_cast<int>(pp[1]);
 	int halfPointSize = pointSize / 2;
 	DrawRectangle(u - halfPointSize, v - halfPointSize, u + halfPointSize, v + halfPointSize, color);
-}
-
-void FrameBuffer::Draw3DTriangle(PPC * ppc, V3 p0, V3 p1, V3 p2)
-{
-	V3 pp0, pp1, pp2;
-	if (!ppc->Project(p0, pp0))
-		return;
-	if (!ppc->Project(p1, pp1))
-		return;
-	if (!ppc->Project(p2, pp2))
-		return;
-
-	AABB bbTri(pp0);
-	bbTri.AddPoint(pp1);
-	bbTri.AddPoint(pp2);
-	ClipToScreen(bbTri.corners[0][0], bbTri.corners[0][1], bbTri.corners[1][0], bbTri.corners[1][1]);
-
-	// Rasterize bbox 
-	int left = static_cast<int>(bbTri.corners[0][0] + 0.5f), right = static_cast<int>(bbTri.corners[1][0] - 0.5f);
-	int top = static_cast<int>(bbTri.corners[0][1] + 0.5f), bottom = static_cast<int>(bbTri.corners[1][1] - 0.5f);
-
-	// Q matrix
-	M33 abcM;
-	abcM.SetColumn(0, ppc->a);
-	abcM.SetColumn(1, ppc->b);
-	abcM.SetColumn(2, ppc->c);
-	M33 vcM; // V1-C, V2-C, V3-C
-	vcM.SetColumn(0, p0 - ppc->C);
-	vcM.SetColumn(1, p1 - ppc->C);
-	vcM.SetColumn(2, p2 - ppc->C);
-	M33 qM = vcM.Inverse() * abcM;
-	for (int i = top; i <= bottom; ++i)
-	{
-		for (int j = left; j <= right; ++j)
-		{
-			V3 pp(static_cast<float>(j) + 0.5f, static_cast<float>(i) + 0.5f, 1.0f);
-			bool s1 = InsideTriangle(pp, pp0, pp1, pp2);
-			bool s2 = InsideTriangle(pp, pp1, pp2, pp0);
-			bool s3 = InsideTriangle(pp, pp2, pp0, pp1);
-			if (s1 == true && s2 == true && s3 == true)
-			{
-#if defined(SCREEN_SPACE_INTERPOLATION)
-				// Screen-space interpolation
-				int u = j, v = i;
-				V3 c;
-				M33 m;	// Project of P based on A, B, C
-				m[0] = V3(pp0[0], pp0[1], 1.0f);
-				m[1] = V3(pp1[0], pp1[1], 1.0f);
-				m[2] = V3(pp2[0], pp2[1], 1.0f);
-				V3 vpr(c0[0], c1[0], c2[0]);
-				V3 vpg(c0[1], c1[1], c2[1]);
-				V3 vpb(c0[2], c1[2], c2[2]);
-				V3 vpz(pp0[2], pp1[2], pp2[2]);
-				M33 mInverse = m.Inverse();
-				V3 abcR = mInverse * vpr;
-				V3 abcG = mInverse * vpg;
-				V3 abcB = mInverse * vpb;
-				V3 abcZ = mInverse * vpz;
-
-				// Depth test
-				float ppr = abcR * pp;
-				float ppg = abcG * pp;
-				float ppb = abcB * pp;
-				float ppz = abcZ * pp;
-				c = V3(ppr, ppg, ppb);
-				if (Visible(u, v, ppz))
-					DrawPoint(u, v, c.GetColor());
-
-#elif defined(PERSPECTIVE_CORRECT_INTERPOLATION)
-				// Perspective correct interpolation
-				int u = j, v = i;
-				float k = V3(u, v, 1.0f) * qM[1] / (qM.GetColumn(0) * V3(u, u, u) + qM.GetColumn(1) * V3(v, v, v) + qM.
-					GetColumn(2) * V3(1.0f));
-				float l = V3(u, v, 1.0f) * qM[2] / (qM.GetColumn(0) * V3(u, u, u) + qM.GetColumn(1) * V3(v, v, v) + qM.
-					GetColumn(2) * V3(1.0f));
-				float w = qM.GetColumn(0) * V3(u, u, u) + qM.GetColumn(1) * V3(v, v, v) + qM.GetColumn(2) * V3(1.0f);
-				if (Visible(u, v, w))
-				{
-					V3 c(1.0f / w);
-					DrawPoint(u, v, c.GetColor());
-				}
-#endif
-			}
-		}
-	}
 }
 
 void FrameBuffer::Draw3DTriangle(PPC* camera, V3 p1, V3 p2, V3 p3, V3 color)
@@ -774,14 +693,8 @@ void FrameBuffer::Draw3DTriangleTexture(PPC* ppc, PointProperty p0, PointPropert
 				V3 pc = p0.c + (p1.c - p0.c) * k + (p2.c - p0.c) * l;
 				V3 pn = p0.n + (p1.n - p0.n) * k + (p2.n - p0.n) * l;
 				V3 color(0.0f);
-				// First, detect shadow
-				if (IsPixelInShadow(u, v))	// in shadow
-				{
-					DrawPoint(u, v, color.GetColor());
-					continue;
-				}
 
-				// Not in shadow
+				// shading
 				float alpha = 1.0f;
 				if (textures.find(texFile) != textures.end())
 				{
@@ -795,7 +708,7 @@ void FrameBuffer::Draw3DTriangleTexture(PPC* ppc, PointProperty p0, PointPropert
 
 				// Per pixel lighting after texture mapping
 				PointProperty pointProperty(ppc->Unproject(uvP), color, pn, st[0], st[1]);
-				color = Light(pointProperty,Ls,ppc);
+				color = Light(pointProperty,ppc);
 
 				// alpha blending 
 				if (!FloatEqual(1.0f, alpha))
@@ -804,6 +717,10 @@ void FrameBuffer::Draw3DTriangleTexture(PPC* ppc, PointProperty p0, PointPropert
 					pxC.SetColor(pix[(h - 1 - v) * w + u]);
 					color = color * alpha + pxC * (1.0f - alpha);
 				}
+
+				// Cast shadow onto shading results
+				float sdCoeff = IsPixelInShadow(u, v, wv);
+				color = color * sdCoeff;
 				DrawPoint(u, v, color.GetColor());
 			}
 		}
@@ -1009,23 +926,23 @@ V3 FrameBuffer::Light(PointProperty pp, V3 L, PPC* ppc)
 	return ret;
 }
 
-V3 FrameBuffer::Light(PointProperty pp, std::vector<V3> Ls, PPC* ppc)
+V3 FrameBuffer::Light(PointProperty pp, PPC* ppc)
 {
 	V3 ret(0.0f);
+	auto gv = GlobalVariables::Instance();
+	
 	float ka = 0.2f;
-
-	// iterate all lights diffuse and specular
 	float kd = 0.0f, ks = 0.0f;
-	for(auto l:Ls)
+	for(auto l:gv->curScene->lightPPCs)
 	{
-		kd += max((l - pp.p).UnitVector() * pp.n.UnitVector(), 0.0f);
-		float tks = (ppc->C - pp.p).UnitVector() * (l - pp.p).UnitVector().Reflect(pp.n.UnitVector());
-		ks += 0.5f * pow(max(tks, 0.0f), 32);
+		kd += max((l->C - pp.p).UnitVector() * pp.n.UnitVector(), 0.0f);
+		float tks = (ppc->C - pp.p).UnitVector() * (l->C - pp.p).UnitVector().Reflect(pp.n.UnitVector());
+		ks += 0.3f * pow(max(tks, 0.0f), 512);
 	}
 
-	ka = std::clamp(ka, 0.0f, 1.0f);
-	kd = std::clamp(kd, 0.0f, 1.0f);
-	ks = std::clamp(ks, 0.0f, 1.0f);
+	ka = Clamp(ka, 0.0f, 1.0f);
+	kd = Clamp(kd, 0.0f, 1.0f);
+	ks = Clamp(ks, 0.0f, 1.0f);
 
 	ret = pp.c * (ka + (1.0f - ka) * kd) + ks;
 	return ret;

@@ -33,7 +33,6 @@ public:
 	void RenderWireFrame(PPC *ppc, FrameBuffer *fb);
 	void RenderFill(PPC *ppc, FrameBuffer *fb);
 	void RenderFillTexture(PPC *ppc, FrameBuffer *fb);
-	void RenderFillZ(PPC *ppc, FrameBuffer *fb);
 	void RenderAABB(PPC *ppc, FrameBuffer *fb);
 	void RotateAboutArbitraryAxis(V3 O, V3 a, float angled);
 	void Translate(V3 tv);

@@ -25,7 +25,6 @@ public:
 	unordered_map<std::string, vector<TextureInfo>> textures; // use file name as index, different Lod, 0 is default
 	bool depthTest, lodTexture;
 	int w, h;
-	std::vector<V3> Ls;		// light position, prepare for mulitple light
 
 	FrameBuffer(int u0, int v0, int _w, int _h);
 	void draw();
@@ -44,7 +43,8 @@ public:
 	float GetZ(int u, int v);
 	unsigned int Get(int u, int v);
 	bool LoadTex(const std::string texFile);
-	bool IsPixelInShadow(int u, int v);		// iterate all lights in scene
+	float IsPixelInShadow(int u, int v, float z);		// iterate all lights in scene
+	V3 MappingPx(V3 px1, PPC* ppc1, PPC* ppc2);
 
 	// Draw something
 	void DrawSegment(V3 p0, V3 c0, V3 p1, V3 c1);
@@ -54,7 +54,6 @@ public:
 	void DrawEllipse(int u0, int v0, float r0, float r1, unsigned int color);
 	void DrawPoint(int u, int v, unsigned int color);
 	void Draw3DPoint(PPC* ppc, V3 p, unsigned int color, int pointSize);
-	void Draw3DTriangle(PPC* ppc, V3 p1, V3 p2, V3 p3);	// color is z value
 	void Draw3DTriangle(PPC* ppc, V3 p1, V3 p2, V3 p3, V3 color);
 	void Draw3DTriangle(PPC* ppc, V3 p0, V3 c0, V3 p1, V3 c1, V3 p2, V3 c2);
 	void Draw3DTriangleTexture(PPC *ppc, PointProperty p0, PointProperty p1, PointProperty p2, const std::string texFile, int pixelSz = -1);
@@ -65,7 +64,7 @@ public:
 	V3 LookupColor(std::string texFile, float s, float t, float &alpha, int pixelSz = -1);
 	V3 BilinearLookupColor(TextureInfo &tex, float s, float t, float &alpha);
 	V3 Light(PointProperty pp, V3 L, PPC *ppc);	// point property, ppc
-	V3 Light(PointProperty pp, std::vector<V3> Ls, PPC *ppc);
+	V3 Light(PointProperty pp, PPC *ppc);
 
 	// Texture downsampling
 	void PrepareTextureLoD(string texFile);
