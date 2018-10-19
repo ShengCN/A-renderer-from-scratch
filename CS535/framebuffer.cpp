@@ -126,7 +126,7 @@ bool FrameBuffer::InsideTriangle(V3 p, V3 v1, V3 v2, V3 v3)
 	float res1 = coeff * V3(p[0], p[1], 1.0f);
 	float res2 = coeff * V3(v3[0], v3[1], 1.0f);
 
-	return res1 * res2 > 0.0f;
+	return res1 * res2 >= 0.0f;
 }
 
 void FrameBuffer::SetGuarded(int u, int v, unsigned int color)

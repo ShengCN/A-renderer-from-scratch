@@ -34,7 +34,7 @@ Scene::Scene(): isRenderAABB(false)
 
 	fb3 = new FrameBuffer(u0 + fb->w + 30, v0, w, h);
 	fb3->label("Third Person View");
-	fb3->show();
+//	fb3->show();
 
 	ppc = new PPC(fb->w, fb->h, fovf);
 	ppc3 = new PPC(fb3->w, fb3->h, 30.0f);
@@ -43,12 +43,20 @@ Scene::Scene(): isRenderAABB(false)
 
 	// Ground Quad
 	TM *auditorium = new TM();
+	TM *ground = new TM();
 	auditorium->LoadModelBin("./geometry/bunny.bin");
+	float groundsz = 1.0f;
+	V3 gColor(0.9f), y(0.0f,1.0f,0.0f);
+	V3 p0(-groundsz, 0.0f, -groundsz), p1(-groundsz, 0.0f, groundsz), p2(groundsz, 0.0f, groundsz), p3(groundsz, 0.0f, -groundsz);
+	PointProperty pp0(p0, gColor, y, 0.0f, 0.0f), pp1(p1, gColor, y, 0.0f, 1.0f), pp2(p2, gColor, y, 1.0f, 1.0f), pp3(p3, gColor, y, 1.0f, 0.0f);
+	ground->SetQuad(pp0, pp1, pp2, pp3);
 
 	float obsz = 30.0f;
 	V3 tmC = ppc->C + ppc->GetVD() * 100.0f;
 	auditorium->PositionAndSize(tmC, obsz);
+	ground->PositionAndSize(tmC - y * (auditorium->ComputeAABB().GetDiagnolVector() * y) * 0.5f, 50.0f);
 	meshes.push_back(auditorium);
+	meshes.push_back(ground);
 
 	ppc->C = ppc->C + V3(0.0f, 10.0f, 0.0f);
 	ppc->PositionAndOrient(ppc->C, auditorium->GetCenter(), V3(0.0f, 1.0f, 0.0f));
@@ -335,8 +343,31 @@ void Scene::InitializeLights()
 	lightms0->PositionAndSize(L0, 10.0f);
 	lightms1->PositionAndSize(L1, 10.0f);
 
+	// Shadow maps
+	int u0 = 20, v0 = 20, sz = 480;
+	float fovf = 55.0f;
+	shared_ptr<PPC> l0PPC = make_shared<PPC>(sz, sz, fovf);
+	shared_ptr<PPC> l1PPC = make_shared<PPC>(sz, sz, fovf);
+	shared_ptr<FrameBuffer> l1SM = make_shared<FrameBuffer>(u0 + fb->w + 30, v0, sz, sz);
+	shared_ptr<FrameBuffer> l2SM = make_shared<FrameBuffer>(u0 + fb->w * 2, v0, sz, sz);
+	l1SM->label("Light 1 Shadows");
+	l1SM->show();
+	l2SM->label("Light 2 Shadows");
+	l2SM->show();
+	l1SM->Clear(0xFFFFFFFF, 0.0f);
+	l2SM->Clear(0xFFFFFFFF, 0.0f);
+	l0PPC->PositionAndOrient(L0, meshes[0]->GetCenter(), V3(0.0f,1.0f,0.0f));
+	l1PPC->PositionAndOrient(L1, meshes[0]->GetCenter(), V3(0.0f, 1.0f, 0.0f));
+	
+	// Render Shadow map
+	RenderTexture(l0PPC.get(), l1SM.get());
+	RenderTexture(l1PPC.get(), l2SM.get());
 
 	// commit to framebuffer
+	shadowMaps.push_back(l1SM);
+	shadowMaps.push_back(l2SM);
+	lightPPCs.push_back(l0PPC);
+	lightPPCs.push_back(l1PPC);
 	fb->Ls.push_back(L0);
 	fb->Ls.push_back(L1);
 	fb3->Ls.push_back(L0);
