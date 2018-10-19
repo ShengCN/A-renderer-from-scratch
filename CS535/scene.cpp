@@ -136,6 +136,19 @@ void Scene::RenderWireFrame()
 	fb->redraw();
 }
 
+void Scene::RenderSM(shared_ptr<PPC> lightPPC, shared_ptr<FrameBuffer> lfb)
+{
+	if (lfb)
+	{
+		lfb->Clear(0xFF999999, 0.0f);
+		for_each(meshes.begin(), meshes.end(), [&](TM* t)
+		{
+			t->RenderFillZ(lightPPC.get(), lfb.get());
+		});
+		lfb->redraw();
+	}
+}
+
 V3 Scene::GetSceneCenter()
 {
 	V3 ret(0.0f);
@@ -335,20 +348,22 @@ void Scene::InitializeLights()
 	lightms0->SetQuad(pp0, pp1, pp2, pp3);
 	lightms1->SetQuad(pp0, pp1, pp2, pp3);
 	meshes.push_back(lightms0);
-	meshes.push_back(lightms1);
+	// meshes.push_back(lightms1);
 
-	V3 L0 = meshes[0]->GetCenter() + V3(40.0f, 0.0f, 0.0f);
-	V3 L1 = meshes[0]->GetCenter() + V3(0.0f, 0.0f, 40.0f);
+	V3 L0 = meshes[0]->GetCenter() + V3(80.0f, 0.0f, 0.0f);
+	V3 L1 = meshes[0]->GetCenter() + V3(0.0f, 0.0f, 80.0f);
 	lightms0->PositionAndSize(L0, 10.0f);
 	lightms1->PositionAndSize(L1, 10.0f);
 
 	// Shadow maps
 	int u0 = 20, v0 = 20, sz = 480;
 	float fovf = 55.0f;
-	shared_ptr<PPC> l0PPC = make_shared<PPC>(sz, sz, fovf);
-	shared_ptr<PPC> l1PPC = make_shared<PPC>(sz, sz, fovf);
-	shared_ptr<FrameBuffer> l1SM = make_shared<FrameBuffer>(u0 + fb->w + 30, v0, sz, sz);
-	shared_ptr<FrameBuffer> l2SM = make_shared<FrameBuffer>(u0 + fb->w * 2, v0, sz, sz);
+	int w = 640;
+	int h = 480;
+	shared_ptr<PPC> l0PPC = make_shared<PPC>(w, h, fovf);
+	shared_ptr<PPC> l1PPC = make_shared<PPC>(w, h, fovf);
+	shared_ptr<FrameBuffer> l1SM = make_shared<FrameBuffer>(u0 + fb->w + 30, v0, w, h);
+	shared_ptr<FrameBuffer> l2SM = make_shared<FrameBuffer>(u0 + fb->w * 2, v0, w, h);
 	l1SM->label("Light 1 Shadows");
 	l1SM->show();
 	l2SM->label("Light 2 Shadows");
@@ -359,14 +374,14 @@ void Scene::InitializeLights()
 	l1PPC->PositionAndOrient(L1, meshes[0]->GetCenter(), V3(0.0f, 1.0f, 0.0f));
 	
 	// Render Shadow map
-	RenderTexture(l0PPC.get(), l1SM.get());
-	RenderTexture(l1PPC.get(), l2SM.get());
+	RenderSM(l0PPC, l1SM);
+	// RenderSM(l1PPC.get(), l2SM.get());
 
 	// commit to framebuffer
 	shadowMaps.push_back(l1SM);
-	shadowMaps.push_back(l2SM);
+	// shadowMaps.push_back(l2SM);
 	lightPPCs.push_back(l0PPC);
-	lightPPCs.push_back(l1PPC);
+	// lightPPCs.push_back(l1PPC);
 	fb->Ls.push_back(L0);
 	fb->Ls.push_back(L1);
 	fb3->Ls.push_back(L0);

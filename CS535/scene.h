@@ -25,6 +25,7 @@ public:
 	void Render(PPC *currPPC, FrameBuffer *currFB);
 	void RenderTexture(PPC *currPPC, FrameBuffer *currFB);
 	void RenderWireFrame();
+	void RenderSM(shared_ptr<PPC> lightPPC, shared_ptr<FrameBuffer> lfb);
 
 	V3 GetSceneCenter();
 	~Scene();

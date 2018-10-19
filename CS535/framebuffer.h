@@ -54,6 +54,7 @@ public:
 	void DrawEllipse(int u0, int v0, float r0, float r1, unsigned int color);
 	void DrawPoint(int u, int v, unsigned int color);
 	void Draw3DPoint(PPC* ppc, V3 p, unsigned int color, int pointSize);
+	void Draw3DTriangle(PPC* ppc, V3 p1, V3 p2, V3 p3);	// color is z value
 	void Draw3DTriangle(PPC* ppc, V3 p1, V3 p2, V3 p3, V3 color);
 	void Draw3DTriangle(PPC* ppc, V3 p0, V3 c0, V3 p1, V3 c1, V3 p2, V3 c2);
 	void Draw3DTriangleTexture(PPC *ppc, PointProperty p0, PointProperty p1, PointProperty p2, const std::string texFile, int pixelSz = -1);

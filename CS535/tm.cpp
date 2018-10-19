@@ -177,6 +177,17 @@ void TM::RenderFillTexture(PPC* ppc, FrameBuffer* fb)
 	}
 }
 
+void TM::RenderFillZ(PPC * ppc, FrameBuffer * fb)
+{
+	for (int ti = 0; ti < trisN; ++ti)
+	{
+		int vi0 = tris[ti * 3 + 0];
+		int vi1 = tris[ti * 3 + 1];
+		int vi2 = tris[ti * 3 + 2];
+		fb->Draw3DTriangle(ppc, verts[vi0], verts[vi1],verts[vi2]);
+	}
+}
+
 void TM::RenderAABB(PPC* ppc, FrameBuffer* fb)
 {
 	auto aabb = ComputeAABB();
