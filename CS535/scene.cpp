@@ -8,6 +8,7 @@
 #include "TM.h"
 #include <string>
 #include <ctime>
+#include "GlobalVariables.h"
 
 Scene* scene;
 
@@ -59,6 +60,9 @@ Scene::Scene(): isRenderAABB(false)
 	// Lighting
 	InitializeLights();
 
+	// Commit some global variables
+	auto gv = GlobalVariables::Instance();
+	gv->curScene = this;
 	Render();
 	// RenderWireFrame();
 }
@@ -123,6 +127,17 @@ void Scene::RenderWireFrame()
 
 	// commit frame update
 	fb->redraw();
+}
+
+V3 Scene::GetSceneCenter()
+{
+	V3 ret(0.0f);
+	for(auto m:meshes)
+	{
+		ret = ret + m->GetCenter();
+	}
+	ret = ret / static_cast<float>(meshes.size());
+	return ret;
 }
 
 Scene::~Scene()

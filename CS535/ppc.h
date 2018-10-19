@@ -38,5 +38,9 @@ public:
 	void SetInterpolated(PPC *ppc0, PPC *ppc1, float fract);
 	void SaveBin(std::string fname);
 	void LoadBin(std::string fname);
+
+	// Keyboard handles
+	void MoveForward(float delta);
+	void MoveLeft(float delta);
 };
 

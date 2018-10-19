@@ -12,6 +12,7 @@
 #include "AABB.h"
 #include "MathTool.h"
 #include "m33.h"
+#include "GlobalVariables.h"
 // #define SCREEN_SPACE_INTERPOLATION
 #define PERSPECTIVE_CORRECT_INTERPOLATION
 
@@ -39,10 +40,10 @@ int FrameBuffer::handle(int event)
 	switch (event)
 	{
 	case FL_KEYBOARD:
-		{
-			KeyboardHandle();
-			return 0;
-		}
+	{
+		KeyboardHandle();
+		return 0;
+	}
 	default:
 		break;
 	}
@@ -51,7 +52,9 @@ int FrameBuffer::handle(int event)
 
 void FrameBuffer::KeyboardHandle()
 {
+	auto gv = GlobalVariables::Instance();
 	int key = Fl::event_key();
+	cerr << "Pressed "<< (char)key << endl;
 	switch (key)
 	{
 	case ',':
@@ -61,32 +64,45 @@ void FrameBuffer::KeyboardHandle()
 		}
 	case 'w':
 		{
+		gv->curScene->ppc->MoveForward(1.0f);
+		gv->curScene->Render();
 			break;
 		}
 	case 'a':
 		{
+		gv->curScene->ppc->MoveLeft(-1.0f);
+		gv->curScene->Render();
 			break;
 		}
 	case 's':
 		{
+		gv->curScene->ppc->MoveForward(-1.0f);
+		gv->curScene->Render();
 			break;
 		}
 	case 'd':
 		{
+		gv->curScene->ppc->MoveLeft(1.0f);
+		gv->curScene->Render();
 			break;
 		}
 	case 'j':
 		{
 			// RevolveH 
+		gv->curScene->ppc->RevolveH(gv->curScene->GetSceneCenter(), 1.0f);
+		gv->curScene->Render();
 			break;
 		}
 	case 'k':
 		{
 			// RevolveV
-			break;
+		gv->curScene->ppc->RevolveV(gv->curScene->GetSceneCenter(), 1.0f);
+		gv->curScene->Render();
+		break;
 		}
 	default:
 		cerr << "INFO: do not understand keypress" << endl;
+		break;;
 	}
 }
 

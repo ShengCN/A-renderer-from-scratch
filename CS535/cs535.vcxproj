@@ -100,6 +100,7 @@
     <ClInclude Include="aabb.h" />
     <ClInclude Include="framebuffer.h" />
     <ClInclude Include="glext.h" />
+    <ClInclude Include="GlobalVariables.h" />
     <ClInclude Include="gui.h" />
     <ClInclude Include="m33.h" />
     <ClInclude Include="MathTool.h" />
@@ -111,6 +112,7 @@
   <ItemGroup>
     <ClCompile Include="aabb.cpp" />
     <ClCompile Include="framebuffer.cpp" />
+    <ClCompile Include="GlobalVariables.cpp" />
     <ClCompile Include="gui.cxx" />
     <ClCompile Include="m33.cpp" />
     <ClCompile Include="MathTool.cpp" />

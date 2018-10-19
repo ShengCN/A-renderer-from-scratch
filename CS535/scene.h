@@ -26,6 +26,7 @@ public:
 	void RenderTexture(PPC *currPPC, FrameBuffer *currFB);
 	void RenderWireFrame();
 
+	V3 GetSceneCenter();
 	~Scene();
 private:
 	bool DBGFramebuffer();

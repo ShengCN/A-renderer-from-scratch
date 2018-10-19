@@ -193,3 +193,14 @@ void PPC::LoadBin(std::string fname)
 	input.close();
 }
 
+void PPC::MoveForward(float delta)
+{
+	V3 vd = GetVD();
+	C = C + vd * delta;
+}
+
+void PPC::MoveLeft(float delta)
+{
+	C = C + a * delta;
+}
+
