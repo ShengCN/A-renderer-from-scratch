@@ -363,7 +363,7 @@ void Scene::InitializeLights()
 	l0SM->label("Light 1 Shadows");
 	l0SM->show();
 
-	l0SM->Clear(0xFFFFFFFF, 0.0f);
+	l0SM->Clear(0xFFFFFFFF, 0.0f); 
 	l1SM->Clear(0xFFFFFFFF, 0.0f);
 	l2SM->Clear(0xFFFFFFFF, 0.0f);
 	l3SM->Clear(0xFFFFFFFF, 0.0f);
@@ -392,7 +392,7 @@ void Scene::Demonstration()
 	for (int stepi = 0; stepi < stepN; stepi++)
 	{
 		//  Moving objects
-		float radius = static_cast<float>(stepi) * 3.0f;
+		float radius = static_cast<float>(stepi) * 1.0f;
 		for(size_t li = 0; li < lightPPCs.size(); ++li)
 		{
 			float fract = static_cast<float>(li) / static_cast<float>(lightPPCs.size());
@@ -405,6 +405,10 @@ void Scene::Demonstration()
 		// Render
 		UpdateSM();
 		Render();
+
+		char buffer[50];
+		sprintf_s(buffer, "images/shadow-%03d.tiff", stepi);
+		fb->SaveAsTiff(buffer);
 		Fl::check();
 	}
 }

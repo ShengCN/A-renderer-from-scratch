@@ -359,10 +359,10 @@ float FrameBuffer::IsPixelInShadow(int u, int v, float z)
 		auto ppc2 = gv->curScene->lightPPCs[li];
 		auto SM = gv->curScene->shadowMaps[li];
 
-		V3 v2 = MappingPx(V3(uf, vf, z), ppc1, ppc2.get());
+		V3 v2 = HomographMapping(V3(uf, vf, z), ppc1, ppc2.get());
 
 		// compare shadow maps w
-		float eps = 0.1f;
+		float eps = 0.15f;
 		if (SM->GetZ(v2[0],v2[1]) - v2[2] > eps )
 		{
 			// in shadow
@@ -373,7 +373,7 @@ float FrameBuffer::IsPixelInShadow(int u, int v, float z)
 	return ret;
 }
 
-V3 FrameBuffer::MappingPx(V3 px1, PPC* ppc1, PPC* ppc2)
+V3 FrameBuffer::HomographMapping(V3 px1, PPC* ppc1, PPC* ppc2)
 {
 	// Current image plane ppc matrix
 	M33 abc1;

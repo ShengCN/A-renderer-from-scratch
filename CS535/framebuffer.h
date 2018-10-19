@@ -44,7 +44,7 @@ public:
 	unsigned int Get(int u, int v);
 	bool LoadTex(const std::string texFile);
 	float IsPixelInShadow(int u, int v, float z);		// iterate all lights in scene
-	V3 MappingPx(V3 px1, PPC* ppc1, PPC* ppc2);
+	V3 HomographMapping(V3 px1, PPC* ppc1, PPC* ppc2);
 
 	// Draw something
 	void DrawSegment(V3 p0, V3 c0, V3 p1, V3 c1);
