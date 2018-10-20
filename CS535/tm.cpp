@@ -174,7 +174,20 @@ void TM::RenderFillTexture(PPC* ppc, FrameBuffer* fb)
 	else
 	{
 		// no texture
-		RenderFill(ppc, fb);
+		// RenderFill(ppc, fb);
+		for (int ti = 0; ti < trisN; ++ti)
+		{
+			int vi0 = tris[ti * 3 + 0];
+			int vi1 = tris[ti * 3 + 1];
+			int vi2 = tris[ti * 3 + 2];
+
+			PointProperty p0(verts[vi0], colors[vi0], normals[vi0], 0.0f,0.0f);
+			PointProperty p1(verts[vi1], colors[vi1], normals[vi1], 0.0f, 0.0f);
+			PointProperty p2(verts[vi2], colors[vi2], normals[vi2], 0.0f, 0.0f);
+
+			// According to loD, do trilinear in texture look up
+			fb->Draw3DTriangleTexture(ppc, p0, p1, p2, tex, pixelSz);
+		}
 	}
 }
 

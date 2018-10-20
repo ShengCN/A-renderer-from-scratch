@@ -417,7 +417,7 @@ int FrameBuffer::PixelInProjectedTexture(int u, int v, float z, V3 &color, float
 		return 0;
 
 	float eps = 1e-1f;
-	if (projFB->GetZ(v2[0], v2[1]) - v2[2] <= eps)
+	if (projFB->GetZ(v2[0], v2[1]) - v2[2] < eps)
 	{
 		// look up project texture
 		float s = v2[0] / projFB->w, t = v2[1] / projFB->w;
@@ -811,7 +811,7 @@ void FrameBuffer::Draw3DTriangleTexture(PPC* ppc, PointProperty p0, PointPropert
 			bool s2 = InsideTriangle(uvP, pp1, pp2, pp0);
 			bool s3 = InsideTriangle(uvP, pp2, pp0, pp1);
 
-			if (s1 == true && s2 == true && s3 == true)
+			if (s1 && s2 && s3)
 			{
 				float k = V3(u, v, 1.0f) * qM[1] / (qM.GetColumn(0) * V3(u, u, u) + qM.GetColumn(1) * V3(v, v, v) + qM.
 					GetColumn(2) * V3(1.0f));

@@ -110,12 +110,12 @@ void Scene::Render(PPC* currPPC, FrameBuffer* currFB)
 	if (currFB)
 	{
 		currFB->Clear(0xFFFFFFFF, 0.0f);
-		for_each(meshes.begin(), meshes.end(), [&](TM* t)
-	         {
-		         t->RenderFill(currPPC, currFB);
-		         if (isRenderAABB)
-			         t->RenderAABB(currPPC, currFB);
-	         });
+		for (auto t : meshes)
+		{
+			t->RenderFill(currPPC, currFB);
+			if (isRenderAABB)
+				t->RenderAABB(currPPC, currFB);
+		}
 		currFB->redraw();
 	}
 }
