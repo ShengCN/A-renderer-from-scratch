@@ -132,20 +132,6 @@ void TM::RenderWireFrame(PPC* ppc, FrameBuffer* fb)
 
 void TM::RenderFill(PPC* ppc, FrameBuffer* fb)
 {
-	for (int ti = 0; ti < trisN; ++ti)
-	{
-		int vi0 = tris[ti * 3 + 0];
-		int vi1 = tris[ti * 3 + 1];
-		int vi2 = tris[ti * 3 + 2];
-
-		fb->Draw3DTriangle(ppc, verts[vi0], colors[vi0], 
-								verts[vi1], colors[vi1],
-								verts[vi2], colors[vi2]);
-	}
-}
-
-void TM::RenderFillTexture(PPC* ppc, FrameBuffer* fb)
-{
 	auto gv = GlobalVariables::Instance();
 	// Lod Level, use bbox to estimate how many pixels do we need
 	// Assume square texture
@@ -248,7 +234,7 @@ void TM::RenderFillTexture(PPC* ppc, FrameBuffer* fb)
 						PointProperty pointProperty(ppc->Unproject(uvP), color, pn, st[0], st[1]);
 						color = fb->Light(pointProperty, ppc);
 
-						if (GlobalVariables::Instance()->isRenderProjectedTexture)
+						if (GlobalVariables::Instance()->isRenderProjectedTexture && isVisibleInProjection)
 						{
 							V3 c(0.0f);
 							float a = 0.0f;
@@ -335,6 +321,9 @@ void TM::RenderFillZ(PPC* ppc, FrameBuffer* fb)
 					float l = V3(u, v, 1.0f) * qM[2] / (qM.GetColumn(0) * V3(u, u, u) + qM.GetColumn(1) * V3(v, v, v) + qM.
 						GetColumn(2) * V3(1.0f));
 					float wv = qM.GetColumn(0) * V3(u, u, u) + qM.GetColumn(1) * V3(v, v, v) + qM.GetColumn(2) * V3(1.0f);
+
+					if(!isVisibleInProjection)
+						continue;
 
 					if (GlobalVariables::Instance()->depthTest && !fb->Visible(u, v, wv))
 						continue;

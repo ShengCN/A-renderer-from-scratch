@@ -54,8 +54,6 @@ Scene::Scene(): isRenderAABB(false)
 	TM *teapot = new TM();
 	happy->LoadModelBin("./geometry/happy4.bin");
 	teapot->LoadModelBin("geometry/teapot1K.bin");
-	// auditorium->RotateAboutArbitraryAxis(auditorium->GetCenter(), V3(-1.0f, 0.0f, 0.0f), 90.0f);
-	// auditorium->RotateAboutArbitraryAxis(auditorium->GetCenter(), V3(0.0f, 1.0f, 0.0f), 180.0f);
 	V3 p0(0.0f), p1(0.0f), p2(0.0f), p3(0.0f);
 	V3 x(1.0f, 0.0f, 0.0f), y(0.0f,1.0f,0.0f), z(0.0f,0.0f,1.0f), c(0.3f);
 	p0 = p0 + x + y;
@@ -64,6 +62,7 @@ Scene::Scene(): isRenderAABB(false)
 	p3 = p3 + x - y;
 	PointProperty pp0(p0,c,z,0.0f,0.0f), pp1(p1,c,z,0.0f,1.0f), pp2(p2,c,z,1.0f,1.0f), pp3(p3,c,z,1.0f,0.0f);
 	plane->SetQuad(pp0, pp1, pp2, pp3);
+	happy->isVisibleInProjection = false;
 
 	float obsz = 50.0f;
 	V3 tmC = ppc->C + ppc->GetVD() * 100.0f;
@@ -88,7 +87,7 @@ void Scene::Render()
 {
 	if (fb)
 	{
-		RenderTexture(ppc, fb);
+		Render(ppc, fb);
 	}
 
 	// Third person view rendering
@@ -109,26 +108,11 @@ void Scene::Render(PPC* currPPC, FrameBuffer* currFB)
 {
 	if (currFB)
 	{
-		currFB->Clear(0xFFFFFFFF, 0.0f);
-		for (auto t : meshes)
-		{
-			t->RenderFill(currPPC, currFB);
-			if (isRenderAABB)
-				t->RenderAABB(currPPC, currFB);
-		}
-		currFB->redraw();
-	}
-}
-
-void Scene::RenderTexture(PPC* currPPC, FrameBuffer* currFB)
-{
-	if (currFB)
-	{
 		currFB->Clear(0xFF999999, 0.0f);
 
 		for(auto t:meshes)
 		{
-			t->RenderFillTexture(currPPC, currFB);
+			t->RenderFill(currPPC, currFB);
 			if (isRenderAABB)
 				t->RenderAABB(currPPC, currFB);
 		}
@@ -422,7 +406,10 @@ void Scene::Demonstration()
 	{
 		// projectPPC->C = projectPPC->C.RotateThisPointAboutArbitraryAxis(meshes[0]->GetCenter(), 
 		// 	V3(0.0f, 1.0f, 0.0f), 0.5f);
-		projectPPC->MoveLeft(1.0f);
+		// projectPPC->MoveLeft(1.0f);
+		
+		meshes[0]->Translate(V3(1.0f, 0.0f, 0.0f));
+
 		// Update projected Z buffer
 		RenderZbuffer(projectPPC, fbp);
 

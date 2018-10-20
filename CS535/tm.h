@@ -22,8 +22,9 @@ public:
 	int vertsN, trisN;
 	std::string tex;
 	int pixelSz;		// approximate projected aabb size
+	bool isVisibleInProjection;
 
-	TM() :vertsN(0), trisN(0), pixelSz(0) {};
+	TM() :vertsN(0), trisN(0), pixelSz(0), isVisibleInProjection(true) {};
 	void SetRectangle(V3 O, float rw, float rh);
 	void SetTriangle(PointProperty p0, PointProperty p1, PointProperty p2);
 	void SetQuad(PointProperty p0, PointProperty p1, PointProperty p2, PointProperty p3);
@@ -32,8 +33,7 @@ public:
 	void RenderPoints(PPC *ppc, FrameBuffer *fb);
 	void RenderWireFrame(PPC *ppc, FrameBuffer *fb);
 	void RenderFill(PPC *ppc, FrameBuffer *fb);
-	void RenderFillTexture(PPC *ppc, FrameBuffer *fb);
-	void RenderFillZ(PPC *ppc, FrameBuffer *fb);
+	void RenderFillZ(PPC *ppc, FrameBuffer *fb); // only draw z buffer
 	void RenderAABB(PPC *ppc, FrameBuffer *fb);
 	void RotateAboutArbitraryAxis(V3 O, V3 a, float angled);
 	void Translate(V3 tv);
