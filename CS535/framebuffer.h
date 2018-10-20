@@ -43,7 +43,8 @@ public:
 	float GetZ(int u, int v);
 	unsigned int Get(int u, int v);
 	bool LoadTex(const std::string texFile);
-	float IsPixelInShadow(int u, int v, float z);		// iterate all lights in scene
+	float IsPixelInShadow(int u, int v, float z);	
+	V3 PixelInProjectedTexture(int u, int v, float z);
 	V3 HomographMapping(V3 px1, PPC* ppc1, PPC* ppc2);
 
 	// Draw something

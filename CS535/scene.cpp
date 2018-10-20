@@ -36,46 +36,48 @@ Scene::Scene(): isRenderAABB(false)
 
 	fb3 = new FrameBuffer(u0 + fb->w + 30, v0, w, h);
 	fb3->label("Third Person View");
-//	fb3->show();
+	fb3->show();
+
+	fbp = new FrameBuffer(u0 + fb->w + 30, v0 + fb->h + 20, w, h);
+	fbp->label("Projected Texture");
+	fbp->show();
 
 	ppc = new PPC(fb->w, fb->h, fovf);
 	ppc3 = new PPC(fb3->w, fb3->h, 30.0f);
+	projectPPC = new PPC(fbp->w, fbp->h, fovf);
 
 	gui->uiw->position(u0, v0 + fb->h + 60);
 
 	// Ground Quad
 	TM *auditorium = new TM();
-	TM *ground = new TM();
-	TM *teapot = new TM();
-	auditorium->LoadModelBin("./geometry/teapot1K.bin");
-	teapot->LoadModelBin("geometry/teapot1K.bin");
-	float groundsz = 1.0f;
-	V3 gColor(0.9f), y(0.0f,1.0f,0.0f);
-	V3 p0(-groundsz, 0.0f, -groundsz), p1(-groundsz, 0.0f, groundsz), p2(groundsz, 0.0f, groundsz), p3(groundsz, 0.0f, -groundsz);
-	PointProperty pp0(p0, gColor, y, 0.0f, 0.0f), pp1(p1, gColor, y, 0.0f, 1.0f), pp2(p2, gColor, y, 1.0f, 1.0f), pp3(p3, gColor, y, 1.0f, 0.0f);
-	ground->SetQuad(pp0, pp1, pp2, pp3);
+	TM *plane = new TM();
+	auditorium->LoadModelBin("./geometry/bunny.bin");
+	// auditorium->RotateAboutArbitraryAxis(auditorium->GetCenter(), V3(-1.0f, 0.0f, 0.0f), 90.0f);
+	// auditorium->RotateAboutArbitraryAxis(auditorium->GetCenter(), V3(0.0f, 1.0f, 0.0f), 180.0f);
+	V3 p0(0.0f), p1(0.0f), p2(0.0f), p3(0.0f);
+	V3 x(1.0f, 0.0f, 0.0f), y(0.0f,1.0f,0.0f), z(0.0f,0.0f,1.0f), c(1.0f);
+	p0 = p0 + x + y;
+	p1 = p1 - x + y;
+	p2 = p2 - x - y;
+	p3 = p3 + x - y;
+	PointProperty pp0(p0,c,z,0.0f,0.0f), pp1(p1,c,z,0.0f,1.0f), pp2(p2,c,z,1.0f,1.0f), pp3(p3,c,z,1.0f,0.0f);
+	plane->SetQuad(pp0, pp1, pp2, pp3);
 
-	float obsz = 40.0f;
-	V3 tmC = ppc->C + ppc->GetVD() * 60.0f;
+	float obsz = 50.0f;
+	V3 tmC = ppc->C + ppc->GetVD() * 100.0f;
 	auditorium->PositionAndSize(tmC, obsz);
-	ground->PositionAndSize(tmC - y * (auditorium->ComputeAABB().GetDiagnolVector() * y) * 0.5f, 150.0f);
-	teapot->PositionAndSize(tmC + V3(20.0f, 10.0f, 0.0f), obsz);
+	plane->PositionAndSize(tmC + V3(20.0f, 0.0f, 0.0f), obsz);
 	meshes.push_back(auditorium);
-	meshes.push_back(teapot);
-	meshes.push_back(ground);
+	meshes.push_back(plane);
 
-	ppc->C = ppc->C + V3(0.0f, 50.0f, 0.0f);
+	ppc->C = ppc->C + V3(0.0f,0.0f,20.0f);
 	ppc->PositionAndOrient(ppc->C, auditorium->GetCenter(), V3(0.0f, 1.0f, 0.0f));
-//	ppc->RevolveH(ground->GetCenter(), 40.0f);
 
 	ppc3->C = ppc3->C + V3(330.0f, 150.0f, 300.0f);
 	ppc3->PositionAndOrient(ppc3->C, auditorium->GetCenter(), V3(0.0f, 1.0f, 0.0f));
-	
-	// Lighting
-	InitializeLights();
 
+	InitDemo();
 	Render();
-	// RenderWireFrame();
 }
 
 void Scene::Render()
@@ -92,6 +94,7 @@ void Scene::Render()
 
 		fb3->Clear(0xFFFFFFFF, 0.0f);
 		fb3->DrawPPC(ppc3, ppc, currf);
+		fb3->DrawPPC(ppc3, projectPPC, currf);
 		fb->VisualizeCurrView(ppc, currf, ppc3, fb3); // using a 3rd ppc to visualize current ppc
 		fb->VisualizeCurrView3D(ppc, ppc3, fb3); // using a 3rd ppc to visualize current ppc
 		fb3->redraw();
@@ -324,18 +327,6 @@ void Scene::DBG()
 	fb->redraw();
 }
 
-void Scene::InitDemo()
-{
-	// Random axis
-	TM quad;
-	PointProperty p0(V3(-100.0f, 100.0f, -200.0f), V3(0.5f), V3(0.0f, 0.0f, 1.0f), 0.0f, 0.0f);
-	PointProperty p1(V3(100.0f, 100.0f, -200.0f), V3(0.5f), V3(0.0f, 0.0f, 1.0f), 1.0f, 0.0f);
-	PointProperty p2(V3(-100.0f, -100.0f, -200.0f), V3(0.5f), V3(0.0f, 0.0f, 1.0f), 0.0f, 1.0f);
-	PointProperty p3(V3(-100.0f, 100.0f, -200.0f), V3(0.5f), V3(0.0f, 0.0f, 1.0f), 0.0f, 0.0f);
-	quad.SetTriangle(p0, p1, p2);
-	// meshes.push_back(quad);
-}
-
 void Scene::InitializeLights()
 {
 	// Prepare for visualize the light
@@ -384,31 +375,13 @@ void Scene::InitializeLights()
 	UpdateSM();
 }
 
+void Scene::InitDemo()
+{
+	fbp->LoadTex("images/jojo.tiff");
+	projectPPC->PositionAndOrient(ppc->C + V3(10.0f, 10.0f, 0.0f), meshes[0]->GetCenter(), V3(0.0f, 1.0f, 0.0f));
+}
+
 void Scene::Demonstration()
 {
-	int count = 0;
-	int stepN = 360;
-	V3 startPos = lightPPCs[0]->C;
-	for (int stepi = 0; stepi < stepN; stepi++)
-	{
-		//  Moving objects
-		float radius = static_cast<float>(stepi) * 1.0f;
-		for(size_t li = 0; li < lightPPCs.size(); ++li)
-		{
-			float fract = static_cast<float>(li) / static_cast<float>(lightPPCs.size());
-			float rotDeg = 360.0f * fract;
-			V3 transV = V3(1.0f, 0.0f, 0.0f) * radius;
-			transV = transV.RotateThisPointAboutArbitraryAxis(V3(0.0f), V3(0.0f, 1.0f, 0.0f), rotDeg);
-			lightPPCs[li]->PositionAndOrient(startPos + transV, meshes[0]->GetCenter(), V3(1.0f,0.0f,0.0f));
-		}
 
-		// Render
-		UpdateSM();
-		Render();
-
-		char buffer[50];
-		sprintf_s(buffer, "images/shadow-%03d.tiff", stepi);
-		fb->SaveAsTiff(buffer);
-		Fl::check();
-	}
 }

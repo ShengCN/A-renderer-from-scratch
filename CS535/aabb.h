@@ -10,7 +10,7 @@ public:
 	V3 GetCenter();
 	V3 GetDiagnolVector();
 	float GetDiagnoalLength();
-
+	int Clip2D(float left, float right, float top, float bottom);
 
 	friend ostream& operator<<(ostream& ist, AABB bbox);
 };

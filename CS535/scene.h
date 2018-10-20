@@ -12,11 +12,11 @@ class Scene
 {
 public:
 	GUI* gui;
-	FrameBuffer* fb, *fb3;
+	FrameBuffer* fb, *fb3, *fbp;
 	std::vector<shared_ptr<FrameBuffer>> textures;
 	std::vector<shared_ptr<PPC>> lightPPCs;
 	std::vector<shared_ptr<FrameBuffer>> shadowMaps;
-	PPC* ppc, *ppc3;
+	PPC* ppc, *ppc3, *projectPPC;
 	vector<TM*> meshes;
 
 	Scene();

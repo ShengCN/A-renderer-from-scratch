@@ -86,6 +86,18 @@ void FrameBuffer::KeyboardHandle()
 		gv->curScene->Render();
 			break;
 		}
+	case 'z':
+	{
+		gv->curScene->ppc->MoveDown(-1.0f);
+		gv->curScene->Render();
+		break;
+	}
+	case 'x':
+	{
+		gv->curScene->ppc->MoveDown(1.0f);
+		gv->curScene->Render();
+		break;
+	}
 	case 'j':
 		{
 			// RevolveH 
@@ -104,6 +116,8 @@ void FrameBuffer::KeyboardHandle()
 		cerr << "INFO: do not understand keypress" << endl;
 		break;;
 	}
+
+	cerr << gv->curScene->ppc->C;
 }
 
 
@@ -249,10 +263,15 @@ int FrameBuffer::ClipToScreen(float& u0, float& v0, float& u1, float& v1)
 	if (u0 > w || v0 > h || u1 < 0 || v1 < 0)
 		return 0;
 
-	u0 = std::max(0.0f, u0);
-	v0 = std::max(0.0f, v0);
-	u1 = std::min(u1, static_cast<float>(w - 1));
-	v1 = std::min(v1, static_cast<float>(h - 1));
+	if (u0 < 0.0f)
+		u0 = 0.0f;
+	if (v0 < 0.0f)
+		v0 = 0.0f;
+	if (u1 > static_cast<float>(w - 1))
+		u1 = static_cast<float>(w - 1);
+	if (v1 > static_cast<float>(h - 1))
+		v1 = static_cast<float>(h - 1);
+
 	return 1;
 }
 
@@ -369,6 +388,33 @@ float FrameBuffer::IsPixelInShadow(int u, int v, float z)
 			ret *= 0.2f;
 		}
 	}
+
+	return ret;
+}
+
+V3 FrameBuffer::PixelInProjectedTexture(int u, int v, float z)
+{
+	V3 ret(0.0f);
+	// auto gv = GlobalVariables::Instance();
+	// float uf = static_cast<float>(u) + 0.5f, vf = static_cast<float>(v) + 0.5f;
+ //
+	// // Check for all shadow maps
+	// for (size_t li = 0; li < gv->curScene->lightPPCs.size(); ++li)
+	// {
+	// 	auto ppc1 = gv->curScene->ppc;
+	// 	auto ppc2 = gv->curScene->lightPPCs[li];
+	// 	auto SM = gv->curScene->shadowMaps[li];
+ //
+	// 	V3 v2 = HomographMapping(V3(uf, vf, z), ppc1, ppc2.get());
+ //
+	// 	// compare shadow maps w
+	// 	float eps = 0.15f;
+	// 	if (SM->GetZ(v2[0], v2[1]) - v2[2] > eps)
+	// 	{
+	// 		// in shadow
+	// 		ret *= 0.2f;
+	// 	}
+	// }
 
 	return ret;
 }
@@ -515,10 +561,16 @@ void FrameBuffer::Draw3DTriangle(PPC* camera, V3 p1, V3 p2, V3 p3, V3 color)
 	if (!camera->Project(p1, pp0) || !camera->Project(p2, pp1) || !camera->Project(p3, pp2))
 		return;
 
+	if (pp0[0] == FLT_MAX ||
+		pp1[0] == FLT_MAX ||
+		pp2[0] == FLT_MAX)
+		return;
+
 	AABB bbTri(pp0);
 	bbTri.AddPoint(pp1);
 	bbTri.AddPoint(pp2);
-	ClipToScreen(bbTri.corners[0][0], bbTri.corners[0][1], bbTri.corners[1][0], bbTri.corners[1][1]);
+	if (!ClipToScreen(bbTri.corners[0][0], bbTri.corners[0][1], bbTri.corners[1][0], bbTri.corners[1][1]))
+		return;
 
 	// Rasterize bbox 
 	int left = static_cast<int>(bbTri.corners[0][0] + 0.5f), right = static_cast<int>(bbTri.corners[1][0] - 0.5f);
@@ -561,10 +613,16 @@ void FrameBuffer::Draw3DTriangle(PPC* ppc, V3 p0, V3 c0, V3 p1, V3 c1, V3 p2, V3
 	if (!ppc->Project(p2, pp2))
 		return;
 
+	if (pp0[0] == FLT_MAX ||
+		pp1[0] == FLT_MAX ||
+		pp2[0] == FLT_MAX)
+		return;
+
 	AABB bbTri(pp0);
 	bbTri.AddPoint(pp1);
 	bbTri.AddPoint(pp2);
-	ClipToScreen(bbTri.corners[0][0], bbTri.corners[0][1], bbTri.corners[1][0], bbTri.corners[1][1]);
+	if (!ClipToScreen(bbTri.corners[0][0], bbTri.corners[0][1], bbTri.corners[1][0], bbTri.corners[1][1]))
+		return;
 
 	// Rasterize bbox 
 	int left = static_cast<int>(bbTri.corners[0][0] + 0.5f), right = static_cast<int>(bbTri.corners[1][0] - 0.5f);
@@ -647,10 +705,16 @@ void FrameBuffer::Draw3DTriangleTexture(PPC* ppc, PointProperty p0, PointPropert
 	if (!ppc->Project(p2.p, pp2))
 		return;
 
+	if (pp0[0] == FLT_MAX ||
+		pp1[0] == FLT_MAX ||
+		pp2[0] == FLT_MAX)
+		return;
+
 	AABB bbTri(pp0);
 	bbTri.AddPoint(pp1);
 	bbTri.AddPoint(pp2);
-	ClipToScreen(bbTri.corners[0][0], bbTri.corners[0][1], bbTri.corners[1][0], bbTri.corners[1][1]);
+	if (!ClipToScreen(bbTri.corners[0][0], bbTri.corners[0][1], bbTri.corners[1][0], bbTri.corners[1][1]))
+		return;
 
 	M33 abcM;
 	abcM.SetColumn(0, ppc->a);
@@ -721,6 +785,12 @@ void FrameBuffer::Draw3DTriangleTexture(PPC* ppc, PointProperty p0, PointPropert
 				// Cast shadow onto shading results
 				float sdCoeff = IsPixelInShadow(u, v, wv);
 				color = color * sdCoeff;
+
+				if(GlobalVariables::Instance()->isRenderProjectedTexture)
+				{
+					color = color + PixelInProjectedTexture(u, v, wv);
+				}
+
 				DrawPoint(u, v, color.GetColor());
 			}
 		}

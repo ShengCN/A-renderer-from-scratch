@@ -15,4 +15,5 @@ GlobalVariables* GlobalVariables::Instance()
 GlobalVariables::GlobalVariables()
 {
 	curScene = nullptr;
+	isProjected = true;
 }

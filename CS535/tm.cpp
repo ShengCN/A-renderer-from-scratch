@@ -135,6 +135,7 @@ void TM::RenderFill(PPC* ppc, FrameBuffer* fb)
 		int vi0 = tris[ti * 3 + 0];
 		int vi1 = tris[ti * 3 + 1];
 		int vi2 = tris[ti * 3 + 2];
+
 		fb->Draw3DTriangle(ppc, verts[vi0], colors[vi0], 
 								verts[vi1], colors[vi1],
 								verts[vi2], colors[vi2]);
@@ -145,7 +146,7 @@ void TM::RenderFillTexture(PPC* ppc, FrameBuffer* fb)
 {
 	// Lod Level, use bbox to estimate how many pixels do we need
 	// Assume square texture
-	auto aabb = ComputeAABB();
+ 	auto aabb = ComputeAABB();
 	V3 paabb0(0.0f), paabb1(0.0f);
 	ppc->Project(aabb.corners[0], paabb0);
 	ppc->Project(aabb.corners[1], paabb1);

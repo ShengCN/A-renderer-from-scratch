@@ -7,7 +7,7 @@ class GlobalVariables
 {
 public:
 	Scene *curScene;
-
+	bool isRenderProjectedTexture;
 	static GlobalVariables* Instance();
 private:
 	GlobalVariables();

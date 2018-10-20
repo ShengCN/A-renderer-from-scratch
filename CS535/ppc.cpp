@@ -23,8 +23,8 @@ int PPC::Project(V3 P, V3& ProjP)
 	proj.SetColumn(0, a);
 	proj.SetColumn(1, b);
 	proj.SetColumn(2, c);
+	ProjP[0] = FLT_MAX;
 	V3 PPixel = proj.Inverse()*(P - C);
-
 	// check if in the view frustrum
 	if (w <= 0.0f)
 		return 0;
@@ -202,5 +202,10 @@ void PPC::MoveForward(float delta)
 void PPC::MoveLeft(float delta)
 {
 	C = C + a * delta;
+}
+
+void PPC::MoveDown(float delta)
+{
+	C = C + b * delta;
 }
 

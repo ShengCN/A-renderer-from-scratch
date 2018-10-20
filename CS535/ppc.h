@@ -42,5 +42,6 @@ public:
 	// Keyboard handles
 	void MoveForward(float delta);
 	void MoveLeft(float delta);
+	void MoveDown(float delta);
 };
 
