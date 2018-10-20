@@ -44,18 +44,20 @@ Scene::Scene(): isRenderAABB(false)
 
 	ppc = new PPC(fb->w, fb->h, fovf);
 	ppc3 = new PPC(fb3->w, fb3->h, 30.0f);
-	projectPPC = new PPC(fbp->w, fbp->h, fovf);
+	projectPPC = new PPC(fbp->w, fbp->h, 30.0f);
 
 	gui->uiw->position(u0, v0 + fb->h + 60);
 
 	// Ground Quad
-	TM *auditorium = new TM();
+	TM *happy = new TM();
 	TM *plane = new TM();
-	auditorium->LoadModelBin("./geometry/bunny.bin");
+	TM *teapot = new TM();
+	happy->LoadModelBin("./geometry/happy4.bin");
+	teapot->LoadModelBin("geometry/teapot1K.bin");
 	// auditorium->RotateAboutArbitraryAxis(auditorium->GetCenter(), V3(-1.0f, 0.0f, 0.0f), 90.0f);
 	// auditorium->RotateAboutArbitraryAxis(auditorium->GetCenter(), V3(0.0f, 1.0f, 0.0f), 180.0f);
 	V3 p0(0.0f), p1(0.0f), p2(0.0f), p3(0.0f);
-	V3 x(1.0f, 0.0f, 0.0f), y(0.0f,1.0f,0.0f), z(0.0f,0.0f,1.0f), c(1.0f);
+	V3 x(1.0f, 0.0f, 0.0f), y(0.0f,1.0f,0.0f), z(0.0f,0.0f,1.0f), c(0.3f);
 	p0 = p0 + x + y;
 	p1 = p1 - x + y;
 	p2 = p2 - x - y;
@@ -65,16 +67,18 @@ Scene::Scene(): isRenderAABB(false)
 
 	float obsz = 50.0f;
 	V3 tmC = ppc->C + ppc->GetVD() * 100.0f;
-	auditorium->PositionAndSize(tmC, obsz);
-	plane->PositionAndSize(tmC + V3(20.0f, 0.0f, 0.0f), obsz);
-	meshes.push_back(auditorium);
+	happy->PositionAndSize(tmC - V3(20.0f, 0.0f, 0.0f), obsz);
+	teapot->PositionAndSize(tmC + V3(20.0f,0.0f,0.0f), obsz);
+	plane->PositionAndSize(tmC + V3(0.0f, 0.0f, -50.0f), 150.0f);
+	meshes.push_back(happy);
+	meshes.push_back(teapot);
 	meshes.push_back(plane);
 
 	ppc->C = ppc->C + V3(0.0f,0.0f,20.0f);
-	ppc->PositionAndOrient(ppc->C, auditorium->GetCenter(), V3(0.0f, 1.0f, 0.0f));
+	ppc->PositionAndOrient(ppc->C, plane->GetCenter(), V3(0.0f, 1.0f, 0.0f));
 
 	ppc3->C = ppc3->C + V3(330.0f, 150.0f, 300.0f);
-	ppc3->PositionAndOrient(ppc3->C, auditorium->GetCenter(), V3(0.0f, 1.0f, 0.0f));
+	ppc3->PositionAndOrient(ppc3->C, happy->GetCenter(), V3(0.0f, 1.0f, 0.0f));
 
 	InitDemo();
 	Render();
@@ -121,12 +125,13 @@ void Scene::RenderTexture(PPC* currPPC, FrameBuffer* currFB)
 	if (currFB)
 	{
 		currFB->Clear(0xFF999999, 0.0f);
-		for_each(meshes.begin(), meshes.end(), [&](TM* t)
-	         {
-		         t->RenderFillTexture(currPPC, currFB);
-		         if (isRenderAABB)
-			         t->RenderAABB(currPPC, currFB);
-	         });
+
+		for(auto t:meshes)
+		{
+			t->RenderFillTexture(currPPC, currFB);
+			if (isRenderAABB)
+				t->RenderAABB(currPPC, currFB);
+		}
 
 		currFB->redraw();
 	}
@@ -144,11 +149,25 @@ void Scene::RenderWireFrame()
 	fb->redraw();
 }
 
+void Scene::RenderZbuffer(PPC *currPPC, FrameBuffer *currFB)
+{
+	fb->Clear(0xFFFFFFFF, 0.0f);
+
+	// Draw all triangles
+	for_each(meshes.begin(), meshes.end(), [&](TM* t)
+	{
+		t->RenderFillZ(ppc, fb);
+	});
+
+	// commit frame update
+	fb->redraw();
+}
+
 void Scene::UpdateSM()
 {
 	for(size_t li = 0; li < lightPPCs.size(); ++li)
 	{
-		Render(lightPPCs[li].get(), shadowMaps[li].get());
+		RenderZbuffer(lightPPCs[li].get(), shadowMaps[li].get());
 	}
 }
 
@@ -377,17 +396,33 @@ void Scene::InitializeLights()
 
 void Scene::InitDemo()
 {
-	fbp->LoadTex(GlobalVariables::Instance()->projectedTextureName);
+	string projTexName = GlobalVariables::Instance()->projectedTextureName;
+	fbp->LoadTex(projTexName);
+	fbp->LoadTiff(projTexName.c_str());
 	projectPPC->PositionAndOrient(ppc->C + V3(10.0f, 10.0f, 0.0f), meshes[0]->GetCenter(), V3(0.0f, 1.0f, 0.0f));
 	RenderTexture(projectPPC, fbp);
+
+	// lighting and shadows
+	V3 L0 = meshes[0]->GetCenter() + V3(0.0f, 100.0f, 500.0f);
+	int u0 = 20, v0 = 20;
+	float fovf = 55.0f;
+	int w = 640;
+	int h = 480;
+	shared_ptr<PPC> l0PPC = make_shared<PPC>(w, h, fovf);
+	l0PPC->PositionAndOrient(L0, meshes[0]->GetCenter(), V3(1.0f, 0.0f, 0.0f));
+
+	// commit to framebuffer
+	lightPPCs.push_back(l0PPC);
 }
 
 void Scene::Demonstration()
 {
-	int stepN = 360;
+	int stepN = 100;
 	for(int stepi = 0; stepi < stepN; ++stepi)
 	{
-		projectPPC->C = projectPPC->C.RotateThisPointAboutArbitraryAxis(meshes[0]->GetCenter(), V3(0.0f, 1.0f, 0.0f), 1.0f);
+		// projectPPC->C = projectPPC->C.RotateThisPointAboutArbitraryAxis(meshes[0]->GetCenter(), 
+		// 	V3(0.0f, 1.0f, 0.0f), 0.5f);
+		projectPPC->MoveLeft(1.0f);
 		// Update projected Z buffer
 		RenderTexture(projectPPC, fbp);
 

@@ -369,7 +369,7 @@ float FrameBuffer::IsPixelInShadow(int u, int v, float z)
 {
 	float ret = 1.0f;	// shadow effect
 	auto gv = GlobalVariables::Instance();
-	if (gv->curScene->lightPPCs.empty())
+	if (gv->curScene->shadowMaps.empty())
 		return ret;
 
 	float uf = static_cast<float>(u) + 0.5f, vf = static_cast<float>(v) + 0.5f;
@@ -416,8 +416,8 @@ int FrameBuffer::PixelInProjectedTexture(int u, int v, float z, V3 &color, float
 	if (!aabb.Clip2D(0.0f,projFB->w, 0.0f, projFB->h))
 		return 0;
 
-	float eps = 0.15f;
-	if (projFB->GetZ(v2[0], v2[1]) - v2[2] < eps)
+	float eps = 1e-1f;
+	if (projFB->GetZ(v2[0], v2[1]) - v2[2] <= eps)
 	{
 		// look up project texture
 		float s = v2[0] / projFB->w, t = v2[1] / projFB->w;
@@ -562,6 +562,67 @@ void FrameBuffer::Draw3DPoint(PPC* camera, V3 p, unsigned color, int pointSize)
 	int v = static_cast<int>(pp[1]);
 	int halfPointSize = pointSize / 2;
 	DrawRectangle(u - halfPointSize, v - halfPointSize, u + halfPointSize, v + halfPointSize, color);
+}
+
+void FrameBuffer::Draw3DTriangle(PPC* ppc, V3 p0, V3 p1, V3 p2)
+{
+	V3 pp0, pp1, pp2;
+	if (!ppc->Project(p0, pp0))
+		return;
+	if (!ppc->Project(p1, pp1))
+		return;
+	if (!ppc->Project(p2, pp2))
+		return;
+
+	if (pp0[0] == FLT_MAX ||
+		pp1[0] == FLT_MAX ||
+		pp2[0] == FLT_MAX)
+		return;
+
+	AABB bbTri(pp0);
+	bbTri.AddPoint(pp1);
+	bbTri.AddPoint(pp2);
+	if (!ClipToScreen(bbTri.corners[0][0], bbTri.corners[0][1], bbTri.corners[1][0], bbTri.corners[1][1]))
+		return;
+
+	M33 abcM;
+	abcM.SetColumn(0, ppc->a);
+	abcM.SetColumn(1, ppc->b);
+	abcM.SetColumn(2, ppc->c);
+	M33 vcM;
+	vcM.SetColumn(0, p0 - ppc->C);
+	vcM.SetColumn(1, p1 - ppc->C);
+	vcM.SetColumn(2, p2 - ppc->C);
+	M33 qM = vcM.Inverse() * abcM;
+
+	// Rasterize bbox
+	int left = static_cast<int>(bbTri.corners[0][0] + 0.5f), right = static_cast<int>(bbTri.corners[1][0] - 0.5f);
+	int top = static_cast<int>(bbTri.corners[0][1] + 0.5f), bottom = static_cast<int>(bbTri.corners[1][1] - 0.5f);
+
+	int u = left, v = top;
+
+	for (v = top; v <= bottom; ++v)
+	{
+		for (u = left; u <= right; ++u)
+		{
+			V3 uvP(static_cast<float>(u) + 0.5f, static_cast<float>(v) + 0.5f, 1.0f);
+			bool s1 = InsideTriangle(uvP, pp0, pp1, pp2);
+			bool s2 = InsideTriangle(uvP, pp1, pp2, pp0);
+			bool s3 = InsideTriangle(uvP, pp2, pp0, pp1);
+
+			if (s1 && s2 && s3)
+			{
+				float k = V3(u, v, 1.0f) * qM[1] / (qM.GetColumn(0) * V3(u, u, u) + qM.GetColumn(1) * V3(v, v, v) + qM.
+					GetColumn(2) * V3(1.0f));
+				float l = V3(u, v, 1.0f) * qM[2] / (qM.GetColumn(0) * V3(u, u, u) + qM.GetColumn(1) * V3(v, v, v) + qM.
+					GetColumn(2) * V3(1.0f));
+				float wv = qM.GetColumn(0) * V3(u, u, u) + qM.GetColumn(1) * V3(v, v, v) + qM.GetColumn(2) * V3(1.0f);
+
+				if (depthTest && !Visible(u, v, wv))
+					continue;				
+			}
+		}
+	}
 }
 
 void FrameBuffer::Draw3DTriangle(PPC* camera, V3 p1, V3 p2, V3 p3, V3 color)
