@@ -32,24 +32,6 @@ float AABB::GetDiagnoalLength()
 	return diagonalV.Length();
 }
 
-int AABB::Clip2D(float left, float right, float top, float bottom)
-{
-	V3 c0 = corners[0];
-	V3 c1 = corners[1];
-	if (c0[0] > right || c1[0] < left || c0[1] > bottom || c1[1] < top)
-		return 0;
-	if (c0[0] < left)
-		c0[0] = left;
-	if (c1[0] > right)
-		c1[0] = right;
-	if (c0[1] < top)
-		c0[1] = top;
-	if (c1[1] > bottom)
-		c1[1] = bottom;
-	return 1;
-
-}
-
 ostream& operator<<(ostream& ist, AABB bbox)
 {
 	return ist << "BBox corners: " << bbox.corners[0] << bbox.corners[1];

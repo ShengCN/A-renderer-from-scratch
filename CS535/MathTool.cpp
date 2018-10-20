@@ -1,4 +1,5 @@
 #include "MathTool.h"
+#include "V3.h"
 
 bool FloatEqual(float a, float b)
 {
@@ -19,4 +20,16 @@ float Rad2Deg(float rad)
 float Fract(float n)
 {
 	return n - static_cast<int>(n);
+}
+
+bool InsideTriangle(V3 p, V3 v1, V3 v2, V3 v3)
+{
+	float x1 = v1[0], x2 = v2[0], y1 = v1[1], y2 = v2[1];
+
+	V3 coeff(y2 - y1, x1 - x2, x2 * y1 - x1 * y2);
+
+	float res1 = coeff * V3(p[0], p[1], 1.0f);
+	float res2 = coeff * V3(v3[0], v3[1], 1.0f);
+
+	return res1 * res2 >= 0.0f;
 }

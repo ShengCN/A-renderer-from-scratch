@@ -44,7 +44,7 @@ Scene::Scene(): isRenderAABB(false)
 
 	ppc = new PPC(fb->w, fb->h, fovf);
 	ppc3 = new PPC(fb3->w, fb3->h, 30.0f);
-	projectPPC = new PPC(fbp->w, fbp->h, 30.0f);
+	projectPPC = new PPC(fbp->w, fbp->h, 20.0f);
 
 	gui->uiw->position(u0, v0 + fb->h + 60);
 
@@ -400,7 +400,7 @@ void Scene::InitDemo()
 	fbp->LoadTex(projTexName);
 	fbp->LoadTiff(projTexName.c_str());
 	projectPPC->PositionAndOrient(ppc->C + V3(10.0f, 10.0f, 0.0f), meshes[0]->GetCenter(), V3(0.0f, 1.0f, 0.0f));
-	RenderTexture(projectPPC, fbp);
+	RenderZbuffer(projectPPC, fbp);
 
 	// lighting and shadows
 	V3 L0 = meshes[0]->GetCenter() + V3(0.0f, 100.0f, 500.0f);
@@ -424,7 +424,7 @@ void Scene::Demonstration()
 		// 	V3(0.0f, 1.0f, 0.0f), 0.5f);
 		projectPPC->MoveLeft(1.0f);
 		// Update projected Z buffer
-		RenderTexture(projectPPC, fbp);
+		RenderZbuffer(projectPPC, fbp);
 
 		Render();
 		Fl::check();

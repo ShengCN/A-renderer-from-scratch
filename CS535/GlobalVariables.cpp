@@ -16,5 +16,7 @@ GlobalVariables::GlobalVariables()
 {
 	curScene = nullptr;
 	isRenderProjectedTexture = true;
+	depthTest = true;
+	lodTexture = true;
 	projectedTextureName = "images/jojo.tiff";
 }

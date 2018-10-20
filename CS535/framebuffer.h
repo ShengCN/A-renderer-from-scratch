@@ -23,7 +23,6 @@ public:
 	unsigned int *pix;	// pixel 
 	float *zb;			// z buffer
 	unordered_map<std::string, vector<TextureInfo>> textures; // use file name as index, different Lod, 0 is default
-	bool depthTest, lodTexture;
 	int w, h;
 
 	FrameBuffer(int u0, int v0, int _w, int _h);
@@ -55,10 +54,8 @@ public:
 	void DrawEllipse(int u0, int v0, float r0, float r1, unsigned int color);
 	void DrawPoint(int u, int v, unsigned int color);
 	void Draw3DPoint(PPC* ppc, V3 p, unsigned int color, int pointSize);
-	void Draw3DTriangle(PPC* ppc, V3 p1, V3 p2, V3 p3);
 	void Draw3DTriangle(PPC* ppc, V3 p1, V3 p2, V3 p3, V3 color);
 	void Draw3DTriangle(PPC* ppc, V3 p0, V3 c0, V3 p1, V3 c1, V3 p2, V3 c2);
-	void Draw3DTriangleTexture(PPC *ppc, PointProperty p0, PointProperty p1, PointProperty p2, const std::string texFile, int pixelSz = -1);
 
 	void DrawPPC(PPC* wPPC, PPC* tPPC, float vf);	// visualize target PPC using wPPC
 	void VisualizeCurrView(PPC *ppc0, float currf, PPC *ppc1, FrameBuffer *fb1);
@@ -74,6 +71,5 @@ public:
 
 private:
 	void Set(int u, int v, int color);
-	bool InsideTriangle(V3 p, V3 v1, V3 v2, V3 v3);
 };
 

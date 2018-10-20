@@ -3,6 +3,8 @@
 
 #include "TM.h"
 #include "MathTool.h"
+#include "GlobalVariables.h"
+#include "m33.h"
 
 using namespace std;
 
@@ -144,6 +146,7 @@ void TM::RenderFill(PPC* ppc, FrameBuffer* fb)
 
 void TM::RenderFillTexture(PPC* ppc, FrameBuffer* fb)
 {
+	auto gv = GlobalVariables::Instance();
 	// Lod Level, use bbox to estimate how many pixels do we need
 	// Assume square texture
  	auto aabb = ComputeAABB();
@@ -155,40 +158,120 @@ void TM::RenderFillTexture(PPC* ppc, FrameBuffer* fb)
 	pixelSz = Clamp(pixelSz, 0, fb->w);
 	// cerr << "Current LoD: " << log2(pixelSz) << endl;
 
-	if (tcs.size() == verts.size() * 2)
-	{
+		// with texture
 		for (int ti = 0; ti < trisN; ++ti)
 		{
 			int vi0 = tris[ti * 3 + 0];
 			int vi1 = tris[ti * 3 + 1];
 			int vi2 = tris[ti * 3 + 2];
 
-			PointProperty p0(verts[vi0], colors[vi0], normals[vi0], tcs[vi0 * 2], tcs[vi0 * 2 + 1]);
-			PointProperty p1(verts[vi1], colors[vi1], normals[vi1], tcs[vi1 * 2], tcs[vi1 * 2 + 1]);
-			PointProperty p2(verts[vi2], colors[vi2], normals[vi2], tcs[vi2 * 2], tcs[vi2 * 2 + 1]);
+			bool hasTexture = false;
+			if (tcs.size() == verts.size() * 2) hasTexture = true;
+			
+			PointProperty p0(verts[vi0], colors[vi0], normals[vi0], hasTexture ? tcs[vi0 * 2] : 0.0f, hasTexture ? tcs[vi0 * 2 + 1] : 0.0f);
+			PointProperty p1(verts[vi1], colors[vi1], normals[vi1], hasTexture ? tcs[vi1 * 2] : 0.0f, hasTexture ? tcs[vi1 * 2 + 1] : 0.0f);
+			PointProperty p2(verts[vi2], colors[vi2], normals[vi2], hasTexture ? tcs[vi2 * 2] : 0.0f, hasTexture ? tcs[vi2 * 2 + 1] : 0.0f);
 
 			// According to loD, do trilinear in texture look up
-			fb->Draw3DTriangleTexture(ppc, p0, p1, p2, tex, pixelSz);
-		}
-	}
-	else
-	{
-		// no texture
-		// RenderFill(ppc, fb);
-		for (int ti = 0; ti < trisN; ++ti)
-		{
-			int vi0 = tris[ti * 3 + 0];
-			int vi1 = tris[ti * 3 + 1];
-			int vi2 = tris[ti * 3 + 2];
+			V3 pp0, pp1, pp2;
+			if (!ppc->Project(p0.p, pp0))
+				return;
+			if (!ppc->Project(p1.p, pp1))
+				return;
+			if (!ppc->Project(p2.p, pp2))
+				return;
 
-			PointProperty p0(verts[vi0], colors[vi0], normals[vi0], 0.0f,0.0f);
-			PointProperty p1(verts[vi1], colors[vi1], normals[vi1], 0.0f, 0.0f);
-			PointProperty p2(verts[vi2], colors[vi2], normals[vi2], 0.0f, 0.0f);
+			if (pp0[0] == FLT_MAX ||
+				pp1[0] == FLT_MAX ||
+				pp2[0] == FLT_MAX)
+				return;
 
-			// According to loD, do trilinear in texture look up
-			fb->Draw3DTriangleTexture(ppc, p0, p1, p2, tex, pixelSz);
+			AABB bbTri(pp0);
+			bbTri.AddPoint(pp1);
+			bbTri.AddPoint(pp2);
+			if (!bbTri.Clip2D(0,fb->w-1, 0, fb->h-1))
+				return;
+
+			M33 abcM;
+			abcM.SetColumn(0, ppc->a);
+			abcM.SetColumn(1, ppc->b);
+			abcM.SetColumn(2, ppc->c);
+			M33 vcM;
+			vcM.SetColumn(0, p0.p - ppc->C);
+			vcM.SetColumn(1, p1.p - ppc->C);
+			vcM.SetColumn(2, p2.p - ppc->C);
+			M33 qM = vcM.Inverse() * abcM;
+
+			// Rasterize bbox
+			int left = static_cast<int>(bbTri.corners[0][0] + 0.5f), right = static_cast<int>(bbTri.corners[1][0] - 0.5f);
+			int top = static_cast<int>(bbTri.corners[0][1] + 0.5f), bottom = static_cast<int>(bbTri.corners[1][1] - 0.5f);
+
+			for (int v = top; v <= bottom; ++v)
+			{
+				for (int u = left; u <= right; ++u)
+				{
+					V3 uvP(static_cast<float>(u) + 0.5f, static_cast<float>(v) + 0.5f, 1.0f);
+					bool s1 = InsideTriangle(uvP, pp0, pp1, pp2);
+					bool s2 = InsideTriangle(uvP, pp1, pp2, pp0);
+					bool s3 = InsideTriangle(uvP, pp2, pp0, pp1);
+
+					if (s1 && s2 && s3)
+					{
+						float k = V3(u, v, 1.0f) * qM[1] / (qM.GetColumn(0) * V3(u, u, u) + qM.GetColumn(1) * V3(v, v, v) + qM.
+							GetColumn(2) * V3(1.0f));
+						float l = V3(u, v, 1.0f) * qM[2] / (qM.GetColumn(0) * V3(u, u, u) + qM.GetColumn(1) * V3(v, v, v) + qM.
+							GetColumn(2) * V3(1.0f));
+						float wv = qM.GetColumn(0) * V3(u, u, u) + qM.GetColumn(1) * V3(v, v, v) + qM.GetColumn(2) * V3(1.0f);
+						V3 st0(p0.s, p0.t, 0.0f), st1(p1.s, p1.t, 0.0f), st2(p2.s, p2.t, 0.0f);
+
+						if (gv->depthTest && !fb->Visible(u, v, wv))
+							continue;
+						uvP[2] = wv;
+						V3 st = st0 + (st1 - st0) * k + (st2 - st0) * l;
+						V3 pc = p0.c + (p1.c - p0.c) * k + (p2.c - p0.c) * l;
+						V3 pn = p0.n + (p1.n - p0.n) * k + (p2.n - p0.n) * l;
+						V3 color(0.0f);
+
+						// shading
+						float alpha = 1.0f;
+						if (fb->textures.find(tex) != fb->textures.end())
+						{
+							// s and t in (0.0f,1.0f)
+							float s = Clamp(Fract(st[0]), 0.0f, 1.0f);
+							float t = Clamp(Fract(st[1]), 0.0f, 1.0f);
+							color = fb->LookupColor(tex, s, t, alpha, pixelSz);
+						}
+						else
+							color = pc;
+
+						// Per pixel lighting after texture mapping
+						PointProperty pointProperty(ppc->Unproject(uvP), color, pn, st[0], st[1]);
+						color = fb->Light(pointProperty, ppc);
+
+						if (GlobalVariables::Instance()->isRenderProjectedTexture)
+						{
+							V3 c(0.0f);
+							float a = 0.0f;
+							if (fb->PixelInProjectedTexture(u, v, wv, c, a))
+								color = color * (1.0f - a) + c * a;
+						}
+
+						// alpha blending 
+						if (!FloatEqual(1.0f, alpha))
+						{
+							V3 pxC(0.0f);
+							pxC.SetColor(fb->pix[(fb->h - 1 - v) * fb->w + u]);
+							color = color * alpha + pxC * (1.0f - alpha);
+						}
+
+						// Cast shadow onto shading results
+						float sdCoeff = fb->IsPixelInShadow(u, v, wv);
+						color = color * sdCoeff;
+						fb->DrawPoint(u, v, color.GetColor());
+					}
+				}
+			}
 		}
-	}
 }
 
 void TM::RenderFillZ(PPC* ppc, FrameBuffer* fb)
@@ -199,7 +282,65 @@ void TM::RenderFillZ(PPC* ppc, FrameBuffer* fb)
 		int vi1 = tris[ti * 3 + 1];
 		int vi2 = tris[ti * 3 + 2];
 
-		fb->Draw3DTriangle(ppc, verts[vi0], verts[vi1], verts[vi2]);
+		// Render z buffer to fb
+		V3 p0 = verts[vi0], p1 = verts[vi1], p2 = verts[vi2];
+		V3 pp0, pp1, pp2;
+		if (!ppc->Project(p0, pp0))
+			return;
+		if (!ppc->Project(p1, pp1))
+			return;
+		if (!ppc->Project(p2, pp2))
+			return;
+
+		if (pp0[0] == FLT_MAX ||
+			pp1[0] == FLT_MAX ||
+			pp2[0] == FLT_MAX)
+			return;
+
+		AABB bbTri(pp0);
+		bbTri.AddPoint(pp1);
+		bbTri.AddPoint(pp2);
+		if (!bbTri.Clip2D(0, fb->w - 1, 0, fb->h - 1))
+			return;
+
+		M33 abcM;
+		abcM.SetColumn(0, ppc->a);
+		abcM.SetColumn(1, ppc->b);
+		abcM.SetColumn(2, ppc->c);
+		M33 vcM;
+		vcM.SetColumn(0, p0 - ppc->C);
+		vcM.SetColumn(1, p1 - ppc->C);
+		vcM.SetColumn(2, p2 - ppc->C);
+		M33 qM = vcM.Inverse() * abcM;
+
+		// Rasterize bbox
+		int left = static_cast<int>(bbTri.corners[0][0] + 0.5f), right = static_cast<int>(bbTri.corners[1][0] - 0.5f);
+		int top = static_cast<int>(bbTri.corners[0][1] + 0.5f), bottom = static_cast<int>(bbTri.corners[1][1] - 0.5f);
+
+		int u = left, v = top;
+
+		for (v = top; v <= bottom; ++v)
+		{
+			for (u = left; u <= right; ++u)
+			{
+				V3 uvP(static_cast<float>(u) + 0.5f, static_cast<float>(v) + 0.5f, 1.0f);
+				bool s1 = InsideTriangle(uvP, pp0, pp1, pp2);
+				bool s2 = InsideTriangle(uvP, pp1, pp2, pp0);
+				bool s3 = InsideTriangle(uvP, pp2, pp0, pp1);
+
+				if (s1 && s2 && s3)
+				{
+					float k = V3(u, v, 1.0f) * qM[1] / (qM.GetColumn(0) * V3(u, u, u) + qM.GetColumn(1) * V3(v, v, v) + qM.
+						GetColumn(2) * V3(1.0f));
+					float l = V3(u, v, 1.0f) * qM[2] / (qM.GetColumn(0) * V3(u, u, u) + qM.GetColumn(1) * V3(v, v, v) + qM.
+						GetColumn(2) * V3(1.0f));
+					float wv = qM.GetColumn(0) * V3(u, u, u) + qM.GetColumn(1) * V3(v, v, v) + qM.GetColumn(2) * V3(1.0f);
+
+					if (GlobalVariables::Instance()->depthTest && !fb->Visible(u, v, wv))
+						continue;
+				}
+			}
+		}
 	}
 }
 

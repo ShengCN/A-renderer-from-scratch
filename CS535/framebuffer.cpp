@@ -23,10 +23,6 @@ FrameBuffer::FrameBuffer(int u0, int v0, int _w, int _h)
 	h = _h;
 	pix = new unsigned int[w * h];
 	zb = new float[w * h];
-
-	// Rendering parameters
-	depthTest = true;
-	lodTexture = true;
 }
 
 
@@ -129,18 +125,6 @@ void FrameBuffer::SetBGR(unsigned int bgr)
 void FrameBuffer::Set(int u, int v, int color)
 {
 	pix[(h - 1 - v) * w + u] = color;
-}
-
-bool FrameBuffer::InsideTriangle(V3 p, V3 v1, V3 v2, V3 v3)
-{
-	float x1 = v1[0], x2 = v2[0], y1 = v1[1], y2 = v2[1];
-
-	V3 coeff(y2 - y1, x1 - x2, x2 * y1 - x1 * y2);
-
-	float res1 = coeff * V3(p[0], p[1], 1.0f);
-	float res2 = coeff * V3(v3[0], v3[1], 1.0f);
-
-	return res1 * res2 >= 0.0f;
 }
 
 void FrameBuffer::SetGuarded(int u, int v, unsigned int color)
@@ -413,14 +397,14 @@ int FrameBuffer::PixelInProjectedTexture(int u, int v, float z, V3 &color, float
 		return 0;
 
 	AABB aabb(v2);
-	if (!aabb.Clip2D(0.0f,projFB->w, 0.0f, projFB->h))
+	if (!aabb.Clip2D(0 , projFB->w - 1, 0, projFB->h -1))
 		return 0;
 
 	float eps = 1e-1f;
 	if (projFB->GetZ(v2[0], v2[1]) - v2[2] < eps)
 	{
 		// look up project texture
-		float s = v2[0] / projFB->w, t = v2[1] / projFB->w;
+		float s = v2[0] / (projFB->w-1), t = v2[1] / (projFB->w-1);
 		color = gv->curScene->fbp->LookupColor(projTexName, s, t, alpha);
 		return 1;
 	}
@@ -564,67 +548,6 @@ void FrameBuffer::Draw3DPoint(PPC* camera, V3 p, unsigned color, int pointSize)
 	DrawRectangle(u - halfPointSize, v - halfPointSize, u + halfPointSize, v + halfPointSize, color);
 }
 
-void FrameBuffer::Draw3DTriangle(PPC* ppc, V3 p0, V3 p1, V3 p2)
-{
-	V3 pp0, pp1, pp2;
-	if (!ppc->Project(p0, pp0))
-		return;
-	if (!ppc->Project(p1, pp1))
-		return;
-	if (!ppc->Project(p2, pp2))
-		return;
-
-	if (pp0[0] == FLT_MAX ||
-		pp1[0] == FLT_MAX ||
-		pp2[0] == FLT_MAX)
-		return;
-
-	AABB bbTri(pp0);
-	bbTri.AddPoint(pp1);
-	bbTri.AddPoint(pp2);
-	if (!ClipToScreen(bbTri.corners[0][0], bbTri.corners[0][1], bbTri.corners[1][0], bbTri.corners[1][1]))
-		return;
-
-	M33 abcM;
-	abcM.SetColumn(0, ppc->a);
-	abcM.SetColumn(1, ppc->b);
-	abcM.SetColumn(2, ppc->c);
-	M33 vcM;
-	vcM.SetColumn(0, p0 - ppc->C);
-	vcM.SetColumn(1, p1 - ppc->C);
-	vcM.SetColumn(2, p2 - ppc->C);
-	M33 qM = vcM.Inverse() * abcM;
-
-	// Rasterize bbox
-	int left = static_cast<int>(bbTri.corners[0][0] + 0.5f), right = static_cast<int>(bbTri.corners[1][0] - 0.5f);
-	int top = static_cast<int>(bbTri.corners[0][1] + 0.5f), bottom = static_cast<int>(bbTri.corners[1][1] - 0.5f);
-
-	int u = left, v = top;
-
-	for (v = top; v <= bottom; ++v)
-	{
-		for (u = left; u <= right; ++u)
-		{
-			V3 uvP(static_cast<float>(u) + 0.5f, static_cast<float>(v) + 0.5f, 1.0f);
-			bool s1 = InsideTriangle(uvP, pp0, pp1, pp2);
-			bool s2 = InsideTriangle(uvP, pp1, pp2, pp0);
-			bool s3 = InsideTriangle(uvP, pp2, pp0, pp1);
-
-			if (s1 && s2 && s3)
-			{
-				float k = V3(u, v, 1.0f) * qM[1] / (qM.GetColumn(0) * V3(u, u, u) + qM.GetColumn(1) * V3(v, v, v) + qM.
-					GetColumn(2) * V3(1.0f));
-				float l = V3(u, v, 1.0f) * qM[2] / (qM.GetColumn(0) * V3(u, u, u) + qM.GetColumn(1) * V3(v, v, v) + qM.
-					GetColumn(2) * V3(1.0f));
-				float wv = qM.GetColumn(0) * V3(u, u, u) + qM.GetColumn(1) * V3(v, v, v) + qM.GetColumn(2) * V3(1.0f);
-
-				if (depthTest && !Visible(u, v, wv))
-					continue;				
-			}
-		}
-	}
-}
-
 void FrameBuffer::Draw3DTriangle(PPC* camera, V3 p1, V3 p2, V3 p3, V3 color)
 {
 	V3 pp0, pp1, pp2; // image space point coordinate
@@ -764,110 +687,6 @@ void FrameBuffer::Draw3DTriangle(PPC* ppc, V3 p0, V3 c0, V3 p1, V3 c1, V3 p2, V3
 	}
 }
 
-void FrameBuffer::Draw3DTriangleTexture(PPC* ppc, PointProperty p0, PointProperty p1, PointProperty p2,
-                                        const std::string texFile, int pixelSz)
-{
-	V3 pp0, pp1, pp2;
-	if (!ppc->Project(p0.p, pp0))
-		return;
-	if (!ppc->Project(p1.p, pp1))
-		return;
-	if (!ppc->Project(p2.p, pp2))
-		return;
-
-	if (pp0[0] == FLT_MAX ||
-		pp1[0] == FLT_MAX ||
-		pp2[0] == FLT_MAX)
-		return;
-
-	AABB bbTri(pp0);
-	bbTri.AddPoint(pp1);
-	bbTri.AddPoint(pp2);
-	if (!ClipToScreen(bbTri.corners[0][0], bbTri.corners[0][1], bbTri.corners[1][0], bbTri.corners[1][1]))
-		return;
-
-	M33 abcM;
-	abcM.SetColumn(0, ppc->a);
-	abcM.SetColumn(1, ppc->b);
-	abcM.SetColumn(2, ppc->c);
-	M33 vcM;
-	vcM.SetColumn(0, p0.p - ppc->C);
-	vcM.SetColumn(1, p1.p - ppc->C);
-	vcM.SetColumn(2, p2.p - ppc->C);
-	M33 qM = vcM.Inverse() * abcM;
-
-	// Rasterize bbox
-	int left = static_cast<int>(bbTri.corners[0][0] + 0.5f), right = static_cast<int>(bbTri.corners[1][0] - 0.5f);
-	int top = static_cast<int>(bbTri.corners[0][1] + 0.5f), bottom = static_cast<int>(bbTri.corners[1][1] - 0.5f);
-
-	int u = left, v = top;
-
-	for (v = top; v <= bottom; ++v)
-	{
-		for (u = left; u <= right; ++u)
-		{
-			V3 uvP(static_cast<float>(u) + 0.5f, static_cast<float>(v) + 0.5f, 1.0f);
-			bool s1 = InsideTriangle(uvP, pp0, pp1, pp2);
-			bool s2 = InsideTriangle(uvP, pp1, pp2, pp0);
-			bool s3 = InsideTriangle(uvP, pp2, pp0, pp1);
-
-			if (s1 && s2 && s3)
-			{
-				float k = V3(u, v, 1.0f) * qM[1] / (qM.GetColumn(0) * V3(u, u, u) + qM.GetColumn(1) * V3(v, v, v) + qM.
-					GetColumn(2) * V3(1.0f));
-				float l = V3(u, v, 1.0f) * qM[2] / (qM.GetColumn(0) * V3(u, u, u) + qM.GetColumn(1) * V3(v, v, v) + qM.
-					GetColumn(2) * V3(1.0f));
-				float wv = qM.GetColumn(0) * V3(u, u, u) + qM.GetColumn(1) * V3(v, v, v) + qM.GetColumn(2) * V3(1.0f);
-				V3 st0(p0.s, p0.t, 0.0f), st1(p1.s, p1.t, 0.0f), st2(p2.s, p2.t, 0.0f);
-
-				if (depthTest && !Visible(u, v, wv))
-					continue;
-				uvP[2] = wv;
-				V3 st = st0 + (st1 - st0) * k + (st2 - st0) * l;
-				V3 pc = p0.c + (p1.c - p0.c) * k + (p2.c - p0.c) * l;
-				V3 pn = p0.n + (p1.n - p0.n) * k + (p2.n - p0.n) * l;
-				V3 color(0.0f);
-
-				// shading
-				float alpha = 1.0f;
-				if (textures.find(texFile) != textures.end())
-				{
-					// s and t in (0.0f,1.0f)
-					float s = Clamp(Fract(st[0]), 0.0f, 1.0f);
-					float t = Clamp(Fract(st[1]), 0.0f, 1.0f);
-					color = LookupColor(texFile, s, t, alpha, pixelSz);
-				}
-				else
-					color = pc;
-
-				// Per pixel lighting after texture mapping
-				PointProperty pointProperty(ppc->Unproject(uvP), color, pn, st[0], st[1]);
-				color = Light(pointProperty, ppc);
-
-				if(GlobalVariables::Instance()->isRenderProjectedTexture)
-				{
-					V3 c(0.0f);
-					float a = 0.0f;
-					if (PixelInProjectedTexture(u, v, wv, c, a))
-						color = color * (1.0f - a) + c * a;
-				}
-				
-				// alpha blending 
-				if (!FloatEqual(1.0f, alpha))
-				{
-					V3 pxC(0.0f);
-					pxC.SetColor(pix[(h - 1 - v) * w + u]);
-					color = color * alpha + pxC * (1.0f - alpha);
-				}
-
-				// Cast shadow onto shading results
-				float sdCoeff = IsPixelInShadow(u, v, wv);
-				color = color * sdCoeff;
-				DrawPoint(u, v, color.GetColor());
-			}
-		}
-	}
-}
 
 void FrameBuffer::DrawPPC(PPC* wPPC, PPC* tPPC, float vf)
 {
