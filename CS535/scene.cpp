@@ -377,11 +377,21 @@ void Scene::InitializeLights()
 
 void Scene::InitDemo()
 {
-	fbp->LoadTex("images/jojo.tiff");
+	fbp->LoadTex(GlobalVariables::Instance()->projectedTextureName);
 	projectPPC->PositionAndOrient(ppc->C + V3(10.0f, 10.0f, 0.0f), meshes[0]->GetCenter(), V3(0.0f, 1.0f, 0.0f));
+	RenderTexture(projectPPC, fbp);
 }
 
 void Scene::Demonstration()
 {
+	int stepN = 360;
+	for(int stepi = 0; stepi < stepN; ++stepi)
+	{
+		projectPPC->C = projectPPC->C.RotateThisPointAboutArbitraryAxis(meshes[0]->GetCenter(), V3(0.0f, 1.0f, 0.0f), 1.0f);
+		// Update projected Z buffer
+		RenderTexture(projectPPC, fbp);
 
+		Render();
+		Fl::check();
+	}
 }

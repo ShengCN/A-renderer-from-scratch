@@ -44,7 +44,7 @@ public:
 	unsigned int Get(int u, int v);
 	bool LoadTex(const std::string texFile);
 	float IsPixelInShadow(int u, int v, float z);	
-	V3 PixelInProjectedTexture(int u, int v, float z);
+	int PixelInProjectedTexture(int u, int v, float z, V3 &c, float &alpha);
 	V3 HomographMapping(V3 px1, PPC* ppc1, PPC* ppc2);
 
 	// Draw something

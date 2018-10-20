@@ -6,9 +6,12 @@
 class GlobalVariables
 {
 public:
+	static GlobalVariables* Instance();
+
+	// Global variables
 	Scene *curScene;
 	bool isRenderProjectedTexture;
-	static GlobalVariables* Instance();
+	string projectedTextureName;
 private:
 	GlobalVariables();
 	static GlobalVariables* _instance;

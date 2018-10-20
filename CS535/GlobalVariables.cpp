@@ -15,5 +15,6 @@ GlobalVariables* GlobalVariables::Instance()
 GlobalVariables::GlobalVariables()
 {
 	curScene = nullptr;
-	isProjected = true;
+	isRenderProjectedTexture = true;
+	projectedTextureName = "images/purdue.tiff";
 }

@@ -369,8 +369,10 @@ float FrameBuffer::IsPixelInShadow(int u, int v, float z)
 {
 	float ret = 1.0f;	// shadow effect
 	auto gv = GlobalVariables::Instance();
+	if (gv->curScene->lightPPCs.empty())
+		return ret;
+
 	float uf = static_cast<float>(u) + 0.5f, vf = static_cast<float>(v) + 0.5f;
-	
 	// Check for all shadow maps
 	for (size_t li = 0; li < gv->curScene->lightPPCs.size(); ++li)
 	{
@@ -379,6 +381,9 @@ float FrameBuffer::IsPixelInShadow(int u, int v, float z)
 		auto SM = gv->curScene->shadowMaps[li];
 
 		V3 v2 = HomographMapping(V3(uf, vf, z), ppc1, ppc2.get());
+
+		if(v2[2] < 0.0f)
+			continue;
 
 		// compare shadow maps w
 		float eps = 0.15f;
@@ -392,31 +397,35 @@ float FrameBuffer::IsPixelInShadow(int u, int v, float z)
 	return ret;
 }
 
-V3 FrameBuffer::PixelInProjectedTexture(int u, int v, float z)
+int FrameBuffer::PixelInProjectedTexture(int u, int v, float z, V3 &color, float &alpha)
 {
-	V3 ret(0.0f);
-	// auto gv = GlobalVariables::Instance();
-	// float uf = static_cast<float>(u) + 0.5f, vf = static_cast<float>(v) + 0.5f;
- //
-	// // Check for all shadow maps
-	// for (size_t li = 0; li < gv->curScene->lightPPCs.size(); ++li)
-	// {
-	// 	auto ppc1 = gv->curScene->ppc;
-	// 	auto ppc2 = gv->curScene->lightPPCs[li];
-	// 	auto SM = gv->curScene->shadowMaps[li];
- //
-	// 	V3 v2 = HomographMapping(V3(uf, vf, z), ppc1, ppc2.get());
- //
-	// 	// compare shadow maps w
-	// 	float eps = 0.15f;
-	// 	if (SM->GetZ(v2[0], v2[1]) - v2[2] > eps)
-	// 	{
-	// 		// in shadow
-	// 		ret *= 0.2f;
-	// 	}
-	// }
+	auto gv = GlobalVariables::Instance();
+	float uf = static_cast<float>(u) + 0.5f, vf = static_cast<float>(v) + 0.5f;
 
-	return ret;
+	auto ppc1 = gv->curScene->ppc;
+	auto ppc2 = gv->curScene->projectPPC;
+	auto projFB = gv->curScene->fbp;
+	string projTexName = gv->projectedTextureName;
+
+	V3 v2 = HomographMapping(V3(uf, vf, z), ppc1, ppc2);
+
+	if (v2[2] < 0.0f)
+		return 0;
+
+	AABB aabb(v2);
+	if (!aabb.Clip2D(0.0f,projFB->w, 0.0f, projFB->h))
+		return 0;
+
+	float eps = 0.15f;
+	if (projFB->GetZ(v2[0], v2[1]) - v2[2] < eps)
+	{
+		// look up project texture
+		float s = v2[0] / projFB->w, t = v2[1] / projFB->w;
+		color = gv->curScene->fbp->LookupColor(projTexName, s, t, alpha);
+		return 1;
+	}
+
+	return 0;
 }
 
 V3 FrameBuffer::HomographMapping(V3 px1, PPC* ppc1, PPC* ppc2)
@@ -772,8 +781,16 @@ void FrameBuffer::Draw3DTriangleTexture(PPC* ppc, PointProperty p0, PointPropert
 
 				// Per pixel lighting after texture mapping
 				PointProperty pointProperty(ppc->Unproject(uvP), color, pn, st[0], st[1]);
-				color = Light(pointProperty,ppc);
+				color = Light(pointProperty, ppc);
 
+				if(GlobalVariables::Instance()->isRenderProjectedTexture)
+				{
+					V3 c(0.0f);
+					float a = 0.0f;
+					if (PixelInProjectedTexture(u, v, wv, c, a))
+						color = color * (1.0f - a) + c * a;
+				}
+				
 				// alpha blending 
 				if (!FloatEqual(1.0f, alpha))
 				{
@@ -785,12 +802,6 @@ void FrameBuffer::Draw3DTriangleTexture(PPC* ppc, PointProperty p0, PointPropert
 				// Cast shadow onto shading results
 				float sdCoeff = IsPixelInShadow(u, v, wv);
 				color = color * sdCoeff;
-
-				if(GlobalVariables::Instance()->isRenderProjectedTexture)
-				{
-					color = color + PixelInProjectedTexture(u, v, wv);
-				}
-
 				DrawPoint(u, v, color.GetColor());
 			}
 		}
@@ -1000,7 +1011,9 @@ V3 FrameBuffer::Light(PointProperty pp, PPC* ppc)
 {
 	V3 ret(0.0f);
 	auto gv = GlobalVariables::Instance();
-	
+	if (gv->curScene->lightPPCs.empty())
+		return pp.c;	
+
 	float ka = 0.2f;
 	float kd = 0.0f, ks = 0.0f;
 	for(auto l:gv->curScene->lightPPCs)
