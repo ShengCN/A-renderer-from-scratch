@@ -19,4 +19,6 @@ GlobalVariables::GlobalVariables()
 	depthTest = true;
 	lodTexture = true;
 	projectedTextureName = "images/jojo.tiff";
+	isRecording = true;
+	debugZbuffer = true;
 }

@@ -281,7 +281,7 @@ void FrameBuffer::ClearBGR(unsigned bgr, float z0)
 
 void FrameBuffer::ClearZ(float z0)
 {
-	memset(zb, 0, sizeof(float) * w * h);
+	 memset(zb, z0, sizeof(float) * w * h);
 }
 
 bool FrameBuffer::Visible(int u, int v, float curz)
@@ -405,9 +405,16 @@ int FrameBuffer::PixelInProjectedTexture(int u, int v, float z, V3 &color, float
 	if (!aabb.Clip2D(0 , projFB->w - 1, 0, projFB->h -1))
 		return 0;
 
-	float eps = 0.05f;
+	float eps = 0.01f;
 
-	if (projFB->GetZ(v2[0], v2[1]) - v2[2] < eps)
+//	ofstream out("mydbg/dbg.txt", ofstream::app);
+//	out << "Project FB Z: " << projFB->GetZ(v2[0], v2[1]) << endl;
+//	out << "Projected Z: " << v2[2] << endl;
+//	out << "Dif: " << projFB->GetZ(v2[0], v2[1]) - v2[2] << endl;
+//	out << endl;
+//	out.close();
+
+	if (projFB->GetZ(v2[0], v2[1]) - v2[2] <= eps)
 	{
 		// look up project texture
 		float s = v2[0] / (projFB-> w - 1), t = v2[1] / (projFB->w - 1);

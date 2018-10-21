@@ -24,6 +24,7 @@ public:
 
 	Scene();
 	void DBG();
+	void DBGZBuffer(string outFile,FrameBuffer *curfb);
 	void Render();				// render all triangles in the scene
 	void Render(PPC *currPPC, FrameBuffer *currFB);
 	void RenderWireFrame();
