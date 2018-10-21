@@ -146,7 +146,7 @@ void Scene::RenderZbuffer(PPC *currPPC, FrameBuffer *currFB)
 	// Draw all triangles
 	for(auto m : meshes)
 	{
-		m->RenderFillZ(ppc, fb);
+		m->RenderFillZ(currPPC, currFB);
 	};
 
 	for (auto o : obstacles)

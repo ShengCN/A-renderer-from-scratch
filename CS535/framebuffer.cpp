@@ -400,11 +400,12 @@ int FrameBuffer::PixelInProjectedTexture(int u, int v, float z, V3 &color, float
 	if (!aabb.Clip2D(0 , projFB->w - 1, 0, projFB->h -1))
 		return 0;
 
-	float eps = 1e-1f;
+	float eps = 0.1f;
+
 	if (projFB->GetZ(v2[0], v2[1]) - v2[2] < eps)
 	{
 		// look up project texture
-		float s = v2[0] / (projFB->w-1), t = v2[1] / (projFB->w-1);
+		float s = v2[0] / (projFB-> w - 1), t = v2[1] / (projFB->w - 1);
 		color = gv->curScene->fbp->LookupColor(projTexName, s, t, alpha);
 		return 1;
 	}
