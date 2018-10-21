@@ -62,7 +62,6 @@ Scene::Scene(): isRenderAABB(false)
 	p3 = p3 + x - y;
 	PointProperty pp0(p0,c,z,0.0f,0.0f), pp1(p1,c,z,0.0f,1.0f), pp2(p2,c,z,1.0f,1.0f), pp3(p3,c,z,1.0f,0.0f);
 	plane->SetQuad(pp0, pp1, pp2, pp3);
-	happy->isVisibleInProjection = false;
 
 	float obsz = 50.0f;
 	V3 tmC = ppc->C + ppc->GetVD() * 100.0f;
@@ -404,16 +403,35 @@ void Scene::Demonstration()
 	int stepN = 100;
 	for(int stepi = 0; stepi < stepN; ++stepi)
 	{
-		// projectPPC->C = projectPPC->C.RotateThisPointAboutArbitraryAxis(meshes[0]->GetCenter(), 
-		// 	V3(0.0f, 1.0f, 0.0f), 0.5f);
-		// projectPPC->MoveLeft(1.0f);
+		// projectPPC->C = projectPPC->C.RotateThisPointAboutArbitraryAxis(GetSceneCenter(), 
+		// 	V3(0.0f, 1.0f, 0.0f), 3.0f);
+		stepi < stepN / 2 ? projectPPC->MoveLeft(1.0f) :
+			projectPPC->MoveLeft(-0.5f);
 		
-		meshes[0]->Translate(V3(1.0f, 0.0f, 0.0f));
+		// Update projected Z buffer
+		RenderZbuffer(projectPPC, fbp);
+		Render();
+		Fl::check();
+
+		char buffer[100];
+		sprintf_s(buffer, "images/projector-%03d.tiff", stepi);
+		fb->SaveAsTiff(buffer);
+	}
+
+	for (int stepi = stepN; stepi < 2 * stepN; ++stepi)
+	{
+		// projectPPC->C = projectPPC->C.RotateThisPointAboutArbitraryAxis(GetSceneCenter(), 
+		// 	V3(0.0f, 1.0f, 0.0f), 3.0f);
+		stepi < stepN + stepN /2 ? meshes[0]->Translate(V3(1.0f, 0.0f, 0.0f))
+		: meshes[0]->Translate(V3(-1.0f, 0.0f, 0.0f));
 
 		// Update projected Z buffer
 		RenderZbuffer(projectPPC, fbp);
 
 		Render();
 		Fl::check();
+		char buffer[100];
+		sprintf_s(buffer, "images/projector-%03d.tiff", stepi);
+		fb->SaveAsTiff(buffer);
 	}
 }

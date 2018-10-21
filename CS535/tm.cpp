@@ -234,7 +234,7 @@ void TM::RenderFill(PPC* ppc, FrameBuffer* fb)
 						PointProperty pointProperty(ppc->Unproject(uvP), color, pn, st[0], st[1]);
 						color = fb->Light(pointProperty, ppc);
 
-						if (GlobalVariables::Instance()->isRenderProjectedTexture && isVisibleInProjection)
+						if (GlobalVariables::Instance()->isRenderProjectedTexture)
 						{
 							V3 c(0.0f);
 							float a = 0.0f;
@@ -321,9 +321,6 @@ void TM::RenderFillZ(PPC* ppc, FrameBuffer* fb)
 					float l = V3(u, v, 1.0f) * qM[2] / (qM.GetColumn(0) * V3(u, u, u) + qM.GetColumn(1) * V3(v, v, v) + qM.
 						GetColumn(2) * V3(1.0f));
 					float wv = qM.GetColumn(0) * V3(u, u, u) + qM.GetColumn(1) * V3(v, v, v) + qM.GetColumn(2) * V3(1.0f);
-
-					if(!isVisibleInProjection)
-						continue;
 
 					if (GlobalVariables::Instance()->depthTest && !fb->Visible(u, v, wv))
 						continue;

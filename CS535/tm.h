@@ -22,9 +22,8 @@ public:
 	int vertsN, trisN;
 	std::string tex;
 	int pixelSz;		// approximate projected aabb size
-	bool isVisibleInProjection;
 
-	TM() :vertsN(0), trisN(0), pixelSz(0), isVisibleInProjection(true) {};
+	TM() :vertsN(0), trisN(0), pixelSz(0) {};
 	void SetRectangle(V3 O, float rw, float rh);
 	void SetTriangle(PointProperty p0, PointProperty p1, PointProperty p2);
 	void SetQuad(PointProperty p0, PointProperty p1, PointProperty p2, PointProperty p3);
