@@ -94,7 +94,7 @@ void Scene::Render()
 	{
 		float currf = 40.0f;
 
-		fb3->Clear(0xFFFFFFFF, 0.0f);
+		fb3->ClearBGR(0xFFFFFFFF, 0.0f);
 		fb3->DrawPPC(ppc3, ppc, currf);
 		fb3->DrawPPC(ppc3, projectPPC, currf);
 		fb->VisualizeCurrView(ppc, currf, ppc3, fb3); // using a 3rd ppc to visualize current ppc
@@ -107,7 +107,7 @@ void Scene::Render(PPC* currPPC, FrameBuffer* currFB)
 {
 	if (currFB)
 	{
-		currFB->Clear(0xFF999999, 0.0f);
+		currFB->ClearBGR(0xFF999999, 0.0f);
 
 		for(auto t:meshes)
 		{
@@ -130,7 +130,7 @@ void Scene::Render(PPC* currPPC, FrameBuffer* currFB)
 
 void Scene::RenderWireFrame()
 {
-	fb->Clear(0xFFFFFFFF, 0.0f);
+	fb->ClearBGR(0xFFFFFFFF, 0.0f);
 
 	// Draw all triangles
 	for_each(meshes.begin(), meshes.end(), [&](TM* t) { t->RenderWireFrame(ppc, fb); });
@@ -141,7 +141,7 @@ void Scene::RenderWireFrame()
 
 void Scene::RenderZbuffer(PPC *currPPC, FrameBuffer *currFB)
 {
-	fb->Clear(0xFFFFFFFF, 0.0f);
+	currFB->ClearZ(0.0f);
 
 	// Draw all triangles
 	for(auto m : meshes)
@@ -156,7 +156,7 @@ void Scene::RenderZbuffer(PPC *currPPC, FrameBuffer *currFB)
 			o->RenderAABB(currPPC, currFB);
 	}
 	// commit frame update
-	fb->redraw();
+	currFB->redraw();
 }
 
 void Scene::UpdateSM()
@@ -380,10 +380,10 @@ void Scene::InitializeLights()
 	l0SM->label("Light 1 Shadows");
 	l0SM->show();
 
-	l0SM->Clear(0xFFFFFFFF, 0.0f); 
-	l1SM->Clear(0xFFFFFFFF, 0.0f);
-	l2SM->Clear(0xFFFFFFFF, 0.0f);
-	l3SM->Clear(0xFFFFFFFF, 0.0f);
+	l0SM->ClearBGR(0xFFFFFFFF, 0.0f); 
+	l1SM->ClearBGR(0xFFFFFFFF, 0.0f);
+	l2SM->ClearBGR(0xFFFFFFFF, 0.0f);
+	l3SM->ClearBGR(0xFFFFFFFF, 0.0f);
 	l0PPC->PositionAndOrient(L0, meshes[0]->GetCenter(), V3(1.0f, 0.0f,0.0f));
 	l1PPC->PositionAndOrient(L0, meshes[0]->GetCenter(), V3(1.0f, 0.0f, 0.0f));
 	l2PPC->PositionAndOrient(L0, meshes[0]->GetCenter(), V3(1.0f, 0.0f, 0.0f));
@@ -429,17 +429,17 @@ void Scene::Demonstration()
 	{
 		// projectPPC->C = projectPPC->C.RotateThisPointAboutArbitraryAxis(GetSceneCenter(), 
 		// 	V3(0.0f, 1.0f, 0.0f), 3.0f);
-		stepi < stepN /2 ? obstacles[0]->Translate(V3(1.0f, 0.0f, 0.0f))
-		: obstacles[0]->Translate(V3(-1.0f, 0.0f, 0.0f));
+		stepi < stepN /2 ? projectPPC->MoveLeft(-1.0f)
+		: projectPPC->MoveLeft(1.0f);
 
 		// Update projected Z buffer
 		RenderZbuffer(projectPPC, fbp);
 		Render();
 		Fl::check();
 
-		// char buffer[100];
-		// sprintf_s(buffer, "images/projector-%03d.tiff", stepi);
-		// fb->SaveAsTiff(buffer);
+		 char buffer[100];
+		 sprintf_s(buffer, "images/projector-%03d.tiff", stepi);
+		 fb->SaveAsTiff(buffer);
 	}
 
 	// With invisible
@@ -457,8 +457,8 @@ void Scene::Demonstration()
 		Render();
 		Fl::check();
 
-		// char buffer[100];
-		// sprintf_s(buffer, "images/projector-%03d.tiff", stepi);
-		// fb->SaveAsTiff(buffer);
+		 char buffer[100];
+		 sprintf_s(buffer, "images/projector-%03d.tiff", stepi + stepN);
+		 fb->SaveAsTiff(buffer);
 	}
 }

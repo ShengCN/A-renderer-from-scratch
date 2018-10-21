@@ -273,9 +273,14 @@ bool FrameBuffer::IsInScreen(int u, int v)
 	return true;
 }
 
-void FrameBuffer::Clear(unsigned bgr, float z0)
+void FrameBuffer::ClearBGR(unsigned bgr, float z0)
 {
 	SetBGR(bgr);
+	ClearZ(z0);
+}
+
+void FrameBuffer::ClearZ(float z0)
+{
 	memset(zb, 0, sizeof(float) * w * h);
 }
 
@@ -400,7 +405,7 @@ int FrameBuffer::PixelInProjectedTexture(int u, int v, float z, V3 &color, float
 	if (!aabb.Clip2D(0 , projFB->w - 1, 0, projFB->h -1))
 		return 0;
 
-	float eps = 0.1f;
+	float eps = 0.05f;
 
 	if (projFB->GetZ(v2[0], v2[1]) - v2[2] < eps)
 	{
