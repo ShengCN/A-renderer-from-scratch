@@ -13,6 +13,7 @@ public:
 	bool isRenderProjectedTexture;
 	string projectedTextureName;
 	bool depthTest, lodTexture;
+
 private:
 	GlobalVariables();
 	static GlobalVariables* _instance;
