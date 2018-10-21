@@ -34,7 +34,7 @@ public:
 	V3 GetSceneCenter();
 	~Scene();
 
-	void PreprocessOcculProjTexture();
+	void PreprocessOcculProjTexture(FrameBuffer *fbp);
 private:
 	bool DBGFramebuffer();
 	bool DBGV3();

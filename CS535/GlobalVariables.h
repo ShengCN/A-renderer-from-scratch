@@ -15,6 +15,7 @@ public:
 	bool depthTest, lodTexture;
 	bool isRecording;
 	bool debugZbuffer;
+
 private:
 	GlobalVariables();
 	static GlobalVariables* _instance;

@@ -386,7 +386,7 @@ float FrameBuffer::IsPixelInShadow(int u, int v, float z)
 	return ret;
 }
 
-int FrameBuffer::PixelInProjectedTexture(int u, int v, float z, V3 &color, float &alpha)
+int FrameBuffer::IsPixelInProjection(int u, int v, float z, V3 &color, float &alpha)
 {
 	auto gv = GlobalVariables::Instance();
 	float uf = static_cast<float>(u) + 0.5f, vf = static_cast<float>(v) + 0.5f;
@@ -395,6 +395,9 @@ int FrameBuffer::PixelInProjectedTexture(int u, int v, float z, V3 &color, float
 	auto ppc2 = gv->curScene->projectPPC;
 	auto projFB = gv->curScene->fbp;
 	string projTexName = gv->projectedTextureName;
+
+	if (!ppc1 || !ppc1 || !projFB)
+		return 0;
 
 	V3 v2 = HomographMapping(V3(uf, vf, z), ppc1, ppc2);
 
@@ -407,25 +410,23 @@ int FrameBuffer::PixelInProjectedTexture(int u, int v, float z, V3 &color, float
 
 	float eps = 0.01f;
 
-//	ofstream out("mydbg/dbg.txt", ofstream::app);
-//	out << "Project FB Z: " << projFB->GetZ(v2[0], v2[1]) << endl;
-//	out << "Projected Z: " << v2[2] << endl;
-//	out << "Dif: " << projFB->GetZ(v2[0], v2[1]) - v2[2] << endl;
-//	out << endl;
-//	out.close();
-
 	if (projFB->GetZ(v2[0], v2[1]) - v2[2] <= eps)
 	{
 		// look up project texture
-		float s = v2[0] / (projFB-> w - 1), t = v2[1] / (projFB->w - 1);
-		color = gv->curScene->fbp->LookupColor(projTexName, s, t, alpha);
+		// float s = v2[0] / (projFB-> w - 1), t = v2[1] / (projFB->w - 1);
+		// color = gv->curScene->fbp->LookupColor(projTexName, s, t, alpha);
+		
+		unsigned int c = gv->curScene->fbp->Get(v2[0], v2[1]);
+		color.SetColor(c);
+		unsigned char*rgba = (unsigned char*)&c;
+		alpha = static_cast<float>(rgba[3]) / 255.0f;
 		return 1;
 	}
 
 	return 0;
 }
 
-V3 FrameBuffer::HomographMapping(V3 px1, PPC* ppc1, PPC* ppc2)
+V3 FrameBuffer::HomographMapping(V3 uvw, PPC* ppc1, PPC* ppc2)
 {
 	// Current image plane ppc matrix
 	M33 abc1;
@@ -442,8 +443,8 @@ V3 FrameBuffer::HomographMapping(V3 px1, PPC* ppc1, PPC* ppc2)
 	auto qC = abc2Inv * (ppc1->C - ppc2->C);
 	auto qM = abc2Inv * abc1;
 
-	float w1 = 1.0f / px1[2];
-	V3 px = V3(px1[0], px1[1], 1.0f) * w1;
+	float w1 = 1.0f / uvw[2];
+	V3 px = V3(uvw[0], uvw[1], 1.0f) * w1;
 	float w2 = 1.0f / (qC[2] + qM[2] * px);
 	float u2 = (qC[0] + qM[0] * px) * w2;
 	float v2 = (qC[1] + qM[1] * px) * w2;
@@ -698,6 +699,19 @@ void FrameBuffer::Draw3DTriangle(PPC* ppc, V3 p0, V3 c0, V3 p1, V3 c1, V3 p2, V3
 			}
 		}
 	}
+}
+
+void FrameBuffer::DrawTexture(const std::string texFile, int LoD)
+{
+	if (textures.find(texFile) == textures.end())
+		return;
+
+	auto tex = textures.at(texFile).back();
+	delete[] pix;
+	w = tex.w;
+	h = tex.h;
+	pix = new unsigned int[w*h];
+	copy(tex.texture.begin(), tex.texture.end(), pix);
 }
 
 

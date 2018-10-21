@@ -242,7 +242,7 @@ void TM::RenderFill(PPC* ppc, FrameBuffer* fb)
 					{
 						V3 c(0.0f);
 						float a = 0.0f;
-						if (fb->PixelInProjectedTexture(u, v, wv, c, a))
+						if (fb->IsPixelInProjection(u, v, wv, c, a))
 							color = color * (1.0f - a) + c * a;
 					}
 

@@ -16,6 +16,7 @@ struct TextureInfo
 	vector<unsigned int> texture;
 	int w, h;
 	TextureInfo() :w(0), h(0){};
+	TextureInfo(int _w, int _h) :w(_w), h(_h) { texture.resize(w*h); };
 };
 
 class FrameBuffer : public Fl_Gl_Window {
@@ -44,8 +45,8 @@ public:
 	unsigned int Get(int u, int v);
 	bool LoadTex(const std::string texFile);
 	float IsPixelInShadow(int u, int v, float z);	
-	int PixelInProjectedTexture(int u, int v, float z, V3 &c, float &alpha);
-	V3 HomographMapping(V3 px1, PPC* ppc1, PPC* ppc2);
+	int IsPixelInProjection(int u, int v, float z, V3 &c, float &alpha);
+	V3 HomographMapping(V3 uvw, PPC* ppc1, PPC* ppc2);
 
 	// Draw something
 	void DrawSegment(V3 p0, V3 c0, V3 p1, V3 c1);
@@ -57,6 +58,7 @@ public:
 	void Draw3DPoint(PPC* ppc, V3 p, unsigned int color, int pointSize);
 	void Draw3DTriangle(PPC* ppc, V3 p1, V3 p2, V3 p3, V3 color);
 	void Draw3DTriangle(PPC* ppc, V3 p0, V3 c0, V3 p1, V3 c1, V3 p2, V3 c2);
+	void DrawTexture(const std::string texFile, int LoD = 0);
 
 	void DrawPPC(PPC* wPPC, PPC* tPPC, float vf);	// visualize target PPC using wPPC
 	void VisualizeCurrView(PPC *ppc0, float currf, PPC *ppc1, FrameBuffer *fb1);

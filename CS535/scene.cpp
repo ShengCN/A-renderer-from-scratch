@@ -38,7 +38,7 @@ Scene::Scene(): isRenderAABB(false)
 	fb3->label("Third Person View");
 	fb3->show();
 
-	fbp = new FrameBuffer(u0 + fb->w + 30, v0 + fb->h + 20, w, h);
+	fbp = new FrameBuffer(u0 + fb->w + 30, v0 + fb->h + 20, h, h);
 	fbp->label("Projected Texture");
 	fbp->show();
 
@@ -49,38 +49,39 @@ Scene::Scene(): isRenderAABB(false)
 	gui->uiw->position(u0, v0 + fb->h + 60);
 
 	// Ground Quad
-	TM *happy = new TM();
-	TM *plane = new TM();
-	TM *teapot = new TM();
-	happy->LoadModelBin("./geometry/teapot1K.bin");
+	TM* teapot = new TM();
+	TM* plane = new TM();
+	auto happy = make_shared<TM>();
+	happy->LoadModelBin("geometry/happy4.bin");
 	teapot->LoadModelBin("geometry/teapot1K.bin");
 	V3 p0(0.0f), p1(0.0f), p2(0.0f), p3(0.0f);
-	V3 x(1.0f, 0.0f, 0.0f), y(0.0f,1.0f,0.0f), z(0.0f,0.0f,1.0f), c(0.3f);
+	V3 x(1.0f, 0.0f, 0.0f), y(0.0f, 1.0f, 0.0f), z(0.0f, 0.0f, 1.0f), c(0.3f);
 	p0 = p0 + x + y;
 	p1 = p1 - x + y;
 	p2 = p2 - x - y;
 	p3 = p3 + x - y;
-	PointProperty pp0(p0,c,z,0.0f,0.0f), pp1(p1,c,z,0.0f,1.0f), pp2(p2,c,z,1.0f,1.0f), pp3(p3,c,z,1.0f,0.0f);
+	PointProperty pp0(p0, c, z, 0.0f, 0.0f), pp1(p1, c, z, 0.0f, 1.0f), pp2(p2, c, z, 1.0f, 1.0f), pp3(
+		p3, c, z, 1.0f, 0.0f);
 	plane->SetQuad(pp0, pp1, pp2, pp3);
 
-	float obsz = 50.0f;
+	float obsz = 25.0f;
 	V3 tmC = ppc->C + ppc->GetVD() * 100.0f;
-	happy->PositionAndSize(tmC - V3(20.0f, 0.0f, -20.0f), obsz);
-	teapot->PositionAndSize(tmC + V3(20.0f,0.0f,0.0f), obsz);
-	plane->PositionAndSize(tmC + V3(0.0f, 0.0f, -100.0f), 150.0f);
+	happy->PositionAndSize(tmC + V3(20.0f, 0.0f, 20.0f), obsz);
+	teapot->PositionAndSize(tmC + V3(20.0f, 0.0f, 0.0f), obsz);
+	plane->PositionAndSize(tmC + V3(0.0f, 0.0f, -100.0f), 200.0f);
 	// obstacles.push_back(make_shared<TM>(*happy));
-	meshes.push_back(happy);
 	meshes.push_back(teapot);
 	meshes.push_back(plane);
+	obstacles.push_back(happy);
 
-	ppc->C = ppc->C + V3(0.0f,0.0f,20.0f);
+	ppc->C = ppc->C + V3(0.0f, 0.0f, 20.0f);
 	ppc->PositionAndOrient(ppc->C, plane->GetCenter(), V3(0.0f, 1.0f, 0.0f));
 
 	ppc3->C = ppc3->C + V3(330.0f, 150.0f, 300.0f);
 	ppc3->PositionAndOrient(ppc3->C, happy->GetCenter(), V3(0.0f, 1.0f, 0.0f));
 
 	InitDemo();
-	Render();
+	Render(ppc,fb);
 }
 
 void Scene::Render()
@@ -110,7 +111,7 @@ void Scene::Render(PPC* currPPC, FrameBuffer* currFB)
 	{
 		currFB->ClearBGR(0xFF999999, 0.0f);
 
-		for(auto t:meshes)
+		for (auto t : meshes)
 		{
 			t->RenderFill(currPPC, currFB);
 			if (isRenderAABB)
@@ -140,18 +141,20 @@ void Scene::RenderWireFrame()
 	fb->redraw();
 }
 
-void Scene::RenderZbuffer(PPC *currPPC, FrameBuffer *currFB)
+void Scene::RenderZbuffer(PPC* currPPC, FrameBuffer* currFB)
 {
 	if (currFB)
 	{
-		// currFB->ClearZ(0.0f);
-		currFB->ClearBGR(0xFF000000, 0.0f);
+		currFB->ClearZ(0.0f);
+
+		if (GlobalVariables::Instance()->debugZbuffer)
+			currFB->ClearBGR(0xFF000000, 0.0f);
 
 		// Draw all triangles
 		for (auto m : meshes)
 		{
 			m->RenderFillZ(currPPC, currFB);
-		};
+		}
 
 		for (auto o : obstacles)
 		{
@@ -164,7 +167,7 @@ void Scene::RenderZbuffer(PPC *currPPC, FrameBuffer *currFB)
 
 void Scene::UpdateSM()
 {
-	for(size_t li = 0; li < lightPPCs.size(); ++li)
+	for (size_t li = 0; li < lightPPCs.size(); ++li)
 	{
 		RenderZbuffer(lightPPCs[li].get(), shadowMaps[li].get());
 	}
@@ -173,7 +176,7 @@ void Scene::UpdateSM()
 V3 Scene::GetSceneCenter()
 {
 	V3 ret(0.0f);
-	for(auto m:meshes)
+	for (auto m : meshes)
 	{
 		ret = ret + m->GetCenter();
 	}
@@ -194,15 +197,47 @@ Scene::~Scene()
 		delete fb3;
 }
 
-void Scene::PreprocessOcculProjTexture()
+void Scene::PreprocessOcculProjTexture(FrameBuffer *fbp)
 {
+	shared_ptr<FrameBuffer> fbScene = make_shared<FrameBuffer>(0,0,fb->w,fb->h);
+	shared_ptr<FrameBuffer> fbSceneWithObs = make_shared<FrameBuffer>(0,0,fb->w,fb->h);
+	
+	auto texName = GlobalVariables::Instance()->projectedTextureName;
+	TextureInfo texBuffer = fbp->textures.at(texName).back();
+	
+	fbScene->ClearBGR(0xFF999999, 0.0f);
+	fbSceneWithObs->ClearBGR(0xFF999999, 0.0f);
+
 	// Project without obstacles framebuffer
+	for (auto m : meshes) m->RenderFillZ(ppc, fbScene.get());
 
 	// Project with obstacle framebuffer
+	for (auto m : meshes) m->RenderFillZ(ppc, fbSceneWithObs.get());
+	for (auto m : obstacles) m->RenderFillZ(ppc, fbSceneWithObs.get());
 
-	// Update new textures
-
-	// go through normal pipeline
+//	// Update new textures
+//	for(int u = 0; u < fb->w; ++u)
+//	{
+//		for(int v = 0; v < fb->h; ++v)
+//		{
+//			float uf = static_cast<float>(u) + 0.5f, vf = static_cast<float>(v) + 0.5f;
+//			V3 scenePix(uf, vf, fbScene->GetZ(u, v)), sceneObsPix(uf, vf, fbSceneWithObs->GetZ(u, v));
+//			V3 sceneInPP = fb->HomographMapping(scenePix, ppc, projectPPC);
+//			V3 sceneObsInPP = fb->HomographMapping(sceneObsPix, ppc, projectPPC);
+//			
+//			// Check in screen
+//			if(sceneInPP[2]<0.0f || sceneObsInPP[2] <0.0f || !fbp->IsInScreen(sceneInPP[0], sceneInPP[1]) || fbp->IsInScreen(sceneObsInPP[0], sceneObsInPP[1]))
+//				continue;
+//			
+//			int su = sceneInPP[0], sv = sceneInPP[1];
+//			int sou = sceneObsInPP[0], sov = sceneObsInPP[1];
+//			texBuffer->SetGuarded(su, sv, fbp->Get(sou, sov));
+//		}
+//	}
+//
+//	//update texture
+//	memcpy(fbp->pix, texBuffer->pix, sizeof(float) * fbp->w * fbp->h); 
+//	fbp->redraw();
 }
 
 bool Scene::DBGFramebuffer()
@@ -359,9 +394,9 @@ void Scene::DBG()
 void Scene::DBGZBuffer(string outFile, FrameBuffer* curfb)
 {
 	ofstream out(outFile);
-	for(int u =0; u < curfb->w; ++u)
+	for (int u = 0; u < curfb->w; ++u)
 	{
-		for(int v = 0; v < curfb->h; ++v)
+		for (int v = 0; v < curfb->h; ++v)
 		{
 			out << curfb->GetZ(u, v) << "\t";
 		}
@@ -375,8 +410,10 @@ void Scene::InitializeLights()
 	// Prepare for visualize the light
 	V3 y(0.0f, 1.0f, 0.0f), gColor(0.5f);
 	float lightsz = 1.0f, height = 0.0f;
-	V3 p0(-lightsz, -height, -lightsz), p1(-lightsz, -height, lightsz), p2(lightsz, -height, lightsz), p3(lightsz, -height, -lightsz);
-	PointProperty pp0(p0, gColor, y, 0.0f, 0.0f), pp1(p1, gColor, y, 0.0f, 1.0f), pp2(p2, gColor, y, 1.0f, 1.0f), pp3(p3, gColor, y, 1.0f, 0.0f);
+	V3 p0(-lightsz, -height, -lightsz), p1(-lightsz, -height, lightsz), p2(lightsz, -height, lightsz), p3(
+		lightsz, -height, -lightsz);
+	PointProperty pp0(p0, gColor, y, 0.0f, 0.0f), pp1(p1, gColor, y, 0.0f, 1.0f), pp2(p2, gColor, y, 1.0f, 1.0f), pp3(
+		p3, gColor, y, 1.0f, 0.0f);
 	// meshes.push_back(lightms1);
 
 	V3 L0 = meshes[0]->GetCenter() + V3(0.0f, 80.0f, 0.0f);
@@ -397,15 +434,15 @@ void Scene::InitializeLights()
 	l0SM->label("Light 1 Shadows");
 	l0SM->show();
 
-	l0SM->ClearBGR(0xFFFFFFFF, 0.0f); 
+	l0SM->ClearBGR(0xFFFFFFFF, 0.0f);
 	l1SM->ClearBGR(0xFFFFFFFF, 0.0f);
 	l2SM->ClearBGR(0xFFFFFFFF, 0.0f);
 	l3SM->ClearBGR(0xFFFFFFFF, 0.0f);
-	l0PPC->PositionAndOrient(L0, meshes[0]->GetCenter(), V3(1.0f, 0.0f,0.0f));
+	l0PPC->PositionAndOrient(L0, meshes[0]->GetCenter(), V3(1.0f, 0.0f, 0.0f));
 	l1PPC->PositionAndOrient(L0, meshes[0]->GetCenter(), V3(1.0f, 0.0f, 0.0f));
 	l2PPC->PositionAndOrient(L0, meshes[0]->GetCenter(), V3(1.0f, 0.0f, 0.0f));
 	l3PPC->PositionAndOrient(L0, meshes[0]->GetCenter(), V3(1.0f, 0.0f, 0.0f));
-	
+
 	// commit to framebuffer
 	shadowMaps.push_back(l0SM);
 	shadowMaps.push_back(l1SM);
@@ -422,9 +459,9 @@ void Scene::InitDemo()
 {
 	string projTexName = GlobalVariables::Instance()->projectedTextureName;
 	fbp->LoadTex(projTexName);
-	// fbp->LoadTiff(projTexName.c_str());
-	projectPPC->PositionAndOrient(ppc->C + V3(0.0f,0.0f,-30.0f) , meshes[1]->GetCenter(), V3(0.0f, 1.0f, 0.0f));
-//	projectPPC->PositionAndOrient(ppc->C + V3(10.0f, 10.0f, 0.0f), obstacles[0]->GetCenter(), V3(0.0f, 1.0f, 0.0f));
+	fbp->DrawTexture(projTexName);
+	projectPPC->PositionAndOrient(ppc->C + V3(0.0f, 0.0f, -30.0f), meshes[0]->GetCenter(), V3(0.0f, 1.0f, 0.0f));
+	//	projectPPC->PositionAndOrient(ppc->C + V3(10.0f, 10.0f, 0.0f), obstacles[0]->GetCenter(), V3(0.0f, 1.0f, 0.0f));
 	RenderZbuffer(projectPPC, fbp);
 
 	// lighting and shadows
@@ -441,44 +478,50 @@ void Scene::InitDemo()
 void Scene::Demonstration()
 {
 	auto gv = GlobalVariables::Instance();
-	int stepN = 360;
+	int stepN = 100;
 
-	// Without invisible
-	for (int stepi = 0; stepi < stepN; ++stepi)
-	{
-		stepi < stepN /2 ? projectPPC->MoveLeft(-1.0f)
-		: projectPPC->MoveLeft(1.0f);
-
-		// Update projected Z buffer
-		RenderZbuffer(projectPPC, fbp);
-		Render();
-		Fl::check();
-
-		if (gv->isRecording)
-		{
-			char buffer[100];
-			sprintf_s(buffer, "images/projector-%03d.tiff", stepi);
-			fb->SaveAsTiff(buffer);
-		}
-	}
-
-//	// With invisible
+//	// Without invisible
 //	for (int stepi = 0; stepi < stepN; ++stepi)
 //	{
-//		// projectPPC->C = projectPPC->C.RotateThisPointAboutArbitraryAxis(GetSceneCenter(), 
-//		// 	V3(0.0f, 1.0f, 0.0f), 3.0f);
-//		stepi < stepN / 2 ? obstacles[0]->Translate(V3(1.0f, 0.0f, 0.0f))
-//			: obstacles[0]->Translate(V3(-1.0f, 0.0f, 0.0f));
+//		stepi < stepN / 2
+//			? obstacles[0]->Translate(V3(-1.0f,0.0f,0.0f))
+//			: obstacles[0]->Translate(V3(1.0f, 0.0f, 0.0f));
 //
-//		// prepare occlusion projection
-//		PreprocessOcculProjTexture();	
 //		// Update projected Z buffer
 //		RenderZbuffer(projectPPC, fbp);
 //		Render();
 //		Fl::check();
 //
-//		 char buffer[100];
-//		 sprintf_s(buffer, "images/projector-%03d.tiff", stepi + stepN);
-//		 fb->SaveAsTiff(buffer);
+//		if (gv->isRecording)
+//		{
+//			char buffer[100];
+//			sprintf_s(buffer, "images/projector-%03d.tiff", stepi);
+//			fb->SaveAsTiff(buffer);
+//		}
 //	}
+
+	// With invisible
+	for (int stepi = 0; stepi < stepN; ++stepi)
+	{
+		// projectPPC->C = projectPPC->C.RotateThisPointAboutArbitraryAxis(GetSceneCenter(), 
+		// 	V3(0.0f, 1.0f, 0.0f), 3.0f);
+		stepi < stepN / 2
+			? obstacles[0]->Translate(V3(-1.0f, 0.0f, 0.0f))
+			: obstacles[0]->Translate(V3(1.0f, 0.0f, 0.0f));
+
+		// Update projected Z buffer
+		RenderZbuffer(projectPPC, fbp);
+
+		// prepare occlusion projection
+		PreprocessOcculProjTexture(fbp);
+		Render(ppc,fb);
+		Fl::check();
+
+		if (gv->isRecording)
+		{
+			char buffer[100];
+			sprintf_s(buffer, "images/projector-%03d.tiff", stepi + stepN);
+			fb->SaveAsTiff(buffer);
+		}
+	}
 }
