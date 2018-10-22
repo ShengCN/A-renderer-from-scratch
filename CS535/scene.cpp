@@ -66,7 +66,7 @@ Scene::Scene(): isRenderAABB(false)
 
 	float obsz = 25.0f;
 	V3 tmC = ppc->C + ppc->GetVD() * 100.0f;
-	happy->PositionAndSize(tmC + V3(20.0f, 0.0f, 20.0f), obsz);
+	happy->PositionAndSize(tmC + V3(-20.0f, 0.0f, 20.0f), obsz);
 	teapot->PositionAndSize(tmC + V3(20.0f, 0.0f, 0.0f), obsz);
 	plane->PositionAndSize(tmC + V3(0.0f, 0.0f, -100.0f), 200.0f);
 	// obstacles.push_back(make_shared<TM>(*happy));
@@ -199,6 +199,8 @@ Scene::~Scene()
 
 void Scene::PreprocessOcculProjTexture(FrameBuffer *fbp)
 {
+	fbp->DrawTexture(GlobalVariables::Instance()->projectedTextureName);
+	vector<unsigned int> pixBuffer(fbp->pix, fbp->pix + fbp->w * fbp->h * sizeof(unsigned int));
 	shared_ptr<FrameBuffer> fbScene = make_shared<FrameBuffer>(0,0,fb->w,fb->h);
 	shared_ptr<FrameBuffer> fbSceneWithObs = make_shared<FrameBuffer>(0,0,fb->w,fb->h);
 	
@@ -215,29 +217,31 @@ void Scene::PreprocessOcculProjTexture(FrameBuffer *fbp)
 	for (auto m : meshes) m->RenderFillZ(ppc, fbSceneWithObs.get());
 	for (auto m : obstacles) m->RenderFillZ(ppc, fbSceneWithObs.get());
 
-//	// Update new textures
-//	for(int u = 0; u < fb->w; ++u)
-//	{
-//		for(int v = 0; v < fb->h; ++v)
-//		{
-//			float uf = static_cast<float>(u) + 0.5f, vf = static_cast<float>(v) + 0.5f;
-//			V3 scenePix(uf, vf, fbScene->GetZ(u, v)), sceneObsPix(uf, vf, fbSceneWithObs->GetZ(u, v));
-//			V3 sceneInPP = fb->HomographMapping(scenePix, ppc, projectPPC);
-//			V3 sceneObsInPP = fb->HomographMapping(sceneObsPix, ppc, projectPPC);
-//			
-//			// Check in screen
-//			if(sceneInPP[2]<0.0f || sceneObsInPP[2] <0.0f || !fbp->IsInScreen(sceneInPP[0], sceneInPP[1]) || fbp->IsInScreen(sceneObsInPP[0], sceneObsInPP[1]))
-//				continue;
-//			
-//			int su = sceneInPP[0], sv = sceneInPP[1];
-//			int sou = sceneObsInPP[0], sov = sceneObsInPP[1];
-//			texBuffer->SetGuarded(su, sv, fbp->Get(sou, sov));
-//		}
-//	}
-//
-//	//update texture
-//	memcpy(fbp->pix, texBuffer->pix, sizeof(float) * fbp->w * fbp->h); 
-//	fbp->redraw();
+//	ofstream out("mydbg/out.txt");
+	// Update new textures
+	for(int u = 0; u < fb->w; ++u)
+	{
+		for(int v = 0; v < fb->h; ++v)
+		{
+			float uf = static_cast<float>(u) + 0.5f, vf = static_cast<float>(v) + 0.5f;
+			V3 scenePix(uf, vf, fbScene->GetZ(u, v)), sceneObsPix(uf, vf, fbSceneWithObs->GetZ(u, v));
+			V3 sceneInPP = fb->HomographMapping(scenePix, ppc, projectPPC);
+			V3 sceneObsInPP = fb->HomographMapping(sceneObsPix, ppc, projectPPC);
+			
+			// Check in screen
+			if(sceneInPP[2] <0.0f || sceneObsInPP[2] <0.0f 
+				|| !fbp->IsInScreen(static_cast<int>(sceneInPP[0]), static_cast<int>(sceneInPP[1]))
+				|| !fbp->IsInScreen(static_cast<int>(sceneObsInPP[0]), static_cast<int>(sceneObsInPP[1])))
+				continue;
+
+			int su = sceneInPP[0], sv = sceneInPP[1];
+			int sou = sceneObsInPP[0], sov = sceneObsInPP[1];
+			// cerr << sou <<" " << sov << endl;
+			fbp->DrawPoint(sou, sov, pixBuffer[(fbp->h - 1 - sv) * fbp->w + su]);
+		}
+	}
+
+	fbp->redraw();
 }
 
 bool Scene::DBGFramebuffer()
@@ -506,8 +510,8 @@ void Scene::Demonstration()
 		// projectPPC->C = projectPPC->C.RotateThisPointAboutArbitraryAxis(GetSceneCenter(), 
 		// 	V3(0.0f, 1.0f, 0.0f), 3.0f);
 		stepi < stepN / 2
-			? obstacles[0]->Translate(V3(-1.0f, 0.0f, 0.0f))
-			: obstacles[0]->Translate(V3(1.0f, 0.0f, 0.0f));
+			? obstacles[0]->Translate(V3(1.0f, 0.0f, 0.0f))
+			: obstacles[0]->Translate(V3(-1.0f, 0.0f, 0.0f));
 
 		// Update projected Z buffer
 		RenderZbuffer(projectPPC, fbp);
