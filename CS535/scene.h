@@ -18,9 +18,6 @@ public:
 	std::vector<shared_ptr<FrameBuffer>> shadowMaps;
 	PPC* ppc, *ppc3, *projectPPC;
 	vector<TM*> meshes;
-	
-	// For HW4 
-	vector<shared_ptr<TM>> obstacles;
 
 	Scene();
 	void DBG();
@@ -34,7 +31,6 @@ public:
 	V3 GetSceneCenter();
 	~Scene();
 
-	void PreprocessOcculProjTexture(FrameBuffer *fbp);
 private:
 	bool DBGFramebuffer();
 	bool DBGV3();

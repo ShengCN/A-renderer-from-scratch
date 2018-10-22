@@ -16,6 +16,7 @@ public:
 	bool isRecording;
 	bool debugZbuffer;
 
+	vector<const string> cubeMapFiles;
 private:
 	GlobalVariables();
 	static GlobalVariables* _instance;
