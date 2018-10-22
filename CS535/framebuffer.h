@@ -23,8 +23,10 @@ class FrameBuffer : public Fl_Gl_Window {
 public:
 	unsigned int *pix;	// pixel 
 	float *zb;			// z buffer
-	unordered_map<std::string, vector<TextureInfo>> textures; // use file name as index, different Lod, 0 is default
 	int w, h;
+
+	unordered_map<std::string, vector<TextureInfo>> textures; // use file name as index, different Lod, 0 is default
+	FrameBuffer *projFB; 
 
 	FrameBuffer(int u0, int v0, int _w, int _h);
 	void draw();

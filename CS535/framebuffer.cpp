@@ -395,7 +395,6 @@ int FrameBuffer::IsPixelInProjection(int u, int v, float z, V3 &color, float &al
 
 	auto ppc1 = gv->curScene->ppc;
 	auto ppc2 = gv->curScene->projectPPC;
-	auto projFB = gv->curScene->fbp;
 	string projTexName = gv->projectedTextureName;
 
 	if (!ppc1 || !ppc1 || !projFB)
@@ -414,11 +413,7 @@ int FrameBuffer::IsPixelInProjection(int u, int v, float z, V3 &color, float &al
 
 	if (projFB->GetZ(v2[0], v2[1]) - v2[2] <= eps)
 	{
-		// look up project texture
-		// float s = v2[0] / (projFB-> w - 1), t = v2[1] / (projFB->w - 1);
-		// color = gv->curScene->fbp->LookupColor(projTexName, s, t, alpha);
-		
-		unsigned int c = gv->curScene->fbp->Get(v2[0], v2[1]);
+		unsigned int c = projFB->Get(v2[0], v2[1]);
 		color.SetColor(c);
 		unsigned char*rgba = (unsigned char*)&c;
 		alpha = static_cast<float>(rgba[3]) / 255.0f;

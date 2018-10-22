@@ -38,13 +38,16 @@ Scene::Scene(): isRenderAABB(false)
 	fb3->label("Third Person View");
 	fb3->show();
 
-	fbp = new FrameBuffer(u0 + fb->w + 30, v0 + fb->h + 20, h, h);
+	fbp = new FrameBuffer(u0 + fb->w + 30, v0 + fb->h + 30, h, h);
 	fbp->label("Projected Texture");
 	fbp->show();
 
+	fbp1 = new FrameBuffer(u0 + fb->w + 30, v0 + fb->h + 50, h, h);
+	fbp1->label("Projected Texture1");
+
 	ppc = new PPC(fb->w, fb->h, fovf);
 	ppc3 = new PPC(fb3->w, fb3->h, 30.0f);
-	projectPPC = new PPC(fbp->w, fbp->h, fovf);
+	projectPPC = new PPC(fbp->w, fbp->h, 30.0f);
 
 	gui->uiw->position(u0, v0 + fb->h + 60);
 
@@ -69,8 +72,7 @@ Scene::Scene(): isRenderAABB(false)
 	happy->PositionAndSize(tmC + V3(-20.0f, 0.0f, 20.0f), obsz);
 	teapot->PositionAndSize(tmC + V3(20.0f, 0.0f, 0.0f), obsz);
 	plane->PositionAndSize(tmC + V3(0.0f, 0.0f, -100.0f), 200.0f);
-	// obstacles.push_back(make_shared<TM>(*happy));
-	// meshes.push_back(teapot);
+	meshes.push_back(teapot);
 	meshes.push_back(plane);
 	obstacles.push_back(happy);
 
@@ -81,7 +83,7 @@ Scene::Scene(): isRenderAABB(false)
 	ppc3->PositionAndOrient(ppc3->C, happy->GetCenter(), V3(0.0f, 1.0f, 0.0f));
 
 	InitDemo();
-	PreprocessOcculProjTexture(fbp);
+	
 	Render();
 }
 
@@ -459,9 +461,15 @@ void Scene::InitDemo()
 	string projTexName = GlobalVariables::Instance()->projectedTextureName;
 	fbp->LoadTex(projTexName);
 	fbp->DrawTexture(projTexName);
-	projectPPC->PositionAndOrient(ppc->C + V3(0.0f, 0.0f, 30.0f), meshes[0]->GetCenter(), V3(0.0f, 1.0f, 0.0f));
-	//	projectPPC->PositionAndOrient(ppc->C + V3(10.0f, 10.0f, 0.0f), obstacles[0]->GetCenter(), V3(0.0f, 1.0f, 0.0f));
+	fbp1->LoadTex(projTexName);
+	fbp1->DrawTexture(projTexName);
+	projectPPC->PositionAndOrient(ppc->C + V3(0.0f, 0.0f, 30.0f), meshes[1]->GetCenter(), V3(0.0f, 1.0f, 0.0f));
+	
+	fb->projFB = fbp;
+	fb3->projFB = fbp1;
+	
 	RenderZbuffer(projectPPC, fbp);
+	RenderZbuffer(projectPPC, fbp1);
 
 	// lighting and shadows
 	V3 L0 = meshes[0]->GetCenter() + V3(0.0f, 100.0f, 500.0f);
@@ -472,6 +480,8 @@ void Scene::InitDemo()
 	shared_ptr<PPC> l0PPC = make_shared<PPC>(w, h, fovf);
 	l0PPC->PositionAndOrient(L0, meshes[0]->GetCenter(), V3(1.0f, 0.0f, 0.0f));
 	lightPPCs.push_back(l0PPC);
+
+	PreprocessOcculProjTexture(fbp);
 }
 
 void Scene::Demonstration()
@@ -489,16 +499,18 @@ void Scene::Demonstration()
 
 		// Update projected Z buffer
 		RenderZbuffer(projectPPC, fbp);
+		RenderZbuffer(projectPPC, fbp1);
 
 		// prepare occlusion projection
 		PreprocessOcculProjTexture(fbp);
-		Render();
+		Render(ppc, fb);
+		Render(ppc, fb3);
 		Fl::check();
 
 		if (gv->isRecording)
 		{
 			char buffer[100];
-			sprintf_s(buffer, "images/projector-%03d.tiff", stepi + stepN);
+			sprintf_s(buffer, "images/ExtraProjection-%03d.tiff", stepi + stepN);
 			fb->SaveAsTiff(buffer);
 		}
 	}

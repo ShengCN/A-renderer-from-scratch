@@ -258,7 +258,7 @@ void TM::RenderFill(PPC* ppc, FrameBuffer* fb)
 					float sdCoeff = 1.0f; 
 					fb->ComputeShadowEffect(u, v, wv, sdCoeff);
 					color = color * sdCoeff;
-					fb->DrawPoint(u, v, color.GetColor());
+					 fb->DrawPoint(u, v, color.GetColor());
 				}
 			}
 		}
