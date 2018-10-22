@@ -44,7 +44,7 @@ public:
 	float GetZ(int u, int v);
 	unsigned int Get(int u, int v);
 	bool LoadTex(const std::string texFile);
-	float IsPixelInShadow(int u, int v, float z);	
+	int ComputeShadowEffect(int u, int v, float z, float &sdEffect);	
 	int IsPixelInProjection(int u, int v, float z, V3 &c, float &alpha);
 	V3 HomographMapping(V3 uvw, PPC* ppc1, PPC* ppc2);
 

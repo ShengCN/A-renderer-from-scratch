@@ -255,9 +255,10 @@ void TM::RenderFill(PPC* ppc, FrameBuffer* fb)
 					}
 
 					// Cast shadow onto shading results
-					float sdCoeff = fb->IsPixelInShadow(u, v, wv);
+					float sdCoeff = 1.0f; 
+					fb->ComputeShadowEffect(u, v, wv, sdCoeff);
 					color = color * sdCoeff;
-					 fb->DrawPoint(u, v, color.GetColor());
+					fb->DrawPoint(u, v, color.GetColor());
 				}
 			}
 		}

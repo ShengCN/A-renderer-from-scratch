@@ -354,12 +354,13 @@ bool FrameBuffer::LoadTex(const std::string texFile)
 	return true;
 }
 
-float FrameBuffer::IsPixelInShadow(int u, int v, float z)
+int FrameBuffer::ComputeShadowEffect(int u, int v, float z, float &sdEffect)
 {
-	float ret = 1.0f;	// shadow effect
+	bool isInSS = false;
+	sdEffect = 1.0f;	// shadow effect
 	auto gv = GlobalVariables::Instance();
 	if (gv->curScene->shadowMaps.empty())
-		return ret;
+		return isInSS;
 
 	float uf = static_cast<float>(u) + 0.5f, vf = static_cast<float>(v) + 0.5f;
 	// Check for all shadow maps
@@ -379,11 +380,12 @@ float FrameBuffer::IsPixelInShadow(int u, int v, float z)
 		if (SM->GetZ(v2[0],v2[1]) - v2[2] > eps )
 		{
 			// in shadow
-			ret *= 0.2f;
+			isInSS = true;
+			sdEffect *= 0.2f;
 		}
 	}
 
-	return ret;
+	return isInSS;
 }
 
 int FrameBuffer::IsPixelInProjection(int u, int v, float z, V3 &color, float &alpha)
