@@ -363,8 +363,8 @@ void Scene::InitDemo()
 		folder + "front.tiff",
 		folder + "ground.tiff",
 		folder + "back.tiff",
-		folder + "left.tiff",
-		folder + "right.tiff" };
+		folder + "right.tiff",
+		folder + "left.tiff" };
 	float fovf = 90.0f;
 	std::vector<shared_ptr<PPC>> cubemapPPCs;
 	cubemapPPCs.push_back(make_shared<PPC>(480, 480, fovf));

@@ -26,11 +26,10 @@ V3 CubeMap::LookupColor(V3 dir)
 	if (ppcs.size() != 6)
 		return color;
 
-	int count = 0;
 	dir = dir.UnitVector();
 	V3 p = dir, pp(0.0f);
 
-	while(count++ < 6)
+	for(int count =0; count < 6; ++count)
 	{
 		auto curPPC = ppcs[_lastFB];
 		curPPC->Project(p, pp);
@@ -38,15 +37,14 @@ V3 CubeMap::LookupColor(V3 dir)
 		{
 			// catched by one ppc
 			float s = pp[0] / static_cast<float>(curPPC->w), t = pp[1] / static_cast<float>(curPPC->h);
-			auto tex = cubemapFB->textures[mapOrder[_lastFB]].back();
-			float alpha = 0.0f;
-			color = cubemapFB->BilinearLookupColor(tex, s, t, alpha);
-			return color;
+			auto &tex = cubemapFB->textures[mapOrder[_lastFB]].back();
+			color = cubemapFB->BilinearLookupColor(tex, s, t);
+			break;
 		}
 
 		_lastFB = (_lastFB + 1) % 6;
 	}
-
+	
 	return color;
 }
 

@@ -70,6 +70,7 @@ public:
 	void VisualizeCurrView3D(PPC *ppc0, PPC *ppc1, FrameBuffer *fb1); 
 	V3 LookupColor(std::string texFile, float s, float t);
 	V3 LookupColor(std::string texFile, float s, float t, float &alpha, int pixelSz = -1);
+	V3 BilinearLookupColor(TextureInfo &tex, float s, float t);
 	V3 BilinearLookupColor(TextureInfo &tex, float s, float t, float &alpha);
 	V3 Light(PointProperty pp, V3 L, PPC *ppc);	// point property, ppc
 	V3 Light(PointProperty pp, PPC *ppc);

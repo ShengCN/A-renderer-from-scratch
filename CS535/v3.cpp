@@ -103,6 +103,22 @@ V3 V3::Reflect(V3 n)
 	return ret;
 }
 
+V3 V3::Refract(V3 n, float ratio)
+{
+	// sina / sinb = ratio
+	V3 v = this->UnitVector();
+
+	if (FloatEqual(n * v, 0.0f) || FloatEqual(cross(n).Length(),0.0f))
+		return *this;
+
+	V3 newn = n * (v * n);
+	V3 ret = newn - v;
+	float l = ret.Length() / ratio;
+	ret = ret.UnitVector() * l;
+	ret = newn + ret;
+	return ret;
+}
+
 float& V3::operator[](int i)
 {
 	return xyz[i];

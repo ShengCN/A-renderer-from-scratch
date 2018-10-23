@@ -862,6 +862,34 @@ V3 FrameBuffer::LookupColor(std::string texFile, float s, float t, float& alpha,
 	return c0 * (1.0f - fract) + c1 * fract;
 }
 
+V3 FrameBuffer::BilinearLookupColor(TextureInfo& tex, float s, float t)
+{
+	int texW = tex.w, texH = tex.h;
+	float textS = s * static_cast<float>(texW - 1);
+	float textT = t * static_cast<float>(texH - 1);
+
+	// corner case
+	int u0 = max(0, static_cast<int>(textS - 0.5f)), v0 = max(0, static_cast<int>(textT - 0.5f));
+	int u1 = min(texW - 1, static_cast<int>(textS + 0.5f)), v1 = min(texH, static_cast<int>(textT + 0.5f));
+
+	unsigned int ori0 = tex.texture[(texH - 1 - v0) * texW + u0];
+	unsigned int ori1 = tex.texture[(texH - 1 - v0) * texW + u1];
+	unsigned int ori2 = tex.texture[(texH - 1 - v1) * texW + u0];
+	unsigned int ori3 = tex.texture[(texH - 1 - v1) * texW + u1];
+	V3 c0, c1, c2, c3;
+	c0.SetColor(ori0);
+	c1.SetColor(ori1);
+	c2.SetColor(ori2);
+	c3.SetColor(ori3);
+
+	float uf0 = static_cast<float>(u0) + 0.5f, vf0 = static_cast<float>(v0) + 0.5f;
+	float intpS = Clamp(textS - uf0, 0.0f, 1.0f), intpT = Clamp(textT - vf0, 0.0f, 1.0f);
+
+	// commit result
+	return c0 * (1.0f - intpS) * (1.0f - intpT) + c1 * intpS * (1.0f - intpT) + c2 * (1.0f - intpS) * intpT + c3 * intpS
+		* intpT;
+}
+
 V3 FrameBuffer::BilinearLookupColor(TextureInfo &tex, float s, float t, float& alpha)
 {
 	int texW = tex.w, texH = tex.h;
