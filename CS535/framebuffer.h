@@ -8,6 +8,8 @@
 #include <string>
 #include "ppc.h"
 #include "v3.h"
+
+class CubeMap;
 using std::vector;
 using std::unordered_map;
 struct PointProperty;
@@ -61,6 +63,7 @@ public:
 	void Draw3DTriangle(PPC* ppc, V3 p1, V3 p2, V3 p3, V3 color);
 	void Draw3DTriangle(PPC* ppc, V3 p0, V3 c0, V3 p1, V3 c1, V3 p2, V3 c2);
 	void DrawTexture(const std::string texFile, int LoD = 0);
+	void DrawCubeMap(PPC* ppc, CubeMap *cubemap);
 
 	void DrawPPC(PPC* wPPC, PPC* tPPC, float vf);	// visualize target PPC using wPPC
 	void VisualizeCurrView(PPC *ppc0, float currf, PPC *ppc1, FrameBuffer *fb1);

@@ -349,7 +349,7 @@ bool FrameBuffer::LoadTex(const std::string texFile)
 	TIFFClose(in);
 
 	// Preprocess Lod textures
-	PrepareTextureLoD(texFile);
+	// PrepareTextureLoD(texFile);
 
 	return true;
 }
@@ -709,6 +709,19 @@ void FrameBuffer::DrawTexture(const std::string texFile, int LoD)
 	h = tex.h;
 	pix = new unsigned int[w*h];
 	copy(tex.texture.begin(), tex.texture.end(), pix);
+}
+
+void FrameBuffer::DrawCubeMap(PPC* ppc, CubeMap *cubemap)
+{
+	for(int v = 0; v < h; ++v)
+	{
+		for(int u = 0; u < w; ++u)
+		{
+			V3 eyeRay = ppc->GetRay(u, v);
+			V3 c = cubemap->LookupColor(eyeRay);
+			DrawPoint(u, v, c.GetColor());
+		}
+	}
 }
 
 

@@ -41,7 +41,7 @@ bool PPC::IsInSideImagePlane(V3 pp)
 	int u = static_cast<int>(pp[0]);
 	int v = static_cast<int>(pp[1]);
 
-	if (pp[2] < 0.0f)
+	if (pp[2] <= 0.0f)
 		return false;
 
 	if (u < 0 || u > w - 1)

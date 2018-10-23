@@ -1,5 +1,5 @@
 #include "CubeMap.h"
-
+#include <fstream>
 
 void CubeMap::LoadCubeMap(vector<string> fnames, vector<shared_ptr<PPC>> _ppcs)
 {
@@ -27,10 +27,13 @@ V3 CubeMap::LookupColor(V3 dir)
 		return color;
 
 	int count = 0;
+	dir = dir.UnitVector();
+	V3 p = dir, pp(0.0f);
+
+	ofstream out("mydbg/debug.txt", ofstream::app);
 	while(count++ < 6)
 	{
 		auto curPPC = ppcs[_lastFB];
-		V3 p = curPPC->C + dir, pp(0.0f);
 		curPPC->Project(p, pp);
 		if (curPPC->IsInSideImagePlane(pp))
 		{
@@ -42,11 +45,14 @@ V3 CubeMap::LookupColor(V3 dir)
 			break;
 		}
 
+		if(pp[2] > 0.0f)
+			out << pp;
 		_lastFB = (_lastFB + 1) % 6;
 	}
 
 	if (count == 6)
-		cerr << "Did not find color! \n";
+		cerr << "Did not find color! \n \n";
+	out.close();
 	return color;
 }
 

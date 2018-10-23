@@ -241,7 +241,6 @@ void TM::RenderFill(PPC* ppc, FrameBuffer* fb)
 
 					// DEBUG
 					// color = ClampColor(color + EnvMapping(ppc, gv->curScene->cubemap.get(), p, pn));
-					color = ClampColor(EnvMapping(ppc, gv->curScene->cubemap.get(), p, pn));
 
 					if (GlobalVariables::Instance()->isRenderProjectedTexture)
 					{
@@ -263,6 +262,8 @@ void TM::RenderFill(PPC* ppc, FrameBuffer* fb)
 					float sdCoeff = 1.0f; 
 					fb->ComputeShadowEffect(u, v, wv, sdCoeff);
 					color = color * sdCoeff;
+
+					color = ClampColor(EnvMapping(ppc, gv->curScene->cubemap.get(), p, pn));
 					fb->DrawPoint(u, v, color.GetColor());
 				}
 			}

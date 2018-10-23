@@ -64,6 +64,13 @@ void Scene::Render()
 		fb3->DrawPPC(ppc3, ppc, currf);
 		fb->VisualizeCurrView(ppc, currf, ppc3, fb3); // using a 3rd ppc to visualize current ppc
 		fb->VisualizeCurrView3D(ppc, ppc3, fb3); // using a 3rd ppc to visualize current ppc
+		
+		// debug cube map
+		for(auto c:cubemap->ppcs)
+		{
+			fb3->DrawPPC(ppc3, c.get(), currf);
+		}
+
 		fb3->redraw();
 	}
 }
@@ -73,6 +80,7 @@ void Scene::Render(PPC* currPPC, FrameBuffer* currFB)
 	if (currFB)
 	{
 		currFB->ClearBGR(0xFF999999, 0.0f);
+		// currFB->DrawCubeMap(currPPC, cubemap.get());
 
 		for (auto t : meshes)
 		{
@@ -370,12 +378,12 @@ void Scene::InitDemo()
 	cubemapPPCs[2]->PositionAndOrient(V3(0.0f), V3(0.0f, -1.0f, 0.0f), V3(0.0f, 0.0f, -1.0f));
 	cubemapPPCs[3]->PositionAndOrient(V3(0.0f), V3(0.0f, 0.0f, 1.0f), V3(0.0f, 1.0f, 0.0f));
 	cubemapPPCs[4]->PositionAndOrient(V3(0.0f), V3(-1.0f, 0.0f, 0.0f), V3(0.0f, 1.0f, 0.0f));
-	cubemapPPCs[5]->PositionAndOrient(V3(0.0f), V3(1.0f, 0.0f, 0.0f), V3(0.0f, 1.0f, 1.0f));
+	cubemapPPCs[5]->PositionAndOrient(V3(0.0f), V3(1.0f, 0.0f, 0.0f), V3(0.0f, 1.0f, 0.0f));
 	cubemap->LoadCubeMap(fnames, cubemapPPCs);
 
 	// Init objects
 	TM* teapot = new TM();
-	teapot->LoadModelBin("geometry/bunny.bin");
+	teapot->LoadModelBin("geometry/teapot1K.bin");
 
 	float obsz = 50.0f;
 	V3 tmC = ppc->C + ppc->GetVD() * 100.0f;
