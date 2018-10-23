@@ -1,6 +1,6 @@
 #include "BillBoard.h"
 #include "MathTool.h"
-
+#include <fstream>
 
 BillBoard::BillBoard()
 {
@@ -35,8 +35,8 @@ bool BillBoard::InsideBillboard(V3 p)
 	if(!FloatEqual((p-p0) * n,0.0f))
 		return false;
 
-	V3 x = p1 - p0;
-	V3 y = p3 - p0;
+	V3 x = p3 - p0;
+	V3 y = p1 - p0;
 	V3 v = p - p0;
 	float xf = x * v, yf = y * v;
 	return !(xf < 0.0f || yf < 0.0f || xf / x.Length() > x.Length() || yf / y.Length() > y.Length());
@@ -50,14 +50,15 @@ V3 BillBoard::GetColor(FrameBuffer *fb, V3 p)
 	V3 p0 = mesh->verts[0];
 	V3 p1 = mesh->verts[1];
 	V3 p3 = mesh->verts[3];
-	V3 x = p1 - p0;
-	V3 y = p3 - p0;
+	V3 x = p3 - p0;
+	V3 y = p1 - p0;
 	V3 v = p - p0;
 	float xf = x * v, yf = y * v;
-	float s = xf / x.Length() / x.Length();
-	float t = yf / y.Length() / y.Length();
+	float s = xf / (x.Length() * x.Length());
+	float t = yf / (y.Length() * y.Length());
 
-	return fb->LookupColor(mesh->tex, s, t);
+	auto &tex = fb->textures.at(mesh->tex).back();
+	return fb->BilinearLookupColor(tex, s, t);
 }
 
 BillBoard::~BillBoard()

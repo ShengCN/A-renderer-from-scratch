@@ -695,42 +695,6 @@ void FrameBuffer::VisualizeCurrView3D(PPC* ppc0, PPC* ppc1, FrameBuffer* fb1)
 	}
 }
 
-V3 FrameBuffer::LookupColor(std::string texFile, float s, float t)
-{
-	if (textures.find(texFile) == textures.end())
-	{
-		cerr << "Not found texture: " << texFile << endl;
-		return V3(0.0f);
-	}
-
-
-	int texW = textures[texFile][0].w, texH = textures[texFile][0].h;
-	float textS = s * static_cast<float>(texW - 1);
-	float textT = t * static_cast<float>(texH - 1);
-
-	// nearest
-	//	int u = int(textS);
-	//	int v = int(textT);
-	//	V3 c;
-	//	c.SetColor(textures[texFile].texture[(texH - 1 - v)*texW + u]);
-	//	return c;
-
-	// corner case
-	int u0 = max(0, static_cast<int>(textS - 0.5f)), v0 = max(0, static_cast<int>(textT - 0.5f));
-	int u1 = min(texW - 1, static_cast<int>(textS + 0.5f)), v1 = min(texH, static_cast<int>(textT + 0.5f));
-
-	V3 c0, c1, c2, c3;
-	c0.SetColor(textures[texFile][0].texture[(texH - 1 - v0) * texW + u0]);
-	c1.SetColor(textures[texFile][0].texture[(texH - 1 - v0) * texW + u1]);
-	c2.SetColor(textures[texFile][0].texture[(texH - 1 - v1) * texW + u0]);
-	c3.SetColor(textures[texFile][0].texture[(texH - 1 - v1) * texW + u1]);
-
-	float uf0 = static_cast<float>(u0) + 0.5f, vf0 = static_cast<float>(v0) + 0.5f;
-	float intpS = Clamp(textS - uf0, 0.0f, 1.0f), intpT = Clamp(textT - vf0, 0.0f, 1.0f);
-	return c0 * (1.0f - intpS) * (1.0f - intpT) + c1 * intpS * (1.0f - intpT) + c2 * (1.0f - intpS) * intpT + c3 * intpS
-		* intpT;
-}
-
 V3 FrameBuffer::LookupColor(std::string texFile, float s, float t, float& alpha, int pixelSz)
 {
 	if (textures.find(texFile) == textures.end())

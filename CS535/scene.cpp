@@ -420,6 +420,7 @@ void Scene::Demonstration()
 	for(int stepi = 0; stepi < stepN; ++stepi)
 	{
 		ppc->RevolveH(meshes[0]->GetCenter(), 1.0f);
+		// billboards[0]->mesh->Translate(V3(0.0f, 0.0f, -1.0f));
 		Render();
 		Fl::check();
 

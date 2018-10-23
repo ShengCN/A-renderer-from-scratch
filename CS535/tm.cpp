@@ -523,7 +523,7 @@ V3 TM::Shading(PPC* ppc, FrameBuffer *fb, int u, int v, float w, PointProperty p
 	// environment mapping
 	if (isEnvMapping)
 	{
-		float fract = 0.4f;
+		float fract = 0.0f;
 		auto envColor = EnvMapping(ppc, fb, GlobalVariables::Instance()->curScene->cubemap.get(), pp.p, pp.n);
 		pp.c = ClampColor(pp.c * fract + envColor * (1.0f - fract));
 	}
@@ -682,6 +682,11 @@ V3 TM::EnvMapping(PPC* ppc, FrameBuffer *fb, CubeMap* cubemap, V3 p, V3 n)
 	auto gv = GlobalVariables::Instance();
 	V3 viewDir = ppc->C - p;
 
+	if (gv->isRefraction)
+		viewDir = viewDir.Refract(n, gv->refractRatio);
+	else
+		viewDir = viewDir.Reflect(n);
+
 	// Check intersections
 	auto &billboards = gv->curScene->billboards;
 	float distance = 0.0f;
@@ -692,25 +697,21 @@ V3 TM::EnvMapping(PPC* ppc, FrameBuffer *fb, CubeMap* cubemap, V3 p, V3 n)
 		if (!b->Intersect(p, viewDir, t))
 			continue;
 
-		t = 1.0 / t;
+  		t = 1.0 / t;
 
 		// Find the closest Billboard
 		if (distance < t)
 		{
 			distance = t;
 		}
-		
-		V3 pBB = p + viewDir / t;
-	  	bbColor = b->GetColor(fb, pBB);
+
+		t = 1.0f / t;
+		V3 pBB = p + viewDir * t;
+		bbColor = b->GetColor(fb, pBB);
 	}
 
 	// intersect with bb
 	if (!FloatEqual(distance, 0.0f)) return bbColor;
-
-	if (gv->isRefraction)
-		viewDir = viewDir.Refract(n, gv->refractRatio);
-	else
-		viewDir = viewDir.Reflect(n);
 
 	return cubemap->LookupColor(viewDir, pixelSz);
 }

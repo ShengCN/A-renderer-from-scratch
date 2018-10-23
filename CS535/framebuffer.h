@@ -64,7 +64,6 @@ public:
 	void DrawPPC(PPC* wPPC, PPC* tPPC, float vf);	// visualize target PPC using wPPC
 	void VisualizeCurrView(PPC *ppc0, float currf, PPC *ppc1, FrameBuffer *fb1);
 	void VisualizeCurrView3D(PPC *ppc0, PPC *ppc1, FrameBuffer *fb1); 
-	V3 LookupColor(std::string texFile, float s, float t);
 	V3 LookupColor(std::string texFile, float s, float t, float &alpha, int pixelSz = -1);
 	V3 BilinearLookupColor(TextureInfo &tex, float s, float t);
 	V3 BilinearLookupColor(TextureInfo &tex, float s, float t, float &alpha);
