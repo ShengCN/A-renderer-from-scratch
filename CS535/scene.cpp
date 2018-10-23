@@ -80,7 +80,7 @@ void Scene::Render(PPC* currPPC, FrameBuffer* currFB)
 	if (currFB)
 	{
 		currFB->ClearBGR(0xFF999999, 0.0f);
-		// currFB->DrawCubeMap(currPPC, cubemap.get());
+		currFB->DrawCubeMap(currPPC, cubemap.get());
 
 		for (auto t : meshes)
 		{
@@ -407,5 +407,12 @@ void Scene::Demonstration()
 		ppc->RevolveH(meshes[0]->GetCenter(), 1.0f);
 		Render();
 		Fl::check();
+
+		if(GlobalVariables::Instance()->isRecording)
+		{
+			char buffer[50];
+			sprintf_s(buffer, "images/reflect-%03d.tiff", stepi);
+			fb->SaveAsTiff(buffer);
+		}
 	}
 }

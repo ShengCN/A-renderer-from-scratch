@@ -30,7 +30,6 @@ V3 CubeMap::LookupColor(V3 dir)
 	dir = dir.UnitVector();
 	V3 p = dir, pp(0.0f);
 
-	ofstream out("mydbg/debug.txt", ofstream::app);
 	while(count++ < 6)
 	{
 		auto curPPC = ppcs[_lastFB];
@@ -42,17 +41,12 @@ V3 CubeMap::LookupColor(V3 dir)
 			auto tex = cubemapFB->textures[mapOrder[_lastFB]].back();
 			float alpha = 0.0f;
 			color = cubemapFB->BilinearLookupColor(tex, s, t, alpha);
-			break;
+			return color;
 		}
 
-		if(pp[2] > 0.0f)
-			out << pp;
 		_lastFB = (_lastFB + 1) % 6;
 	}
 
-	if (count == 6)
-		cerr << "Did not find color! \n \n";
-	out.close();
 	return color;
 }
 
