@@ -660,8 +660,13 @@ V3 TM::EnvMapping(PPC* ppc, CubeMap* cubemap, V3 p, V3 n)
 	if (!cubemap)
 		return V3(0.0f);
 
+	auto gv = GlobalVariables::Instance();
 	V3 viewDir = ppc->C - p;
-	viewDir = viewDir.Reflect(n);
+	if (gv->isRefraction)
+		viewDir = viewDir.Refract(n, gv->refractRatio);
+	else
+		viewDir = viewDir.Reflect(n);
+
 	return cubemap->LookupColor(viewDir);
 }
 

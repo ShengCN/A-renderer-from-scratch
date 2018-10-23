@@ -17,6 +17,11 @@ public:
 	bool debugZbuffer;
 	bool isSaveLodTextures;
 	bool isLight;
+	
+	// For HW5
+	bool isRefraction;
+	float refractRatio;
+
 private:
 	GlobalVariables();
 	static GlobalVariables* _instance;
