@@ -220,50 +220,19 @@ void TM::RenderFill(PPC* ppc, FrameBuffer* fb)
 					V3 st = st0 + (st1 - st0) * k + (st2 - st0) * l;
 					V3 pc = p0.c + (p1.c - p0.c) * k + (p2.c - p0.c) * l;
 					V3 pn = p0.n + (p1.n - p0.n) * k + (p2.n - p0.n) * l;
-					V3 color(0.0f);
+					V3 p = ppc->Unproject(uvP);
+
+					PointProperty pp(p, pc, pn, st[0], st[1]);
 
 					// shading
 					float alpha = 1.0f;
-					if (fb->textures.find(tex) != fb->textures.end())
-					{
-						// s and t in (0.0f,1.0f)
-						float s = Clamp(Fract(st[0]), 0.0f, 1.0f);
-						float t = Clamp(Fract(st[1]), 0.0f, 1.0f);
-						color = fb->LookupColor(tex, s, t, alpha, pixelSz);
-					}
-					else
-						color = pc;
-
-					// Per pixel lighting after texture mapping
-					V3 p = ppc->Unproject(uvP);
-					PointProperty pointProperty(p, color, pn, st[0], st[1]);
-					color = fb->Light(pointProperty, ppc);
-
-					// DEBUG
-					// color = ClampColor(color + EnvMapping(ppc, gv->curScene->cubemap.get(), p, pn));
-
-					if (GlobalVariables::Instance()->isRenderProjectedTexture)
-					{
-						V3 c(0.0f);
-						float a = 0.0f;
-						if (fb->IsPixelInProjection(u, v, wv, c, a))
-							color = color * (1.0f - a) + c * a;
-					}
-
+					V3 color = Shading(ppc, fb, u, v, wv, pp, alpha);
+					
 					// alpha blending 
 					if (!FloatEqual(1.0f, alpha))
 					{
-						V3 pxC(0.0f);
-						pxC.SetColor(fb->pix[(fb->h - 1 - v) * fb->w + u]);
-						color = color * alpha + pxC * (1.0f - alpha);
+						color = color * alpha + fb->Get(u, v) * (1.0f - alpha);
 					}
-
-					// Cast shadow onto shading results
-					float sdCoeff = 1.0f; 
-					fb->ComputeShadowEffect(u, v, wv, sdCoeff);
-					color = color * sdCoeff;
-
-					color = ClampColor(EnvMapping(ppc, gv->curScene->cubemap.get(), p, pn));
 					fb->DrawPoint(u, v, color.GetColor());
 				}
 			}
@@ -520,6 +489,42 @@ V3 TM::GetCenter()
 	AABB aabb(verts[0]);
 	aabb = ComputeAABB();
 	return aabb.GetCenter();
+}
+
+V3 TM::Shading(PPC* ppc, FrameBuffer *fb, int u, int v, int w, PointProperty pp, float &alpha)
+{
+	V3 color(0.0f);
+	if (fb->textures.find(tex) != fb->textures.end())
+	{
+		// s and t in (0.0f,1.0f)
+		float s = Clamp(Fract(pp.s), 0.0f, 1.0f);
+		float t = Clamp(Fract(pp.t), 0.0f, 1.0f);
+		color = fb->LookupColor(tex, s, t, alpha, pixelSz);
+	}
+	else
+		color = pp.c;
+
+	// Per pixel lighting after texture mapping
+	color = fb->Light(ppc, pp);
+
+	// DEBUG
+	// color = ClampColor(color + EnvMapping(ppc, gv->curScene->cubemap.get(), p, pn));
+	color = ClampColor(color + EnvMapping(ppc, GlobalVariables::Instance()->curScene->cubemap.get(), pp.p, pp.n));
+
+	if (GlobalVariables::Instance()->isRenderProjectedTexture)
+	{
+		V3 c(0.0f);
+		float a = 0.0f;
+		if (fb->IsPixelInProjection(u, v, w, c, a))
+			color = color * (1.0f - a) + c * a;
+	}
+
+	// Cast shadow onto shading results
+	float sdCoeff = 1.0f;
+	fb->ComputeShadowEffect(u, v, w, sdCoeff);
+	color = color * sdCoeff;
+
+	return color;
 }
 
 void TM::Light(V3 mc, V3 L, PPC* ppc)

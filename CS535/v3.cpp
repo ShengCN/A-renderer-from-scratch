@@ -107,16 +107,17 @@ V3 V3::Refract(V3 n, float ratio)
 {
 	// sina / sinb = ratio
 	V3 v = this->UnitVector();
+	float nv = n * v;
 
-	if (FloatEqual(n * v, 0.0f) || FloatEqual(cross(n).Length(),0.0f))
+	if (FloatEqual(nv, 0.0f) || FloatEqual(nv,1.0f))
 		return *this;
 
-	V3 newn = n * (v * n);
+	V3 newn = n * nv;
 	V3 ret = newn - v;
 	float l = ret.Length() / ratio;
 	ret = ret.UnitVector() * l;
 	ret = newn + ret;
-	return ret;
+	return ret.UnitVector();
 }
 
 float& V3::operator[](int i)

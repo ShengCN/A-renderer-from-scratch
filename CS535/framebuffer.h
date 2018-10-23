@@ -73,7 +73,7 @@ public:
 	V3 BilinearLookupColor(TextureInfo &tex, float s, float t);
 	V3 BilinearLookupColor(TextureInfo &tex, float s, float t, float &alpha);
 	V3 Light(PointProperty pp, V3 L, PPC *ppc);	// point property, ppc
-	V3 Light(PointProperty pp, PPC *ppc);
+	V3 Light(PPC *ppc, PointProperty pp);
 
 	// Texture downsampling
 	void PrepareTextureLoD(string texFile);

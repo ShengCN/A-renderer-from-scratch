@@ -19,7 +19,7 @@ public:
 	V3 Rotate(V3 a, float angled);    // Rotate in arbitrary axis 
 	V3 RotateThisPointAboutArbitraryAxis(V3 O, V3 a, float angled);
 	V3 Reflect(V3 n);
-	V3 Refract(V3 n);
+	V3 Refract(V3 n, float ratio);
 	float& operator[](int i);
 	float operator*(V3 v1);
 	V3 operator*(float scf);

@@ -952,7 +952,7 @@ V3 FrameBuffer::Light(PointProperty pp, V3 L, PPC* ppc)
 	return ret;
 }
 
-V3 FrameBuffer::Light(PointProperty pp, PPC* ppc)
+V3 FrameBuffer::Light(PPC* ppc, PointProperty pp)
 {
 	V3 ret(0.0f);
 	auto gv = GlobalVariables::Instance();

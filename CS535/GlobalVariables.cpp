@@ -22,5 +22,5 @@ GlobalVariables::GlobalVariables()
 	debugZbuffer = false;
 	isSaveLodTextures = false;
 
-	isRecording = true;
+	isRecording = false;
 }

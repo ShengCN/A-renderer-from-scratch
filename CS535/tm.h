@@ -44,6 +44,7 @@ public:
 	V3 GetCenter();
 	
 	// Shading
+	V3 Shading(PPC *ppc, FrameBuffer *fb, int u, int v, int w, PointProperty pp, float &alpha);
 	void Light(V3 mc, V3 L, PPC *ppc);	// per vertex light
 	V3 EnvMapping(PPC *ppc, CubeMap *cubemap, V3 p, V3 n);
 	V3 ClampColor(V3 color);
