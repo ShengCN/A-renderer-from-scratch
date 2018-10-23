@@ -12,7 +12,7 @@ void CubeMap::LoadCubeMap(vector<string> fnames, vector<shared_ptr<PPC>> _ppcs)
 	mapOrder.clear();
 	for(auto f:fnames)
 	{
-		if (!cubemapFB->LoadTex(f)) isSuccess = false;
+		if (!cubemapFB->LoadTexture(f)) isSuccess = false;
 		mapOrder.push_back(f);
 	}
 
@@ -20,7 +20,7 @@ void CubeMap::LoadCubeMap(vector<string> fnames, vector<shared_ptr<PPC>> _ppcs)
 		cerr << "Succesfully load cube maps! \n";
 }
 
-V3 CubeMap::LookupColor(V3 dir)
+V3 CubeMap::LookupColor(V3 dir, int LoD)
 {
 	V3 color(0.0f);
 	if (ppcs.size() != 6)

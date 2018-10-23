@@ -16,7 +16,7 @@ public:
 	vector<string> mapOrder;
 
 	void LoadCubeMap(vector<string> fnames, vector<shared_ptr<PPC>> _ppcs);
-	V3 LookupColor(V3 dir);
+	V3 LookupColor(V3 dir, int LoD = -1);
 	CubeMap();
 	~CubeMap();
 };

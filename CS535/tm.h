@@ -53,7 +53,6 @@ public:
 	V3 ClampColor(V3 color);
 	V3 HomographMapping(V3 uvw, PPC* ppc1, PPC* ppc2);
 
-
 	~TM();
 };
 

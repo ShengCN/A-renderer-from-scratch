@@ -506,8 +506,10 @@ V3 TM::Shading(PPC* ppc, FrameBuffer *fb, int u, int v, float w, PointProperty p
 		color = pp.c;
 
 	// DEBUG
-	// pp.c = ClampColor(color + EnvMapping(ppc, GlobalVariables::Instance()->curScene->cubemap.get(), pp.p, pp.n));
-	pp.c = ClampColor(EnvMapping(ppc, GlobalVariables::Instance()->curScene->cubemap.get(), pp.p, pp.n));
+	float fract = 0.4f;
+	auto envColor = EnvMapping(ppc, GlobalVariables::Instance()->curScene->cubemap.get(), pp.p, pp.n);
+	pp.c = ClampColor(color * fract + envColor * (1.0f-fract));
+	// pp.c = ClampColor(EnvMapping(ppc, GlobalVariables::Instance()->curScene->cubemap.get(), pp.p, pp.n));
 
 	if (GlobalVariables::Instance()->isRenderProjectedTexture)
 	{
@@ -667,7 +669,8 @@ V3 TM::EnvMapping(PPC* ppc, CubeMap* cubemap, V3 p, V3 n)
 	else
 		viewDir = viewDir.Reflect(n);
 
-	return cubemap->LookupColor(viewDir);
+	int LoD = log2(pixelSz);
+	return cubemap->LookupColor(viewDir, LoD);
 }
 
 V3 TM::ClampColor(V3 color)

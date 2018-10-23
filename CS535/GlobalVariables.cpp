@@ -20,7 +20,7 @@ GlobalVariables::GlobalVariables()
 	lodTexture = true;
 	projectedTextureName = "images/jojo.tiff";
 	debugZbuffer = false;
-	isSaveLodTextures = false;
+	isSaveLodTextures = true;
 	isLight = false;
 	isRefraction = true;
 	refractRatio = 0.7f;

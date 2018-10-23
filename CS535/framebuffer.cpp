@@ -315,7 +315,7 @@ unsigned FrameBuffer::Get(int u, int v)
 	return pix[(h - 1 - v) * w + u];
 }
 
-bool FrameBuffer::LoadTex(const std::string texFile)
+bool FrameBuffer::LoadTexture(const std::string texFile)
 {
 	const char* fname = texFile.c_str();
 	TIFF* in = TIFFOpen(fname, "r");
@@ -349,7 +349,7 @@ bool FrameBuffer::LoadTex(const std::string texFile)
 	TIFFClose(in);
 
 	// Preprocess Lod textures
-	// PrepareTextureLoD(texFile);
+	PrepareTextureLoD(texFile);
 
 	return true;
 }
@@ -857,7 +857,7 @@ V3 FrameBuffer::Light(PointProperty pp, V3 L, PPC* ppc)
 	return ret;
 }
 
-void FrameBuffer::PrepareTextureLoD(string texFile)
+void FrameBuffer::PrepareTextureLoD(const string texFile)
 {
 	if (textures.find(texFile) == textures.end())
 		return;
@@ -869,9 +869,7 @@ void FrameBuffer::PrepareTextureLoD(string texFile)
 	textures[texFile].clear();
 	textures[texFile].resize(loDMax + 1);
 	textures[texFile][curLoD] = curTex;
-	string texSaveName = texFile + to_string(curLoD) + ".tiff";
-	// See the Lod Preprocess result
-	SaveTextureAsTiff(texSaveName, texFile, curLoD);
+	
 	while (curTex.w >= 2)
 	{
 		int nextW = curTex.w / 2, newLoD = curLoD - 1;
@@ -911,11 +909,11 @@ void FrameBuffer::PrepareTextureLoD(string texFile)
 		textures[texFile][newLoD] = newTex;
 		curTex = newTex;
 		curLoD = newLoD;
-		string texSaveName = texFile + to_string(newLoD) + ".tiff";
 		
 		if(GlobalVariables::Instance()->isSaveLodTextures)
 		{
 			// See the Lod Preprocess result
+			const string texSaveName = texFile + to_string(newLoD) + ".tiff";
 			SaveTextureAsTiff(texSaveName, texFile, newLoD);
 			cerr << "Current tex: " << texFile << " While count: " << newLoD << endl;
 		}

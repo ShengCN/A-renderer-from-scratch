@@ -46,7 +46,7 @@ public:
 	bool Visible(int u, int v, float z);
 	float GetZ(int u, int v);
 	unsigned int Get(int u, int v);
-	bool LoadTex(const std::string texFile);
+	bool LoadTexture(const std::string texFile);
 
 	// Draw something
 	void DrawSegment(V3 p0, V3 c0, V3 p1, V3 c1);
