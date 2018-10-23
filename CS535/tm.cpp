@@ -669,8 +669,7 @@ V3 TM::EnvMapping(PPC* ppc, CubeMap* cubemap, V3 p, V3 n)
 	else
 		viewDir = viewDir.Reflect(n);
 
-	int LoD = log2(pixelSz);
-	return cubemap->LookupColor(viewDir, LoD);
+	return cubemap->LookupColor(viewDir, pixelSz);
 }
 
 V3 TM::ClampColor(V3 color)
