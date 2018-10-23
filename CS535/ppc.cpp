@@ -36,6 +36,23 @@ int PPC::Project(V3 P, V3& ProjP)
 	return 1;
 }
 
+bool PPC::IsInSideImagePlane(V3 pp)
+{
+	int u = static_cast<int>(pp[0]);
+	int v = static_cast<int>(pp[1]);
+
+	if (pp[2] < 0.0f)
+		return false;
+
+	if (u < 0 || u > w - 1)
+		return false;
+
+	if (v < 0 || v > h - 1)
+		return false;
+
+	return true;
+}
+
 V3 PPC::GetVD()
 {
 	return (a^b).UnitVector();

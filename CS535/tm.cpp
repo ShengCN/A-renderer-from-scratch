@@ -235,8 +235,13 @@ void TM::RenderFill(PPC* ppc, FrameBuffer* fb)
 						color = pc;
 
 					// Per pixel lighting after texture mapping
-					PointProperty pointProperty(ppc->Unproject(uvP), color, pn, st[0], st[1]);
+					V3 p = ppc->Unproject(uvP);
+					PointProperty pointProperty(p, color, pn, st[0], st[1]);
 					color = fb->Light(pointProperty, ppc);
+
+					// DEBUG
+					// color = ClampColor(color + EnvMapping(ppc, gv->curScene->cubemap.get(), p, pn));
+					color = ClampColor(EnvMapping(ppc, gv->curScene->cubemap.get(), p, pn));
 
 					if (GlobalVariables::Instance()->isRenderProjectedTexture)
 					{
@@ -258,7 +263,7 @@ void TM::RenderFill(PPC* ppc, FrameBuffer* fb)
 					float sdCoeff = 1.0f; 
 					fb->ComputeShadowEffect(u, v, wv, sdCoeff);
 					color = color * sdCoeff;
-					 fb->DrawPoint(u, v, color.GetColor());
+					fb->DrawPoint(u, v, color.GetColor());
 				}
 			}
 		}
@@ -527,6 +532,25 @@ void TM::Light(V3 mc, V3 L, PPC* ppc)
 		ks = pow(max(ks, 0.0f), 8);
 		colors[vi] = mc * (ka + (1.0f - ka) * kd) + ks;
 	}
+}
+
+V3 TM::EnvMapping(PPC* ppc, CubeMap* cubemap, V3 p, V3 n)
+{
+	if (!cubemap)
+		return V3(0.0f);
+
+	V3 viewDir = ppc->C - p;
+	viewDir = viewDir.Reflect(n);
+	return cubemap->LookupColor(viewDir);
+}
+
+V3 TM::ClampColor(V3 color)
+{
+	V3 ret(0.0f);
+	ret[0] = Clamp(color[0], 0.0f, 1.0f);
+	ret[1] = Clamp(color[1], 0.0f, 1.0f);
+	ret[2] = Clamp(color[2], 0.0f, 1.0f);
+	return ret;
 }
 
 TM::~TM()

@@ -15,8 +15,8 @@ public:
 	bool depthTest, lodTexture;
 	bool isRecording;
 	bool debugZbuffer;
+	bool isSaveLodTextures;
 
-	vector<const string> cubeMapFiles;
 private:
 	GlobalVariables();
 	static GlobalVariables* _instance;

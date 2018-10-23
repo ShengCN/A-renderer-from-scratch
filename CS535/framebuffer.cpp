@@ -849,7 +849,7 @@ V3 FrameBuffer::LookupColor(std::string texFile, float s, float t, float& alpha,
 	return c0 * (1.0f - fract) + c1 * fract;
 }
 
-V3 FrameBuffer::BilinearLookupColor(TextureInfo& tex, float s, float t, float& alpha)
+V3 FrameBuffer::BilinearLookupColor(TextureInfo &tex, float s, float t, float& alpha)
 {
 	int texW = tex.w, texH = tex.h;
 	float textS = s * static_cast<float>(texW - 1);
@@ -990,8 +990,12 @@ void FrameBuffer::PrepareTextureLoD(string texFile)
 		curTex = newTex;
 		curLoD = newLoD;
 		string texSaveName = texFile + to_string(newLoD) + ".tiff";
-		// See the Lod Preprocess result
-		SaveTextureAsTiff(texSaveName, texFile, newLoD);
-		cerr << "Current tex: " << texFile << " While count: " << newLoD << endl;
+		
+		if(GlobalVariables::Instance()->isSaveLodTextures)
+		{
+			// See the Lod Preprocess result
+			SaveTextureAsTiff(texSaveName, texFile, newLoD);
+			cerr << "Current tex: " << texFile << " While count: " << newLoD << endl;
+		}
 	}
 }

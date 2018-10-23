@@ -3,6 +3,7 @@
 #include "framebuffer.h"
 #include "AABB.h"
 #include <vector>
+#include "cubemap.h"
 using std::vector;
 
 struct PointProperty
@@ -41,7 +42,11 @@ public:
 	AABB ComputeAABB();
 	void PositionAndSize(V3 tmC, float tmSize);
 	V3 GetCenter();
+	
+	// Shading
 	void Light(V3 mc, V3 L, PPC *ppc);	// per vertex light
+	V3 EnvMapping(PPC *ppc, CubeMap *cubemap, V3 p, V3 n);
+	V3 ClampColor(V3 color);
 
 	~TM();
 };

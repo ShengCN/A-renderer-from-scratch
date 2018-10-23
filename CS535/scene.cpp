@@ -43,29 +43,6 @@ Scene::Scene(): isRenderAABB(false)
 
 	gui->uiw->position(u0, v0 + fb->h + 60);
 
-	// Ground Quad
-	TM* teapot = new TM();
-	teapot->LoadModelBin("geometry/teapot1K.bin");
-	V3 p0(0.0f), p1(0.0f), p2(0.0f), p3(0.0f);
-	V3 x(1.0f, 0.0f, 0.0f), y(0.0f, 1.0f, 0.0f), z(0.0f, 0.0f, 1.0f), c(0.3f);
-	p0 = p0 + x + y;
-	p1 = p1 - x + y;
-	p2 = p2 - x - y;
-	p3 = p3 + x - y;
-	PointProperty pp0(p0, c, z, 0.0f, 0.0f), pp1(p1, c, z, 0.0f, 1.0f), pp2(p2, c, z, 1.0f, 1.0f), pp3(
-		p3, c, z, 1.0f, 0.0f);
-
-	float obsz = 50.0f;
-	V3 tmC = ppc->C + ppc->GetVD() * 100.0f;
-	teapot->PositionAndSize(tmC, obsz);
-	meshes.push_back(teapot);
-
-	ppc->C = ppc->C + V3(0.0f, 0.0f, 20.0f);
-	ppc->PositionAndOrient(ppc->C, meshes[0]->GetCenter(), V3(0.0f, 1.0f, 0.0f));
-
-	ppc3->C = ppc3->C + V3(330.0f, 150.0f, 300.0f);
-	ppc3->PositionAndOrient(ppc3->C, meshes[0]->GetCenter(), V3(0.0f, 1.0f, 0.0f));
-
 	InitDemo();
 	
 	Render();
@@ -355,41 +332,63 @@ void Scene::InitializeLights()
 	int w = 640;
 	int h = 480;
 	shared_ptr<PPC> l0PPC = make_shared<PPC>(w, h, fovf);
-	shared_ptr<PPC> l1PPC = make_shared<PPC>(w, h, fovf);
-	shared_ptr<PPC> l2PPC = make_shared<PPC>(w, h, fovf);
-	shared_ptr<PPC> l3PPC = make_shared<PPC>(w, h, fovf);
 	shared_ptr<FrameBuffer> l0SM = make_shared<FrameBuffer>(u0 + fb->w * 2 + 30, v0, w, h);
-	shared_ptr<FrameBuffer> l1SM = make_shared<FrameBuffer>(u0 + fb->w * 2, v0, w, h);
-	shared_ptr<FrameBuffer> l2SM = make_shared<FrameBuffer>(u0 + fb->w * 2, v0, w, h);
-	shared_ptr<FrameBuffer> l3SM = make_shared<FrameBuffer>(u0 + fb->w * 2, v0, w, h);
 	l0SM->label("Light 1 Shadows");
-	l0SM->show();
 
 	l0SM->ClearBGR(0xFFFFFFFF, 0.0f);
-	l1SM->ClearBGR(0xFFFFFFFF, 0.0f);
-	l2SM->ClearBGR(0xFFFFFFFF, 0.0f);
-	l3SM->ClearBGR(0xFFFFFFFF, 0.0f);
 	l0PPC->PositionAndOrient(L0, meshes[0]->GetCenter(), V3(0.0f, 1.0f, 0.0f));
-	l1PPC->PositionAndOrient(L0, meshes[0]->GetCenter(), V3(0.0f, 1.0f, 0.0f));
-	l2PPC->PositionAndOrient(L0, meshes[0]->GetCenter(), V3(0.0f, 1.0f, 0.0f));
-	l3PPC->PositionAndOrient(L0, meshes[0]->GetCenter(), V3(0.0f, 1.0f, 0.0f));
 
 	// commit to framebuffer
 	shadowMaps.push_back(l0SM);
-	shadowMaps.push_back(l1SM);
-	shadowMaps.push_back(l2SM);
-	shadowMaps.push_back(l3SM);
 	lightPPCs.push_back(l0PPC);
-	lightPPCs.push_back(l1PPC);
-	lightPPCs.push_back(l2PPC);
-	lightPPCs.push_back(l3PPC);
 	UpdateSM();
 }
 
 void Scene::InitDemo()
 {
-	// lighting and shadows
+	cubemap = make_shared<CubeMap>();
 	
+	// prepare cubemap
+	string folder = "images/cubemaps/";
+	std::vector<string> fnames{
+		folder + "top.tiff",
+		folder + "front.tiff",
+		folder + "ground.tiff",
+		folder + "back.tiff",
+		folder + "left.tiff",
+		folder + "right.tiff" };
+	float fovf = 90.0f;
+	std::vector<shared_ptr<PPC>> cubemapPPCs;
+	cubemapPPCs.push_back(make_shared<PPC>(480, 480, fovf));
+	cubemapPPCs.push_back(make_shared<PPC>(480, 480, fovf));
+	cubemapPPCs.push_back(make_shared<PPC>(480, 480, fovf));
+	cubemapPPCs.push_back(make_shared<PPC>(480, 480, fovf));
+	cubemapPPCs.push_back(make_shared<PPC>(480, 480, fovf));
+	cubemapPPCs.push_back(make_shared<PPC>(480, 480, fovf));
+	cubemapPPCs[0]->PositionAndOrient(V3(0.0f), V3(0.0f, 1.0f, 0.0f), V3(0.0f, 0.0f, 1.0f));
+	cubemapPPCs[1]->PositionAndOrient(V3(0.0f), V3(0.0f, 0.0f, -1.0f), V3(0.0f, 1.0f, 0.0f));
+	cubemapPPCs[2]->PositionAndOrient(V3(0.0f), V3(0.0f, -1.0f, 0.0f), V3(0.0f, 0.0f, -1.0f));
+	cubemapPPCs[3]->PositionAndOrient(V3(0.0f), V3(0.0f, 0.0f, 1.0f), V3(0.0f, 1.0f, 0.0f));
+	cubemapPPCs[4]->PositionAndOrient(V3(0.0f), V3(-1.0f, 0.0f, 0.0f), V3(0.0f, 1.0f, 0.0f));
+	cubemapPPCs[5]->PositionAndOrient(V3(0.0f), V3(1.0f, 0.0f, 0.0f), V3(0.0f, 1.0f, 1.0f));
+	cubemap->LoadCubeMap(fnames, cubemapPPCs);
+
+	// Init objects
+	TM* teapot = new TM();
+	teapot->LoadModelBin("geometry/bunny.bin");
+
+	float obsz = 50.0f;
+	V3 tmC = ppc->C + ppc->GetVD() * 100.0f;
+	teapot->PositionAndSize(V3(0.0f), obsz);
+	meshes.push_back(teapot);
+
+	ppc->C = ppc->C - tmC;
+	ppc->PositionAndOrient(ppc->C, meshes[0]->GetCenter(), V3(0.0f, 1.0f, 0.0f));
+
+	ppc3->C = ppc3->C + V3(330.0f, 150.0f, 300.0f);
+	ppc3->PositionAndOrient(ppc3->C, meshes[0]->GetCenter(), V3(0.0f, 1.0f, 0.0f));
+
+	InitializeLights();
 }
 
 void Scene::Demonstration()

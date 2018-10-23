@@ -10,6 +10,7 @@ public:
 	PPC(int _w, int _h, float hfov);
 	void Translate(V3 v);
 	int Project(V3 P, V3 &ProjP);
+	bool IsInSideImagePlane(V3 pp);
 
 	// Access
 	V3 GetVD();							// view direction
