@@ -354,101 +354,6 @@ bool FrameBuffer::LoadTex(const std::string texFile)
 	return true;
 }
 
-int FrameBuffer::ComputeShadowEffect(int u, int v, float z, float &sdEffect)
-{
-	bool isInSS = false;
-	sdEffect = 1.0f;	// shadow effect
-	auto gv = GlobalVariables::Instance();
-	if (gv->curScene->shadowMaps.empty())
-		return isInSS;
-
-	float uf = static_cast<float>(u) + 0.5f, vf = static_cast<float>(v) + 0.5f;
-	// Check for all shadow maps
-	for (size_t li = 0; li < gv->curScene->lightPPCs.size(); ++li)
-	{
-		auto ppc1 = gv->curScene->ppc;
-		auto ppc2 = gv->curScene->lightPPCs[li];
-		auto SM = gv->curScene->shadowMaps[li];
-
-		V3 v2 = HomographMapping(V3(uf, vf, z), ppc1, ppc2.get());
-
-		if(v2[2] < 0.0f)
-			continue;
-
-		// compare shadow maps w
-		float eps = 0.15f;
-		if (SM->GetZ(v2[0],v2[1]) - v2[2] > eps )
-		{
-			// in shadow
-			isInSS = true;
-			sdEffect *= 0.2f;
-		}
-	}
-
-	return isInSS;
-}
-
-int FrameBuffer::IsPixelInProjection(int u, int v, float z, V3 &color, float &alpha)
-{
-	auto gv = GlobalVariables::Instance();
-	float uf = static_cast<float>(u) + 0.5f, vf = static_cast<float>(v) + 0.5f;
-
-	auto ppc1 = gv->curScene->ppc;
-	auto ppc2 = gv->curScene->projectPPC;
-	string projTexName = gv->projectedTextureName;
-
-	if (!ppc1 || !ppc1 || !projFB)
-		return 0;
-
-	V3 v2 = HomographMapping(V3(uf, vf, z), ppc1, ppc2);
-
-	if (v2[2] < 0.0f)
-		return 0;
-
-	AABB aabb(v2);
-	if (!aabb.Clip2D(0 , projFB->w - 1, 0, projFB->h -1))
-		return 0;
-
-	float eps = 0.01f;
-
-	if (projFB->GetZ(v2[0], v2[1]) - v2[2] <= eps)
-	{
-		unsigned int c = projFB->Get(v2[0], v2[1]);
-		color.SetColor(c);
-		unsigned char*rgba = (unsigned char*)&c;
-		alpha = static_cast<float>(rgba[3]) / 255.0f;
-		return 1;
-	}
-
-	return 0;
-}
-
-V3 FrameBuffer::HomographMapping(V3 uvw, PPC* ppc1, PPC* ppc2)
-{
-	// Current image plane ppc matrix
-	M33 abc1;
-	abc1.SetColumn(0, ppc1->a);
-	abc1.SetColumn(1, ppc1->b);
-	abc1.SetColumn(2, ppc1->c);
-
-	M33 abc2;
-	abc2.SetColumn(0, ppc2->a);
-	abc2.SetColumn(1, ppc2->b);
-	abc2.SetColumn(2, ppc2->c);
-	auto abc2Inv = abc2.Inverse();
-
-	auto qC = abc2Inv * (ppc1->C - ppc2->C);
-	auto qM = abc2Inv * abc1;
-
-	float w1 = 1.0f / uvw[2];
-	V3 px = V3(uvw[0], uvw[1], 1.0f) * w1;
-	float w2 = 1.0f / (qC[2] + qM[2] * px);
-	float u2 = (qC[0] + qM[0] * px) * w2;
-	float v2 = (qC[1] + qM[1] * px) * w2;
-
-	return V3(u2, v2, w2);
-}
-
 void FrameBuffer::DrawSegment(V3 p0, V3 c0, V3 p1, V3 c1)
 {
 	V3 v2v1 = p1 - p0;
@@ -948,30 +853,6 @@ V3 FrameBuffer::Light(PointProperty pp, V3 L, PPC* ppc)
 	float kd = max((L - pp.p).UnitVector() * pp.n.UnitVector(), 0.0f);
 	float ks = (ppc->C - pp.p).UnitVector() * (L - pp.p).UnitVector().Reflect(pp.n.UnitVector());
 	ks = 0.5f * pow(max(ks, 0.0f), 32);
-	ret = pp.c * (ka + (1.0f - ka) * kd) + ks;
-	return ret;
-}
-
-V3 FrameBuffer::Light(PPC* ppc, PointProperty pp)
-{
-	V3 ret(0.0f);
-	auto gv = GlobalVariables::Instance();
-	if (gv->curScene->lightPPCs.empty())
-		return pp.c;	
-
-	float ka = 0.2f;
-	float kd = 0.0f, ks = 0.0f;
-	for(auto l:gv->curScene->lightPPCs)
-	{
-		kd += max((l->C - pp.p).UnitVector() * pp.n.UnitVector(), 0.0f);
-		float tks = (ppc->C - pp.p).UnitVector() * (l->C - pp.p).UnitVector().Reflect(pp.n.UnitVector());
-		ks += 0.3f * pow(max(tks, 0.0f), 512);
-	}
-
-	ka = Clamp(ka, 0.0f, 1.0f);
-	kd = Clamp(kd, 0.0f, 1.0f);
-	ks = Clamp(ks, 0.0f, 1.0f);
-
 	ret = pp.c * (ka + (1.0f - ka) * kd) + ks;
 	return ret;
 }

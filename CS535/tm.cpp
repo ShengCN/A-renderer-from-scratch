@@ -233,6 +233,7 @@ void TM::RenderFill(PPC* ppc, FrameBuffer* fb)
 					{
 						color = color * alpha + fb->Get(u, v) * (1.0f - alpha);
 					}
+
 					fb->DrawPoint(u, v, color.GetColor());
 				}
 			}
@@ -491,7 +492,7 @@ V3 TM::GetCenter()
 	return aabb.GetCenter();
 }
 
-V3 TM::Shading(PPC* ppc, FrameBuffer *fb, int u, int v, int w, PointProperty pp, float &alpha)
+V3 TM::Shading(PPC* ppc, FrameBuffer *fb, int u, int v, float w, PointProperty pp, float &alpha)
 {
 	V3 color(0.0f);
 	if (fb->textures.find(tex) != fb->textures.end())
@@ -504,25 +505,23 @@ V3 TM::Shading(PPC* ppc, FrameBuffer *fb, int u, int v, int w, PointProperty pp,
 	else
 		color = pp.c;
 
-	// Per pixel lighting after texture mapping
-	color = fb->Light(ppc, pp);
-
 	// DEBUG
-	// color = ClampColor(color + EnvMapping(ppc, gv->curScene->cubemap.get(), p, pn));
-	color = ClampColor(color + EnvMapping(ppc, GlobalVariables::Instance()->curScene->cubemap.get(), pp.p, pp.n));
+	// pp.c = ClampColor(color + EnvMapping(ppc, GlobalVariables::Instance()->curScene->cubemap.get(), pp.p, pp.n));
+	pp.c = ClampColor(EnvMapping(ppc, GlobalVariables::Instance()->curScene->cubemap.get(), pp.p, pp.n));
 
 	if (GlobalVariables::Instance()->isRenderProjectedTexture)
 	{
 		V3 c(0.0f);
 		float a = 0.0f;
-		if (fb->IsPixelInProjection(u, v, w, c, a))
-			color = color * (1.0f - a) + c * a;
+		if (IsPixelInProjection(u, v, w, c, a))
+			pp.c = pp.c * (1.0f - a) + c * a;
 	}
 
-	// Cast shadow onto shading results
-	float sdCoeff = 1.0f;
-	fb->ComputeShadowEffect(u, v, w, sdCoeff);
-	color = color * sdCoeff;
+	// Per pixel lighting 
+	if (GlobalVariables::Instance()->isLight)
+		color = Light(ppc, pp, u, v, w);
+	else
+		color = pp.c;
 
 	return color;
 }
@@ -538,6 +537,122 @@ void TM::Light(V3 mc, V3 L, PPC* ppc)
 		ks = pow(max(ks, 0.0f), 8);
 		colors[vi] = mc * (ka + (1.0f - ka) * kd) + ks;
 	}
+}
+
+V3 TM::Light(PPC* ppc, PointProperty pp, int u, int v, float w)
+{
+	V3 ret(0.0f);
+	auto gv = GlobalVariables::Instance();
+	if (gv->curScene->lightPPCs.empty())
+		return pp.c;
+
+	float ka = 0.2f;
+	float kd = 0.0f, ks = 0.0f;
+	float sd = 1.0f;
+	for (size_t li = 0; li < gv->curScene->lightPPCs.size(); ++li)
+	{
+		auto ppc2 = gv->curScene->lightPPCs[li];
+
+		// Phong
+		kd += max((ppc2->C - pp.p).UnitVector() * pp.n.UnitVector(), 0.0f);
+		float liks = (ppc->C - pp.p).UnitVector() * (ppc2->C - pp.p).UnitVector().Reflect(pp.n.UnitVector());
+		ks += 0.3f * pow(max(liks, 0.0f), 512);
+
+		// Shadow
+		if(!gv->curScene->shadowMaps.empty())
+		{
+			auto SM = gv->curScene->shadowMaps[li];
+			float uf = static_cast<float>(u), vf = static_cast<float>(v), z = w;
+			V3 v2 = HomographMapping(V3(uf, vf, z), ppc, ppc2.get());
+			if (v2[2] < 0.0f)
+				continue;
+
+			// compare shadow maps w
+			float eps = 0.15f;
+			if (SM->GetZ(v2[0], v2[1]) - v2[2] > eps)
+			{
+				sd *= 0.2f;
+			}
+		}
+	}
+
+	ka = Clamp(ka, 0.0f, 1.0f);
+	kd = Clamp(kd, 0.0f, 1.0f);
+	ks = Clamp(ks, 0.0f, 1.0f);
+
+	ret = pp.c * (ka + (1.0f - ka) * kd) + ks;
+	ret = ret * sd;	// shadow
+	return ret;
+}
+
+bool TM::ComputeShadowEffect(PPC* ppc, int u, int v, float z, float& sdEffect)
+{
+	bool isInSS = false;
+	sdEffect = 1.0f;	// shadow effect
+	auto gv = GlobalVariables::Instance();
+	if (gv->curScene->shadowMaps.empty())
+		return isInSS;
+
+	float uf = static_cast<float>(u) + 0.5f, vf = static_cast<float>(v) + 0.5f;
+	// Check for all shadow maps
+	for (size_t li = 0; li < gv->curScene->lightPPCs.size(); ++li)
+	{
+		auto ppc1 = ppc;
+		auto ppc2 = gv->curScene->lightPPCs[li];
+		auto SM = gv->curScene->shadowMaps[li];
+
+		V3 v2 = HomographMapping(V3(uf, vf, z), ppc1, ppc2.get());
+
+		if (v2[2] < 0.0f)
+			continue;
+
+		// compare shadow maps w
+		float eps = 0.15f;
+		if (SM->GetZ(v2[0], v2[1]) - v2[2] > eps)
+		{
+			// in shadow
+			isInSS = true;
+			sdEffect *= 0.2f;
+		}
+	}
+
+	return isInSS;
+}
+
+bool TM::IsPixelInProjection(int u, int v, float z, V3& color, float& alpha)
+{
+	auto gv = GlobalVariables::Instance();
+	float uf = static_cast<float>(u) + 0.5f, vf = static_cast<float>(v) + 0.5f;
+
+	auto ppc1 = gv->curScene->ppc;
+	auto ppc2 = gv->curScene->projectPPC;
+	auto projFB = gv->curScene->fbp;
+	string projTexName = gv->projectedTextureName;
+
+	if (!ppc1 || !ppc1 || !projFB)
+		return 0;
+
+	V3 v2 = HomographMapping(V3(uf, vf, z), ppc1, ppc2);
+
+	if (v2[2] < 0.0f)
+		return 0;
+
+	AABB aabb(v2);
+	if (!aabb.Clip2D(0, projFB->w - 1, 0, projFB->h - 1))
+		return 0;
+
+	float eps = 0.01f;
+
+	if (projFB->GetZ(v2[0], v2[1]) - v2[2] <= eps)
+	{
+		unsigned int c = projFB->Get(v2[0], v2[1]);
+		color.SetColor(c);
+		unsigned char*rgba = (unsigned char*)&c;
+		alpha = static_cast<float>(rgba[3]) / 255.0f;
+		return 1;
+	}
+
+	return 0;
 }
 
 V3 TM::EnvMapping(PPC* ppc, CubeMap* cubemap, V3 p, V3 n)
@@ -557,6 +672,32 @@ V3 TM::ClampColor(V3 color)
 	ret[1] = Clamp(color[1], 0.0f, 1.0f);
 	ret[2] = Clamp(color[2], 0.0f, 1.0f);
 	return ret;
+}
+
+V3 TM::HomographMapping(V3 uvw, PPC* ppc1, PPC* ppc2)
+{
+	// Current image plane ppc matrix
+	M33 abc1;
+	abc1.SetColumn(0, ppc1->a);
+	abc1.SetColumn(1, ppc1->b);
+	abc1.SetColumn(2, ppc1->c);
+
+	M33 abc2;
+	abc2.SetColumn(0, ppc2->a);
+	abc2.SetColumn(1, ppc2->b);
+	abc2.SetColumn(2, ppc2->c);
+	auto abc2Inv = abc2.Inverse();
+
+	auto qC = abc2Inv * (ppc1->C - ppc2->C);
+	auto qM = abc2Inv * abc1;
+
+	float w1 = 1.0f / uvw[2];
+	V3 px = V3(uvw[0], uvw[1], 1.0f) * w1;
+	float w2 = 1.0f / (qC[2] + qM[2] * px);
+	float u2 = (qC[0] + qM[0] * px) * w2;
+	float v2 = (qC[1] + qM[1] * px) * w2;
+
+	return V3(u2, v2, w2);
 }
 
 TM::~TM()

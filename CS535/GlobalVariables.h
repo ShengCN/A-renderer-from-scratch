@@ -16,7 +16,7 @@ public:
 	bool isRecording;
 	bool debugZbuffer;
 	bool isSaveLodTextures;
-
+	bool isLight;
 private:
 	GlobalVariables();
 	static GlobalVariables* _instance;

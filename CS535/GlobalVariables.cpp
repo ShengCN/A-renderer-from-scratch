@@ -21,6 +21,7 @@ GlobalVariables::GlobalVariables()
 	projectedTextureName = "images/jojo.tiff";
 	debugZbuffer = false;
 	isSaveLodTextures = false;
+	isLight = false;
 
 	isRecording = false;
 }

@@ -44,10 +44,15 @@ public:
 	V3 GetCenter();
 	
 	// Shading
-	V3 Shading(PPC *ppc, FrameBuffer *fb, int u, int v, int w, PointProperty pp, float &alpha);
-	void Light(V3 mc, V3 L, PPC *ppc);	// per vertex light
+	V3 Shading(PPC *ppc, FrameBuffer *fb, int u, int v, float w, PointProperty pp, float &alpha);
+	void Light(V3 mc, V3 L, PPC *ppc);	  // Per vertex light
+	V3 Light(PPC *ppc, PointProperty pp, int u, int v, float w); // Per pixel  light 
+	bool ComputeShadowEffect(PPC* ppc, int u, int v, float z, float &sdEffect);
+	bool IsPixelInProjection(int u, int v, float z, V3 &color, float &alpha);
 	V3 EnvMapping(PPC *ppc, CubeMap *cubemap, V3 p, V3 n);
 	V3 ClampColor(V3 color);
+	V3 HomographMapping(V3 uvw, PPC* ppc1, PPC* ppc2);
+
 
 	~TM();
 };

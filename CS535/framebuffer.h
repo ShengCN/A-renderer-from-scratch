@@ -28,7 +28,6 @@ public:
 	int w, h;
 
 	unordered_map<std::string, vector<TextureInfo>> textures; // use file name as index, different Lod, 0 is default
-	FrameBuffer *projFB; 
 
 	FrameBuffer(int u0, int v0, int _w, int _h);
 	void draw();
@@ -48,9 +47,6 @@ public:
 	float GetZ(int u, int v);
 	unsigned int Get(int u, int v);
 	bool LoadTex(const std::string texFile);
-	int ComputeShadowEffect(int u, int v, float z, float &sdEffect);	
-	int IsPixelInProjection(int u, int v, float z, V3 &c, float &alpha);
-	V3 HomographMapping(V3 uvw, PPC* ppc1, PPC* ppc2);
 
 	// Draw something
 	void DrawSegment(V3 p0, V3 c0, V3 p1, V3 c1);
@@ -73,7 +69,6 @@ public:
 	V3 BilinearLookupColor(TextureInfo &tex, float s, float t);
 	V3 BilinearLookupColor(TextureInfo &tex, float s, float t, float &alpha);
 	V3 Light(PointProperty pp, V3 L, PPC *ppc);	// point property, ppc
-	V3 Light(PPC *ppc, PointProperty pp);
 
 	// Texture downsampling
 	void PrepareTextureLoD(string texFile);
