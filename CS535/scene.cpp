@@ -89,6 +89,13 @@ void Scene::Render(PPC* currPPC, FrameBuffer* currFB)
 				t->RenderAABB(currPPC, currFB);
 		}
 
+		for (auto b : billboards)
+		{
+			b->mesh->RenderFill(currPPC, currFB);
+			if (isRenderAABB)
+				b->mesh->RenderAABB(currPPC, currFB);
+		}
+
 		currFB->redraw();
 	}
 }
@@ -383,12 +390,20 @@ void Scene::InitDemo()
 
 	// Init objects
 	TM* teapot = new TM();
+	shared_ptr<BillBoard> billboard = make_shared<BillBoard>();
 	teapot->LoadModelBin("geometry/teapot1K.bin");
+	teapot->isEnvMapping = true;
+	billboard->SetBillboard(V3(0.0f), V3(0.0f, 0.0f, 1.0f), V3(0.0f,1.0f,0.0f) , 1.0f);
 
 	float obsz = 50.0f;
 	V3 tmC = ppc->C + ppc->GetVD() * 100.0f;
 	teapot->PositionAndSize(V3(0.0f), obsz);
+	billboard->mesh->PositionAndSize(teapot->GetCenter() + V3(0.0f,0.0f,-obsz * 0.5f), obsz);
+	string bbTexName = GlobalVariables::Instance()->projectedTextureName;
+	fb->LoadTexture(bbTexName);
+	billboard->mesh->SetText(bbTexName);
 	meshes.push_back(teapot);
+	billboards.push_back(billboard);
 
 	ppc->C = ppc->C - tmC;
 	ppc->PositionAndOrient(ppc->C, meshes[0]->GetCenter(), V3(0.0f, 1.0f, 0.0f));

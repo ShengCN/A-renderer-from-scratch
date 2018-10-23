@@ -23,11 +23,13 @@ public:
 	int vertsN, trisN;
 	std::string tex;
 	int pixelSz;		// approximate projected aabb size
+	bool isEnvMapping;
 
-	TM() :vertsN(0), trisN(0), pixelSz(0) {};
+	TM() :vertsN(0), trisN(0), pixelSz(0), isEnvMapping(false) {};
 	void SetRectangle(V3 O, float rw, float rh);
 	void SetTriangle(PointProperty p0, PointProperty p1, PointProperty p2);
 	void SetQuad(PointProperty p0, PointProperty p1, PointProperty p2, PointProperty p3);
+	void SetBillboard(V3 O, V3 n, V3 up, float sz);
 	void SetText(std::string tf);
 	void Allocate();
 	void RenderPoints(PPC *ppc, FrameBuffer *fb);
@@ -42,14 +44,14 @@ public:
 	AABB ComputeAABB();
 	void PositionAndSize(V3 tmC, float tmSize);
 	V3 GetCenter();
-	
+
 	// Shading
 	V3 Shading(PPC *ppc, FrameBuffer *fb, int u, int v, float w, PointProperty pp, float &alpha);
 	void Light(V3 mc, V3 L, PPC *ppc);	  // Per vertex light
 	V3 Light(PPC *ppc, PointProperty pp, int u, int v, float w); // Per pixel  light 
 	bool ComputeShadowEffect(PPC* ppc, int u, int v, float z, float &sdEffect);
 	bool IsPixelInProjection(int u, int v, float z, V3 &color, float &alpha);
-	V3 EnvMapping(PPC *ppc, CubeMap *cubemap, V3 p, V3 n);
+	V3 EnvMapping(PPC *ppc, FrameBuffer *fb, CubeMap *cubemap, V3 p, V3 n);
 	V3 ClampColor(V3 color);
 	V3 HomographMapping(V3 uvw, PPC* ppc1, PPC* ppc2);
 

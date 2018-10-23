@@ -95,6 +95,23 @@ void TM::SetQuad(PointProperty p0, PointProperty p1, PointProperty p2, PointProp
 	tris[5] = 0;
 }
 
+void TM::SetBillboard(V3 O, V3 n, V3 up, float sz)
+{
+	up = up.UnitVector();
+	V3 right = (up ^ n).UnitVector();
+	V3 p0 = O + up * sz - right * sz;
+	V3 p1 = O - up * sz - right * sz;
+	V3 p2 = O - up * sz + right * sz;
+	V3 p3 = O + up * sz + right * sz;
+	V3 c0(0.0f), c1(0.0f), c2(0.0f), c3(0.0f);
+	PointProperty pp0(p0, c0, n, 0.0f, 0.0f);
+	PointProperty pp1(p1, c1, n, 0.0f, 1.0f);
+	PointProperty pp2(p2, c2, n, 1.0f, 1.0f);
+	PointProperty pp3(p3, c3, n, 1.0f, 0.0f);
+	isEnvMapping = false;
+	SetQuad(pp0, pp1, pp2, pp3);
+}
+
 void TM::SetText(string tf)
 {
 	tex = tf;
@@ -201,9 +218,9 @@ void TM::RenderFill(PPC* ppc, FrameBuffer* fb)
 			for (int u = left; u <= right; ++u)
 			{
 				V3 uvP(static_cast<float>(u) + 0.5f, static_cast<float>(v) + 0.5f, 1.0f);
-				bool s1 = InsideTriangle(uvP, pp0, pp1, pp2);
-				bool s2 = InsideTriangle(uvP, pp1, pp2, pp0);
-				bool s3 = InsideTriangle(uvP, pp2, pp0, pp1);
+				bool s1 = Side2D(uvP, pp0, pp1, pp2);
+				bool s2 = Side2D(uvP, pp1, pp2, pp0);
+				bool s3 = Side2D(uvP, pp2, pp0, pp1);
 
 				if (s1 && s2 && s3)
 				{
@@ -311,9 +328,9 @@ void TM::RenderFillZ(PPC* ppc, FrameBuffer* fb)
 			for (int u = left; u <= right; ++u)
 			{
 				V3 uvP(static_cast<float>(u) + 0.5f, static_cast<float>(v) + 0.5f, 1.0f);
-				bool s1 = InsideTriangle(uvP, pp0, pp1, pp2);
-				bool s2 = InsideTriangle(uvP, pp1, pp2, pp0);
-				bool s3 = InsideTriangle(uvP, pp2, pp0, pp1);
+				bool s1 = Side2D(uvP, pp0, pp1, pp2);
+				bool s2 = Side2D(uvP, pp1, pp2, pp0);
+				bool s3 = Side2D(uvP, pp2, pp0, pp1);
 
 				if (s1 && s2 && s3)
 				{
@@ -408,12 +425,12 @@ void TM::LoadModelBin(char* fname)
 		cerr << "INTERNAL ERROR: there should always be vertex xyz data" << endl;
 		return;
 	}
-	if (verts.size() != 0)
+	if (!verts.empty())
 		verts.clear();
 	verts.resize(vertsN);
 
 	ifs.read(&yn, 1); // cols 3 floats
-	if (colors.size() != 0)
+	if (!colors.empty())
 		colors.clear();
 	if (yn == 'y')
 	{
@@ -421,7 +438,7 @@ void TM::LoadModelBin(char* fname)
 	}
 
 	ifs.read(&yn, 1); // normals 3 floats
-	if (normals.size() != 0)
+	if (!normals.empty())
 		normals.clear();
 	if (yn == 'y')
 	{
@@ -430,7 +447,7 @@ void TM::LoadModelBin(char* fname)
 
 	ifs.read(&yn, 1); // texture coordinates 2 floats
 
-	if (tcs.size() != 0)
+	if (!tcs.empty())
 		tcs.clear();
 
 	if (yn == 'y')
@@ -500,16 +517,16 @@ V3 TM::Shading(PPC* ppc, FrameBuffer *fb, int u, int v, float w, PointProperty p
 		// s and t in (0.0f,1.0f)
 		float s = Clamp(Fract(pp.s), 0.0f, 1.0f);
 		float t = Clamp(Fract(pp.t), 0.0f, 1.0f);
-		color = fb->LookupColor(tex, s, t, alpha, pixelSz);
+		pp.c = fb->LookupColor(tex, s, t, alpha, pixelSz);
 	}
-	else
-		color = pp.c;
 
-	// DEBUG
-	float fract = 0.4f;
-	auto envColor = EnvMapping(ppc, GlobalVariables::Instance()->curScene->cubemap.get(), pp.p, pp.n);
-	pp.c = ClampColor(color * fract + envColor * (1.0f-fract));
-	// pp.c = ClampColor(EnvMapping(ppc, GlobalVariables::Instance()->curScene->cubemap.get(), pp.p, pp.n));
+	// environment mapping
+	if (isEnvMapping)
+	{
+		float fract = 0.4f;
+		auto envColor = EnvMapping(ppc, fb, GlobalVariables::Instance()->curScene->cubemap.get(), pp.p, pp.n);
+		pp.c = ClampColor(pp.c * fract + envColor * (1.0f - fract));
+	}
 
 	if (GlobalVariables::Instance()->isRenderProjectedTexture)
 	{
@@ -657,13 +674,39 @@ bool TM::IsPixelInProjection(int u, int v, float z, V3& color, float& alpha)
 	return 0;
 }
 
-V3 TM::EnvMapping(PPC* ppc, CubeMap* cubemap, V3 p, V3 n)
+V3 TM::EnvMapping(PPC* ppc, FrameBuffer *fb, CubeMap* cubemap, V3 p, V3 n)
 {
 	if (!cubemap)
 		return V3(0.0f);
 
 	auto gv = GlobalVariables::Instance();
 	V3 viewDir = ppc->C - p;
+
+	// Check intersections
+	auto &billboards = gv->curScene->billboards;
+	float distance = 0.0f;
+	V3 bbColor(0.0f);
+	for (auto b : billboards)
+	{
+		float t = 0.0f;
+		if (!b->Intersect(p, viewDir, t))
+			continue;
+
+		t = 1.0 / t;
+
+		// Find the closest Billboard
+		if (distance < t)
+		{
+			distance = t;
+		}
+		
+		V3 pBB = p + viewDir / t;
+	  	bbColor = b->GetColor(fb, pBB);
+	}
+
+	// intersect with bb
+	if (!FloatEqual(distance, 0.0f)) return bbColor;
+
 	if (gv->isRefraction)
 		viewDir = viewDir.Refract(n, gv->refractRatio);
 	else

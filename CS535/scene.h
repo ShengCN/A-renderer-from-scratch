@@ -6,6 +6,7 @@
 #include "ppc.h"
 #include "TM.h"
 #include "cubemap.h"
+#include "BillBoard.h"
 using std::vector;
 using std::unique_ptr;
 
@@ -19,6 +20,7 @@ public:
 	std::vector<shared_ptr<FrameBuffer>> shadowMaps;
 	PPC* ppc, *ppc3, *projectPPC;
 	vector<TM*> meshes;
+	vector<shared_ptr<BillBoard>> billboards;
 	shared_ptr<CubeMap> cubemap;
 
 	Scene();

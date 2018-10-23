@@ -18,4 +18,6 @@ T Clamp(T n, T low, T high)
 
 float Fract(float n);
 
-bool InsideTriangle(V3 p, V3 v1, V3 v2, V3 v3);
+bool Side2D(V3 p, V3 v1, V3 v2, V3 v3);
+
+bool IsInsideTriangle2D(V3 p, V3 v1, V3 v2, V3 v3);
