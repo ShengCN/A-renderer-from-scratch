@@ -753,16 +753,40 @@ V3 TM::HomographMapping(V3 uvw, PPC* ppc1, PPC* ppc2)
 
 void TM::SphereMorph(V3 c, float r, float fract)
 {
+	fract = Clamp(fract, 0.0f, 1.0f);
+	if (staticVerts.empty())
+		staticVerts = verts;
+
 	for(int vi =0; vi < vertsN; ++vi)
 	{
-		V3 vp = verts[vi];
+		V3 vp = staticVerts[vi];
 		V3 dis = vp - c;
-		dis = dis.UnitVector() * r * fract;
-		verts[vi] = c + dis;
+		dis = dis.UnitVector() * r;
+		staticVerts[vi] = vp * (1.0f - fract) + (c + dis) * fract;
 
 		V3 n = normals[vi];
 		V3 newn = dis.UnitVector();
 		normals[vi] = n * (1.0f - fract) + newn * fract;
+	}
+}
+
+void TM::WaterAnimation(float t)
+{
+	if (staticVerts.empty())
+		staticVerts = verts;
+
+	// TM animation according to time t
+	for (int vi = 0; vi < vertsN; ++vi)
+	{
+		// Normal not correct animation
+		V3 vp = staticVerts[vi];
+		float scalef = vp[1];
+
+		vp[0] = vp[0] * (1.0f + 0.15f * sin(0.1f * scalef + 0.5f * t));
+		vp[2] = vp[2] * (1.0f + 0.15f * sin(0.1f * scalef + 0.5f * t));
+
+		// commit result
+		verts[vi] = vp;
 	}
 }
 

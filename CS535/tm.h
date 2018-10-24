@@ -17,7 +17,7 @@ struct PointProperty
 class TM
 {
 public:
-	vector<V3> verts, colors, normals;		// vertices and colors
+	vector<V3> verts, colors, normals, staticVerts;		// vertices and colors
 	vector<float> tcs;
 	vector<unsigned int>  tris;		// indices
 	int vertsN, trisN;
@@ -58,6 +58,8 @@ public:
 
 	// Morphing
 	void SphereMorph(V3 c,float r, float fract);
+	void WaterAnimation(float t);
+
 	~TM();
 };
 

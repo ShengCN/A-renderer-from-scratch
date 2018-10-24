@@ -405,10 +405,6 @@ void Scene::InitDemo()
 	meshes.push_back(teapot);
 	billboards.push_back(billboard);
 
-	// Morphing 
-	auto teapotC = teapot->GetCenter();
-	teapot->SphereMorph(teapotC, 10.0f, 1.0f);
-
 	ppc->C = ppc->C - tmC;
 	ppc->PositionAndOrient(ppc->C, meshes[0]->GetCenter(), V3(0.0f, 1.0f, 0.0f));
 
@@ -420,9 +416,13 @@ void Scene::InitDemo()
 
 void Scene::Demonstration()
 {
+	// Morphing 
+	auto teapotC = meshes[0]->GetCenter();
 	int stepN = 360;
 	for(int stepi = 0; stepi < stepN; ++stepi)
 	{
+		meshes[0]->SphereMorph(teapotC, 13.0f, 0.05f);
+		meshes[0]->WaterAnimation(stepi);
 		ppc->RevolveH(meshes[0]->GetCenter(), 1.0f);
 		// billboards[0]->mesh->Translate(V3(0.0f, 0.0f, -1.0f));
 		Render();
