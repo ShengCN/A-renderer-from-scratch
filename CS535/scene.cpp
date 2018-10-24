@@ -405,6 +405,10 @@ void Scene::InitDemo()
 	meshes.push_back(teapot);
 	billboards.push_back(billboard);
 
+	// Morphing 
+	auto teapotC = teapot->GetCenter();
+	teapot->SphereMorph(teapotC, 10.0f, 1.0f);
+
 	ppc->C = ppc->C - tmC;
 	ppc->PositionAndOrient(ppc->C, meshes[0]->GetCenter(), V3(0.0f, 1.0f, 0.0f));
 

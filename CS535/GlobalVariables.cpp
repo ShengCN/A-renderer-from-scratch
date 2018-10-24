@@ -22,7 +22,7 @@ GlobalVariables::GlobalVariables()
 	debugZbuffer = false;
 	isSaveLodTextures = true;
 	isLight = false;
-	isRefraction = true;
+	isRefraction = false;
 	refractRatio = 0.7f;
 
 	isRecording = false;

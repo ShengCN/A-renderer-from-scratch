@@ -751,6 +751,21 @@ V3 TM::HomographMapping(V3 uvw, PPC* ppc1, PPC* ppc2)
 	return V3(u2, v2, w2);
 }
 
+void TM::SphereMorph(V3 c, float r, float fract)
+{
+	for(int vi =0; vi < vertsN; ++vi)
+	{
+		V3 vp = verts[vi];
+		V3 dis = vp - c;
+		dis = dis.UnitVector() * r * fract;
+		verts[vi] = c + dis;
+
+		V3 n = normals[vi];
+		V3 newn = dis.UnitVector();
+		normals[vi] = n * (1.0f - fract) + newn * fract;
+	}
+}
+
 TM::~TM()
 {
 }
