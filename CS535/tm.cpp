@@ -782,8 +782,9 @@ void TM::WaterAnimation(float t)
 		V3 vp = staticVerts[vi];
 		float scalef = vp[1];
 
-		vp[0] = vp[0] * (1.0f + 0.15f * sin(0.1f * scalef + 0.5f * t));
-		vp[2] = vp[2] * (1.0f + 0.15f * sin(0.1f * scalef + 0.5f * t));
+		float a = exp(-0.05f * t);
+		vp[0] = vp[0] * (1.0f + a * 0.15f * sin(0.1f * scalef + 0.5f * t));
+		vp[2] = vp[2] * (1.0f + a * 0.15f * sin(0.1f * scalef + 0.5f * t));
 
 		// commit result
 		verts[vi] = vp;
