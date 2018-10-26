@@ -9,6 +9,9 @@ public:
 	static GlobalVariables* Instance();
 
 	// Global variables
+	bool isHighResolution;
+	int highResoW, highResoH;
+	int resoW, resoH;
 	Scene *curScene;
 	bool isRenderProjectedTexture;
 	string projectedTextureName;
@@ -21,6 +24,8 @@ public:
 	// For HW5
 	bool isRefraction;
 	float refractRatio;
+	string checkerBoxTexName;
+	bool isShadow;
 
 private:
 	GlobalVariables();

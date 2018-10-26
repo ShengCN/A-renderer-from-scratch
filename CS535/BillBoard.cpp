@@ -6,11 +6,14 @@ BillBoard::BillBoard()
 {
 }
 
+BillBoard::~BillBoard()
+{
+}
 
-void BillBoard::SetBillboard(V3 O, V3 n, V3 up, float sz)
+void BillBoard::SetBillboard(V3 O, V3 n, V3 up, float sz, float s, float t)
 {
 	mesh = make_shared<TM>();
-	mesh->SetBillboard(O, n, up, sz);
+	mesh->SetBillboard(O, n, up, sz, s, t);
 }
 
 bool BillBoard::Intersect(V3 p, V3 d, float &t)
@@ -47,15 +50,8 @@ V3 BillBoard::GetColor(FrameBuffer *fb, V3 p)
 	if (!InsideBillboard(p))
 		return V3(0.0f);
 
-	V3 p0 = mesh->verts[0];
-	V3 p1 = mesh->verts[1];
-	V3 p3 = mesh->verts[3];
-	V3 x = p3 - p0;
-	V3 y = p1 - p0;
-	V3 v = p - p0;
-	float xf = x * v, yf = y * v;
-	float s = xf / (x.Length() * x.Length());
-	float t = yf / (y.Length() * y.Length());
+	float s, t;
+	GetST(p, s, t);
 
 	auto &tex = fb->textures.at(mesh->tex).back();
 	return fb->BilinearLookupColor(tex, s, t);
@@ -66,6 +62,14 @@ V3 BillBoard::GetColor(FrameBuffer* fb, V3 p, float& alpha)
 	if (!InsideBillboard(p))
 		return V3(0.0f);
 
+	float s, t;
+	GetST(p, s, t);
+
+	return  fb->LookupColor(mesh->tex, s, t, alpha);
+}
+
+void BillBoard::GetST(V3 p, float& s, float& t)
+{
 	V3 p0 = mesh->verts[0];
 	V3 p1 = mesh->verts[1];
 	V3 p3 = mesh->verts[3];
@@ -73,12 +77,6 @@ V3 BillBoard::GetColor(FrameBuffer* fb, V3 p, float& alpha)
 	V3 y = p1 - p0;
 	V3 v = p - p0;
 	float xf = x * v, yf = y * v;
-	float s = xf / (x.Length() * x.Length());
-	float t = yf / (y.Length() * y.Length());
-
-	return fb->LookupColor(mesh->tex, s, t, alpha);
-}
-
-BillBoard::~BillBoard()
-{
+	s = xf / (x.Length() * x.Length());
+	t = yf / (y.Length() * y.Length());
 }

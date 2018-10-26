@@ -18,18 +18,19 @@ class TM
 {
 public:
 	vector<V3> verts, colors, normals, staticVerts;		// vertices and colors
-	vector<float> tcs;
+	vector<float> vertST;
 	vector<unsigned int>  tris;		// indices
 	int vertsN, trisN;
 	std::string tex;
 	int pixelSz;		// approximate projected aabb size
 	bool isEnvMapping;
+	bool isShowObjColor;
 
-	TM() :vertsN(0), trisN(0), pixelSz(0), isEnvMapping(false) {};
+	TM() :vertsN(0), trisN(0), pixelSz(0), isEnvMapping(false), isShowObjColor(true) {};
 	void SetRectangle(V3 O, float rw, float rh);
 	void SetTriangle(PointProperty p0, PointProperty p1, PointProperty p2);
 	void SetQuad(PointProperty p0, PointProperty p1, PointProperty p2, PointProperty p3);
-	void SetBillboard(V3 O, V3 n, V3 up, float sz);
+	void SetBillboard(V3 O, V3 n, V3 up, float sz, float s = 1.0f, float t = 1.0f);
 	void SetText(std::string tf);
 	void Allocate();
 	void RenderPoints(PPC *ppc, FrameBuffer *fb);
@@ -46,9 +47,9 @@ public:
 	V3 GetCenter();
 
 	// Shading
-	V3 Shading(PPC *ppc, FrameBuffer *fb, int u, int v, float w, PointProperty pp, float &alpha);
+	V3 Shading(PPC *ppc, FrameBuffer *fb, int u, int v, float w, PointProperty& pp, float &alpha);
 	void Light(V3 mc, V3 L, PPC *ppc);	  // Per vertex light
-	V3 Light(PPC *ppc, PointProperty pp, int u, int v, float w); // Per pixel  light 
+	V3 Light(PPC *ppc, PointProperty& pp, int u, int v, float w); // Per pixel  light 
 	bool ComputeShadowEffect(PPC* ppc, int u, int v, float z, float &sdEffect);
 	bool IsPixelInProjection(int u, int v, float z, V3 &color, float &alpha);
 	V3 EnvMapping(PPC *ppc, FrameBuffer *fb, CubeMap *cubemap, V3 p, V3 n);

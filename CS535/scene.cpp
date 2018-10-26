@@ -25,11 +25,11 @@ Scene::Scene(): isRenderAABB(false)
 
 	int u0 = 20;
 	int v0 = 20;
-	int w = 640;
-	int h = 480;
+	int w = gv->isHighResolution? gv->highResoW: gv->resoW;
+	int h = gv->isHighResolution ? gv->highResoH : gv->resoH;
 	//	int w = 1280;
 	//	int h = 720;
-	int fovf = 55.0f;
+	int fovf = 70.0f;
 	fb = new FrameBuffer(u0, v0, w, h);
 	fb->label("SW Framebuffer");
 	fb->show();
@@ -50,6 +50,11 @@ Scene::Scene(): isRenderAABB(false)
 
 void Scene::Render()
 {
+	if(GlobalVariables::Instance()->isShadow)
+	{
+		UpdateSM();
+	}
+
 	if (fb)
 	{
 		Render(ppc, fb);
@@ -66,9 +71,9 @@ void Scene::Render()
 		fb->VisualizeCurrView3D(ppc, ppc3, fb3); // using a 3rd ppc to visualize current ppc
 		
 		// debug cube map
-		for(auto c:cubemap->ppcs)
+		for(auto l:lightPPCs)
 		{
-			fb3->DrawPPC(ppc3, c.get(), currf);
+			fb3->Draw3DPoint(ppc3, l->C, 0xFFFFFF00, 10);
 		}
 
 		fb3->redraw();
@@ -333,13 +338,8 @@ void Scene::InitializeLights()
 	// Prepare for visualize the light
 	V3 y(0.0f, 1.0f, 0.0f), gColor(0.5f);
 	float lightsz = 1.0f, height = 0.0f;
-	V3 p0(-lightsz, -height, -lightsz), p1(-lightsz, -height, lightsz), p2(lightsz, -height, lightsz), p3(
-		lightsz, -height, -lightsz);
-	PointProperty pp0(p0, gColor, y, 0.0f, 0.0f), pp1(p1, gColor, y, 0.0f, 1.0f), pp2(p2, gColor, y, 1.0f, 1.0f), pp3(
-		p3, gColor, y, 1.0f, 0.0f);
-	// meshes.push_back(lightms1);
 
-	V3 L0 = meshes[0]->GetCenter() + V3(0.0f, 0.0f, 200.0f);
+	V3 L0 = meshes[0]->GetCenter() + V3(0.0f, 50.0f, 50.0f);
 
 	// Shadow maps
 	int u0 = 20, v0 = 20;
@@ -390,22 +390,42 @@ void Scene::InitDemo()
 
 	// Init objects
 	TM* teapot = new TM();
+	TM* teapot1 = new TM();
+	TM* teapot2 = new TM();
 	shared_ptr<BillBoard> billboard = make_shared<BillBoard>();
 	teapot->LoadModelBin("geometry/teapot1K.bin");
 	teapot->isEnvMapping = true;
-	billboard->SetBillboard(V3(0.0f), V3(0.0f, 1.0f, 0.0f), V3(0.0f,0.0f,-1.0f) , 1.0f);
+	teapot->isShowObjColor = true;
+	teapot1->LoadModelBin("geometry/teapot1K.bin");
+	teapot1->isEnvMapping = true;
+	teapot1->isShowObjColor = false;
+	teapot2->LoadModelBin("geometry/teapot1K.bin");
+	teapot2->isEnvMapping = true;
+	teapot2->isShowObjColor = false;
+
+	billboard->SetBillboard(V3(0.0f), V3(0.0f, 1.0f, 0.0f), V3(0.0f,0.0f,-1.0f) , 1.0f, 1.0f,1.0f);
 
 	float obsz = 50.0f;
 	V3 tmC = ppc->C + ppc->GetVD() * 100.0f;
 	teapot->PositionAndSize(V3(0.0f), obsz);
-	billboard->mesh->PositionAndSize(teapot->GetCenter() + V3(0.0f, -obsz * 0.5f, 0.0f), obsz);
+	teapot1->PositionAndSize(V3(obsz * 0.75f,  0.0f, -obsz * 0.75f), obsz);
+	teapot2->PositionAndSize(V3(-obsz * 0.75f, 0.0f, -obsz * 0.75f), obsz);
+
+	// Textures
 	string bbTexName = GlobalVariables::Instance()->projectedTextureName;
+	string checkerBoxTexName = GlobalVariables::Instance()->checkerBoxTexName;
 	fb->LoadTexture(bbTexName);
-	billboard->mesh->SetText(bbTexName);
+	fb->LoadTexture(checkerBoxTexName);
+
+	billboard->mesh->PositionAndSize(teapot->GetCenter() + V3(0.0f, -obsz * 0.3f, 0.0f), obsz * 2.0f);
+	billboard->mesh->SetText(checkerBoxTexName);
+
 	meshes.push_back(teapot);
+	meshes.push_back(teapot1);
+	meshes.push_back(teapot2);
 	billboards.push_back(billboard);
 
-	ppc->C = ppc->C - tmC;
+	ppc->C = ppc->C - tmC + V3(0.0f, 15.0f, 0.0f);
 	ppc->PositionAndOrient(ppc->C, meshes[0]->GetCenter(), V3(0.0f, 1.0f, 0.0f));
 
 	ppc3->C = ppc3->C + V3(330.0f, 150.0f, 300.0f);
@@ -422,8 +442,9 @@ void Scene::Demonstration()
 	for(int stepi = 0; stepi < stepN; ++stepi)
 	{
 		float fract = static_cast<float>(stepi) / static_cast<float>(stepN - 1);
-		meshes[0]->SphereMorph(teapotC, 13.0f, 0.05f); 
+		meshes[0]->SphereMorph(teapotC, 13.0f, fract); 
 		meshes[0]->WaterAnimation(stepi);
+		
 		// ppc->RevolveH(meshes[0]->GetCenter(), 1.0f);
 		// billboards[0]->mesh->Translate(V3(0.0f, 0.0f, -1.0f));
 		Render();

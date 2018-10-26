@@ -14,16 +14,25 @@ GlobalVariables* GlobalVariables::Instance()
 
 GlobalVariables::GlobalVariables()
 {
+	isHighResolution = true;
+	highResoW = 1020;
+	highResoH = 720;
+	resoW = 640;
+	resoH = 480;
+
 	curScene = nullptr;
 	isRenderProjectedTexture = true;
 	depthTest = true;
 	lodTexture = false;
 	projectedTextureName = "images/jojo.tiff";
+	checkerBoxTexName = "images/Checkerboard_pattern.tiff";
+
 	debugZbuffer = false;
 	isSaveLodTextures = false;
-	isLight = false;
+	isLight = true;
+	isShadow = false;
 	isRefraction = false;
-	refractRatio = 1.5f;
+	refractRatio = 0.7f;
 
 	isRecording = false;
 }

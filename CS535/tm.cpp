@@ -77,14 +77,14 @@ void TM::SetQuad(PointProperty p0, PointProperty p1, PointProperty p2, PointProp
 	normals[2] = p2.n;
 	normals[3] = p3.n;
 
-	tcs[0] = p0.s;
-	tcs[1] = p0.t;
-	tcs[2] = p1.s;
-	tcs[3] = p1.t;
-	tcs[4] = p2.s;
-	tcs[5] = p2.t;
-	tcs[6] = p3.s;
-	tcs[7] = p3.t;
+	vertST[0] = p0.s;
+	vertST[1] = p0.t;
+	vertST[2] = p1.s;
+	vertST[3] = p1.t;
+	vertST[4] = p2.s;
+	vertST[5] = p2.t;
+	vertST[6] = p3.s;
+	vertST[7] = p3.t;
 
 	tris[0] = 0;
 	tris[1] = 1;
@@ -95,7 +95,7 @@ void TM::SetQuad(PointProperty p0, PointProperty p1, PointProperty p2, PointProp
 	tris[5] = 0;
 }
 
-void TM::SetBillboard(V3 O, V3 n, V3 up, float sz)
+void TM::SetBillboard(V3 O, V3 n, V3 up, float sz, float s, float t)
 {
 	up = up.UnitVector();
 	V3 right = (up ^ n).UnitVector();
@@ -105,9 +105,9 @@ void TM::SetBillboard(V3 O, V3 n, V3 up, float sz)
 	V3 p3 = O + up * sz + right * sz;
 	V3 c0(0.0f), c1(0.0f), c2(0.0f), c3(0.0f);
 	PointProperty pp0(p0, c0, n, 0.0f, 0.0f);
-	PointProperty pp1(p1, c1, n, 0.0f, 1.0f);
-	PointProperty pp2(p2, c2, n, 1.0f, 1.0f);
-	PointProperty pp3(p3, c3, n, 1.0f, 0.0f);
+	PointProperty pp1(p1, c1, n, 0.0f, t);
+	PointProperty pp2(p2, c2, n, s, t);
+	PointProperty pp3(p3, c3, n, s, 0.0f);
 	isEnvMapping = false;
 	SetQuad(pp0, pp1, pp2, pp3);
 }
@@ -122,7 +122,7 @@ void TM::Allocate()
 	verts.resize(vertsN);
 	colors.resize(vertsN);
 	normals.resize(vertsN);
-	tcs.resize(2 * vertsN);
+	vertST.resize(2 * vertsN);
 	tris.resize(3 * trisN); // each triangle has three topological indexs
 }
 
@@ -176,14 +176,14 @@ void TM::RenderFill(PPC* ppc, FrameBuffer* fb)
 		int vi2 = tris[ti * 3 + 2];
 
 		bool hasTexture = false;
-		if (tcs.size() == verts.size() * 2) hasTexture = true;
+		if (vertST.size() == verts.size() * 2) hasTexture = true;
 
-		PointProperty p0(verts[vi0], colors[vi0], normals[vi0], hasTexture ? tcs[vi0 * 2] : 0.0f,
-		                 hasTexture ? tcs[vi0 * 2 + 1] : 0.0f);
-		PointProperty p1(verts[vi1], colors[vi1], normals[vi1], hasTexture ? tcs[vi1 * 2] : 0.0f,
-		                 hasTexture ? tcs[vi1 * 2 + 1] : 0.0f);
-		PointProperty p2(verts[vi2], colors[vi2], normals[vi2], hasTexture ? tcs[vi2 * 2] : 0.0f,
-		                 hasTexture ? tcs[vi2 * 2 + 1] : 0.0f);
+		PointProperty p0(verts[vi0], colors[vi0], normals[vi0], hasTexture ? vertST[vi0 * 2] : 0.0f,
+		                 hasTexture ? vertST[vi0 * 2 + 1] : 0.0f);
+		PointProperty p1(verts[vi1], colors[vi1], normals[vi1], hasTexture ? vertST[vi1 * 2] : 0.0f,
+		                 hasTexture ? vertST[vi1 * 2 + 1] : 0.0f);
+		PointProperty p2(verts[vi2], colors[vi2], normals[vi2], hasTexture ? vertST[vi2 * 2] : 0.0f,
+		                 hasTexture ? vertST[vi2 * 2 + 1] : 0.0f);
 
 		// According to loD, do trilinear in texture look up
 		V3 pp0, pp1, pp2;
@@ -230,15 +230,20 @@ void TM::RenderFill(PPC* ppc, FrameBuffer* fb)
 
 				if (s1 && s2 && s3)
 				{
-					float div = (qM.GetColumn(0) * V3(u, u, u) + qM.GetColumn(1) * V3(v, v, v) + qM.
-						GetColumn(2) * V3(1.0f));
-					float k = V3(u, v, 1.0f) * qM[1] / div;
-					float l = V3(u, v, 1.0f) * qM[2] / div;
+					float div = (qM.GetColumn(0) * V3(u, u, u) + qM.GetColumn(1) * V3(v, v, v) + qM.GetColumn(2) * V3(1.0f));
+
+					if(FloatEqual(div,0.0f))
+						continue;
+
+					div = 1.0f / div;
+					float k = V3(u, v, 1.0f) * qM[1] * div;
+					float l = V3(u, v, 1.0f) * qM[2] * div;
 					float wv = qM.GetColumn(0) * V3(u, u, u) + qM.GetColumn(1) * V3(v, v, v) + qM.GetColumn(2) * V3(1.0f);
 					V3 st0(p0.s, p0.t, 0.0f), st1(p1.s, p1.t, 0.0f), st2(p2.s, p2.t, 0.0f);
 
 					if (gv->depthTest && !fb->Visible(u, v, wv))
 						continue;
+
 					uvP[2] = wv;
 					V3 st = st0 + (st1 - st0) * k + (st2 - st0) * l;
 					V3 pc = p0.c + (p1.c - p0.c) * k + (p2.c - p0.c) * l;
@@ -257,7 +262,6 @@ void TM::RenderFill(PPC* ppc, FrameBuffer* fb)
 						V3 bgC(0.0f);
 						bgC.SetColor(fb->Get(u, v));
 						color = color * alpha + bgC * (1.0f - alpha);
-
 					}
 
 					fb->DrawPoint(u, v, color.GetColor());
@@ -289,14 +293,14 @@ void TM::RenderFillZ(PPC* ppc, FrameBuffer* fb)
 		int vi2 = tris[ti * 3 + 2];
 
 		bool hasTexture = false;
-		if (tcs.size() == verts.size() * 2) hasTexture = true;
+		if (vertST.size() == verts.size() * 2) hasTexture = true;
 
-		PointProperty p0(verts[vi0], colors[vi0], normals[vi0], hasTexture ? tcs[vi0 * 2] : 0.0f,
-			hasTexture ? tcs[vi0 * 2 + 1] : 0.0f);
-		PointProperty p1(verts[vi1], colors[vi1], normals[vi1], hasTexture ? tcs[vi1 * 2] : 0.0f,
-			hasTexture ? tcs[vi1 * 2 + 1] : 0.0f);
-		PointProperty p2(verts[vi2], colors[vi2], normals[vi2], hasTexture ? tcs[vi2 * 2] : 0.0f,
-			hasTexture ? tcs[vi2 * 2 + 1] : 0.0f);
+		PointProperty p0(verts[vi0], colors[vi0], normals[vi0], hasTexture ? vertST[vi0 * 2] : 0.0f,
+			hasTexture ? vertST[vi0 * 2 + 1] : 0.0f);
+		PointProperty p1(verts[vi1], colors[vi1], normals[vi1], hasTexture ? vertST[vi1 * 2] : 0.0f,
+			hasTexture ? vertST[vi1 * 2 + 1] : 0.0f);
+		PointProperty p2(verts[vi2], colors[vi2], normals[vi2], hasTexture ? vertST[vi2 * 2] : 0.0f,
+			hasTexture ? vertST[vi2 * 2 + 1] : 0.0f);
 
 		// According to loD, do trilinear in texture look up
 		V3 pp0, pp1, pp2;
@@ -456,12 +460,12 @@ void TM::LoadModelBin(char* fname)
 
 	ifs.read(&yn, 1); // texture coordinates 2 floats
 
-	if (!tcs.empty())
-		tcs.clear();
+	if (!vertST.empty())
+		vertST.clear();
 
 	if (yn == 'y')
 	{
-		tcs.resize(vertsN * 2);
+		vertST.resize(vertsN * 2);
 	}
 
 	ifs.read((char*)&verts[0], vertsN * 3 * sizeof(float)); // load verts
@@ -474,8 +478,8 @@ void TM::LoadModelBin(char* fname)
 	if (normals.size() == vertsN)
 		ifs.read((char*)&normals[0], vertsN * 3 * sizeof(float)); // load normals
 
-	if (tcs.size() != 0)
-		ifs.read((char*)&tcs[0], vertsN * 2 * sizeof(float)); // load texture coordinates
+	if (vertST.size() != 0)
+		ifs.read((char*)&vertST[0], vertsN * 2 * sizeof(float)); // load texture coordinates
 
 	ifs.read((char*)&trisN, sizeof(int));
 	if (tris.size() != 0)
@@ -487,7 +491,7 @@ void TM::LoadModelBin(char* fname)
 
 	cerr << "INFO: loaded " << vertsN << " verts, " << trisN << " tris from " << endl << "      " << fname << endl;
 	cerr << "      xyz " << ((colors.size() == 0) ? "rgb " : "") << ((normals.size() == 0) ? "nxnynz " : "") << (
-		(tcs.size() == 0) ? "tcstct " : "") << endl;
+		(vertST.size() == 0) ? "tcstct " : "") << endl;
 }
 
 AABB TM::ComputeAABB()
@@ -518,7 +522,7 @@ V3 TM::GetCenter()
 	return aabb.GetCenter();
 }
 
-V3 TM::Shading(PPC* ppc, FrameBuffer *fb, int u, int v, float w, PointProperty pp, float &alpha)
+V3 TM::Shading(PPC* ppc, FrameBuffer *fb, int u, int v, float w, PointProperty& pp, float &alpha)
 {
 	V3 color(0.0f);
 	if (fb->textures.find(tex) != fb->textures.end())
@@ -533,9 +537,11 @@ V3 TM::Shading(PPC* ppc, FrameBuffer *fb, int u, int v, float w, PointProperty p
 	// environment mapping
 	if (isEnvMapping)
 	{
-		float fract = 0.0f;
+		float envEffect = isShowObjColor ? 0.4f : 1.0f;
+
 		auto envColor = EnvMapping(ppc, fb, GlobalVariables::Instance()->curScene->cubemap.get(), pp.p, pp.n);
-		pp.c = ClampColor(pp.c * fract + envColor * (1.0f - fract));
+
+		pp.c = ClampColor(pp.c * (1.0f - envEffect) + envColor * envEffect);
 	}
 
 	if (GlobalVariables::Instance()->isRenderProjectedTexture)
@@ -568,7 +574,7 @@ void TM::Light(V3 mc, V3 L, PPC* ppc)
 	}
 }
 
-V3 TM::Light(PPC* ppc, PointProperty pp, int u, int v, float w)
+V3 TM::Light(PPC* ppc, PointProperty& pp, int u, int v, float w)
 {
 	V3 ret(0.0f);
 	auto gv = GlobalVariables::Instance();
@@ -588,7 +594,7 @@ V3 TM::Light(PPC* ppc, PointProperty pp, int u, int v, float w)
 		ks += 0.3f * pow(max(liks, 0.0f), 512);
 
 		// Shadow
-		if(!gv->curScene->shadowMaps.empty())
+		if(gv->isShadow && !gv->curScene->shadowMaps.empty())
 		{
 			auto SM = gv->curScene->shadowMaps[li];
 			float uf = static_cast<float>(u), vf = static_cast<float>(v), z = w;
@@ -701,6 +707,7 @@ V3 TM::EnvMapping(PPC* ppc, FrameBuffer *fb, CubeMap* cubemap, V3 p, V3 n)
 	auto &billboards = gv->curScene->billboards;
 	float distance = 0.0f;
 	V3 bbColor(0.0f);
+	float alpha = 0.0f;
 	for (auto b : billboards)
 	{
 		float t = 0.0f;
@@ -717,15 +724,22 @@ V3 TM::EnvMapping(PPC* ppc, FrameBuffer *fb, CubeMap* cubemap, V3 p, V3 n)
 			// update closest color
 			t = 1.0f / t;
 			V3 pBB = p + viewDir * t;
-			float alpha = 0.0f;
 			bbColor = b->GetColor(fb, pBB, alpha);
-			if(FloatEqual(alpha,0.0f))
-				bbColor = bbColor * alpha;
+
+			// intersect 0 alpha part of billbard
+			if (FloatEqual(alpha, 0.0f))
+				distance = 0.0f;
 		}
 	}
 
 	// intersect with bb
-	if (!FloatEqual(distance, 0.0f)) return bbColor;
+	if (!FloatEqual(distance, 0.0f))
+	{
+		distance = 1.0f / distance;
+		float disAttenauation = max(pow(distance, 100), 1.0f);
+		bbColor = bbColor / disAttenauation;
+		return bbColor;
+	}
 
 	return cubemap->LookupColor(viewDir, pixelSz);
 }
