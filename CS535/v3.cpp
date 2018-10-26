@@ -106,8 +106,6 @@ V3 V3::Reflect(V3 n)
 V3 V3::Refract(V3 n, float ratio)
 {
 	// sina / sinb = ratio
-	if (ratio < 0.0f || ratio > 1.0f)
-		return *this;
 
 	V3 v = this->UnitVector();
 	float nv = n * v;

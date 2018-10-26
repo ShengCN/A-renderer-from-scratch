@@ -393,12 +393,12 @@ void Scene::InitDemo()
 	shared_ptr<BillBoard> billboard = make_shared<BillBoard>();
 	teapot->LoadModelBin("geometry/teapot1K.bin");
 	teapot->isEnvMapping = true;
-	billboard->SetBillboard(V3(0.0f), V3(0.0f, 0.0f, 1.0f), V3(0.0f,1.0f,0.0f) , 1.0f);
+	billboard->SetBillboard(V3(0.0f), V3(0.0f, 1.0f, 0.0f), V3(0.0f,0.0f,-1.0f) , 1.0f);
 
 	float obsz = 50.0f;
 	V3 tmC = ppc->C + ppc->GetVD() * 100.0f;
 	teapot->PositionAndSize(V3(0.0f), obsz);
-	billboard->mesh->PositionAndSize(teapot->GetCenter() + V3(0.0f,0.0f,-obsz * 0.5f), obsz);
+	billboard->mesh->PositionAndSize(teapot->GetCenter() + V3(0.0f, -obsz * 0.5f, 0.0f), obsz);
 	string bbTexName = GlobalVariables::Instance()->projectedTextureName;
 	fb->LoadTexture(bbTexName);
 	billboard->mesh->SetText(bbTexName);
@@ -421,9 +421,10 @@ void Scene::Demonstration()
 	int stepN = 360;
 	for(int stepi = 0; stepi < stepN; ++stepi)
 	{
-		meshes[0]->SphereMorph(teapotC, 13.0f, 0.05f);
+		float fract = static_cast<float>(stepi) / static_cast<float>(stepN - 1);
+		meshes[0]->SphereMorph(teapotC, 13.0f, 0.05f); 
 		meshes[0]->WaterAnimation(stepi);
-		ppc->RevolveH(meshes[0]->GetCenter(), 1.0f);
+		// ppc->RevolveH(meshes[0]->GetCenter(), 1.0f);
 		// billboards[0]->mesh->Translate(V3(0.0f, 0.0f, -1.0f));
 		Render();
 		Fl::check();

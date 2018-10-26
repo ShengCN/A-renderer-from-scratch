@@ -61,6 +61,24 @@ V3 BillBoard::GetColor(FrameBuffer *fb, V3 p)
 	return fb->BilinearLookupColor(tex, s, t);
 }
 
+V3 BillBoard::GetColor(FrameBuffer* fb, V3 p, float& alpha)
+{
+	if (!InsideBillboard(p))
+		return V3(0.0f);
+
+	V3 p0 = mesh->verts[0];
+	V3 p1 = mesh->verts[1];
+	V3 p3 = mesh->verts[3];
+	V3 x = p3 - p0;
+	V3 y = p1 - p0;
+	V3 v = p - p0;
+	float xf = x * v, yf = y * v;
+	float s = xf / (x.Length() * x.Length());
+	float t = yf / (y.Length() * y.Length());
+
+	return fb->LookupColor(mesh->tex, s, t, alpha);
+}
+
 BillBoard::~BillBoard()
 {
 }

@@ -151,16 +151,22 @@ void TM::RenderWireFrame(PPC* ppc, FrameBuffer* fb)
 void TM::RenderFill(PPC* ppc, FrameBuffer* fb)
 {
 	auto gv = GlobalVariables::Instance();
-	// Lod Level, use bbox to estimate how many pixels do we need
-	// Assume square texture
-	auto aabb = ComputeAABB();
-	V3 paabb0(0.0f), paabb1(0.0f);
-	ppc->Project(aabb.corners[0], paabb0);
-	ppc->Project(aabb.corners[1], paabb1);
-	V3 paabbV = paabb1 - paabb0;
-	pixelSz = max(abs(paabbV[0]), abs(paabbV[1]));
-	pixelSz = Clamp(pixelSz, 0, fb->w);
-	// cerr << "Current LoD: " << log2(pixelSz) << endl;
+	
+	if (gv->lodTexture)
+	{
+		// Lod Level, use bbox to estimate how many pixels do we need
+		// Assume square texture
+		auto aabb = ComputeAABB();
+		V3 paabb0(0.0f), paabb1(0.0f);
+		ppc->Project(aabb.corners[0], paabb0);
+		ppc->Project(aabb.corners[1], paabb1);
+		V3 paabbV = paabb1 - paabb0;
+		pixelSz = max(abs(paabbV[0]), abs(paabbV[1]));
+		pixelSz = Clamp(pixelSz, 0, fb->w);
+		// cerr << "Current LoD: " << log2(pixelSz) << endl;
+	}
+	else
+		pixelSz = -1;
 
 	// with texture
 	for (int ti = 0; ti < trisN; ++ti)
@@ -246,9 +252,12 @@ void TM::RenderFill(PPC* ppc, FrameBuffer* fb)
 					V3 color = Shading(ppc, fb, u, v, wv, pp, alpha);
 					
 					// alpha blending 
-					if (!FloatEqual(1.0f, alpha))
+					if(!FloatEqual(alpha,1.0f))
 					{
-						color = color * alpha + fb->Get(u, v) * (1.0f - alpha);
+						V3 bgC(0.0f);
+						bgC.SetColor(fb->Get(u, v));
+						color = color * alpha + bgC * (1.0f - alpha);
+
 					}
 
 					fb->DrawPoint(u, v, color.GetColor());
@@ -517,6 +526,7 @@ V3 TM::Shading(PPC* ppc, FrameBuffer *fb, int u, int v, float w, PointProperty p
 		// s and t in (0.0f,1.0f)
 		float s = Clamp(Fract(pp.s), 0.0f, 1.0f);
 		float t = Clamp(Fract(pp.t), 0.0f, 1.0f);
+
 		pp.c = fb->LookupColor(tex, s, t, alpha, pixelSz);
 	}
 
@@ -703,11 +713,15 @@ V3 TM::EnvMapping(PPC* ppc, FrameBuffer *fb, CubeMap* cubemap, V3 p, V3 n)
 		if (distance < t)
 		{
 			distance = t;
-		}
 
-		t = 1.0f / t;
-		V3 pBB = p + viewDir * t;
-		bbColor = b->GetColor(fb, pBB);
+			// update closest color
+			t = 1.0f / t;
+			V3 pBB = p + viewDir * t;
+			float alpha = 0.0f;
+			bbColor = b->GetColor(fb, pBB, alpha);
+			if(FloatEqual(alpha,0.0f))
+				bbColor = bbColor * alpha;
+		}
 	}
 
 	// intersect with bb

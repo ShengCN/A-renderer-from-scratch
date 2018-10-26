@@ -17,13 +17,13 @@ GlobalVariables::GlobalVariables()
 	curScene = nullptr;
 	isRenderProjectedTexture = true;
 	depthTest = true;
-	lodTexture = true;
+	lodTexture = false;
 	projectedTextureName = "images/jojo.tiff";
 	debugZbuffer = false;
-	isSaveLodTextures = true;
+	isSaveLodTextures = false;
 	isLight = false;
-	isRefraction = true;
-	refractRatio = 0.7f;
+	isRefraction = false;
+	refractRatio = 1.5f;
 
 	isRecording = false;
 }

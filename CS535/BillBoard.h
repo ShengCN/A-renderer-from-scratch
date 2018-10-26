@@ -11,6 +11,7 @@ public:
 	bool Intersect(V3 p, V3 d, float & t);
 	bool InsideBillboard(V3 p);
 	V3 GetColor(FrameBuffer *fb, V3 p);
+	V3 GetColor(FrameBuffer *fb, V3 p, float &alpha);
 	~BillBoard();
 };
 

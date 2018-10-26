@@ -349,7 +349,8 @@ bool FrameBuffer::LoadTexture(const std::string texFile)
 	TIFFClose(in);
 
 	// Preprocess Lod textures
-	PrepareTextureLoD(texFile);
+	if(GlobalVariables::Instance()->lodTexture)
+		PrepareTextureLoD(texFile);
 
 	return true;
 }
@@ -695,7 +696,7 @@ void FrameBuffer::VisualizeCurrView3D(PPC* ppc0, PPC* ppc1, FrameBuffer* fb1)
 	}
 }
 
-V3 FrameBuffer::LookupColor(std::string texFile, float s, float t, float& alpha, int pixelSz)
+V3 FrameBuffer::LookupColor(std::string texFile, float s, float t, float &alpha, int pixelSz)
 {
 	if (textures.find(texFile) == textures.end())
 	{
