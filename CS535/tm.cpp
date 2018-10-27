@@ -95,6 +95,22 @@ void TM::SetQuad(PointProperty p0, PointProperty p1, PointProperty p2, PointProp
 	tris[5] = 0;
 }
 
+void TM::SetQuad(V3 O, V3 n, V3 up, float sz, float s, float t)
+{
+	up = up.UnitVector();
+	V3 right = (up ^ n).UnitVector();
+	V3 p0 = O + up * sz - right * sz;
+	V3 p1 = O - up * sz - right * sz;
+	V3 p2 = O - up * sz + right * sz;
+	V3 p3 = O + up * sz + right * sz;
+	V3 c0(0.0f), c1(0.0f), c2(0.0f), c3(0.0f);
+	PointProperty pp0(p0, c0, n, 0.0f, 0.0f);
+	PointProperty pp1(p1, c1, n, 0.0f, t);
+	PointProperty pp2(p2, c2, n, s, t);
+	PointProperty pp3(p3, c3, n, s, 0.0f);
+	SetQuad(pp0, pp1, pp2, pp3);
+}
+
 void TM::SetBillboard(V3 O, V3 n, V3 up, float sz, float s, float t)
 {
 	up = up.UnitVector();
@@ -537,10 +553,11 @@ V3 TM::Shading(PPC* ppc, FrameBuffer *fb, int u, int v, float w, PointProperty& 
 	// environment mapping
 	if (isEnvMapping)
 	{
-		float envEffect = isShowObjColor ? 0.4f : 1.0f;
+		float envEffect = 1.0f;
 
-		auto envColor = EnvMapping(ppc, fb, GlobalVariables::Instance()->curScene->cubemap.get(), pp.p, pp.n);
+		auto envColor = EnvMapping(ppc, fb, GlobalVariables::Instance()->curScene->cubemap.get(), pp.p, pp.n, envEffect);
 
+		envEffect = isShowObjColor ? envEffect : 1.0f;
 		pp.c = ClampColor(pp.c * (1.0f - envEffect) + envColor * envEffect);
 	}
 
@@ -591,7 +608,7 @@ V3 TM::Light(PPC* ppc, PointProperty& pp, int u, int v, float w)
 		// Phong
 		kd += max((ppc2->C - pp.p).UnitVector() * pp.n.UnitVector(), 0.0f);
 		float liks = (ppc->C - pp.p).UnitVector() * (ppc2->C - pp.p).UnitVector().Reflect(pp.n.UnitVector());
-		ks += 0.3f * pow(max(liks, 0.0f), 512);
+		ks += pow(max(liks, 0.0f), 200);
 
 		// Shadow
 		if(gv->isShadow && !gv->curScene->shadowMaps.empty())
@@ -615,7 +632,7 @@ V3 TM::Light(PPC* ppc, PointProperty& pp, int u, int v, float w)
 	kd = Clamp(kd, 0.0f, 1.0f);
 	ks = Clamp(ks, 0.0f, 1.0f);
 
-	ret = pp.c * (ka + (1.0f - ka) * kd) + ks;
+	ret = pp.c * (ka + (1.0f - ka) * kd) + V3(1.0f) * ks;
 	ret = ret * sd;	// shadow
 	return ret;
 }
@@ -690,7 +707,9 @@ bool TM::IsPixelInProjection(int u, int v, float z, V3& color, float& alpha)
 	return 0;
 }
 
-V3 TM::EnvMapping(PPC* ppc, FrameBuffer *fb, CubeMap* cubemap, V3 p, V3 n)
+// envEffect (0,1)
+// 1 means should igore point color
+V3 TM::EnvMapping(PPC* ppc, FrameBuffer *fb, CubeMap* cubemap, V3 p, V3 n, float &envEffect)
 {
 	if (!cubemap)
 		return V3(0.0f);
@@ -736,11 +755,12 @@ V3 TM::EnvMapping(PPC* ppc, FrameBuffer *fb, CubeMap* cubemap, V3 p, V3 n)
 	if (!FloatEqual(distance, 0.0f))
 	{
 		distance = 1.0f / distance;
-		float disAttenauation = max(pow(distance, 100), 1.0f);
-		bbColor = bbColor / disAttenauation;
+		float disAttenauation = max(pow(distance*10.0f, 2), 1.0f);
+		envEffect = Clamp(1.0f / disAttenauation,0.0f,1.0f);
 		return bbColor;
 	}
 
+	envEffect = 0.3f;
 	return cubemap->LookupColor(viewDir, pixelSz);
 }
 
@@ -777,6 +797,14 @@ V3 TM::HomographMapping(V3 uvw, PPC* ppc1, PPC* ppc2)
 	float v2 = (qC[1] + qM[1] * px) * w2;
 
 	return V3(u2, v2, w2);
+}
+
+void TM::SetAllPointsColor(V3 color)
+{
+	for(int vi = 0; vi < vertsN; ++vi)
+	{
+		colors[vi] = color;
+	}
 }
 
 void TM::SphereMorph(V3 c, float r, float fract)

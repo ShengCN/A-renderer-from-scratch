@@ -20,6 +20,8 @@ GlobalVariables::GlobalVariables()
 	resoW = 640;
 	resoH = 480;
 
+	tmAnimationID = 1;
+	dbgParameter = 10.0f;
 	curScene = nullptr;
 	isRenderProjectedTexture = true;
 	depthTest = true;

@@ -21,15 +21,18 @@ public:
 	vector<float> vertST;
 	vector<unsigned int>  tris;		// indices
 	int vertsN, trisN;
+	int id;
+
 	std::string tex;
 	int pixelSz;		// approximate projected aabb size
 	bool isEnvMapping;
 	bool isShowObjColor;
 
-	TM() :vertsN(0), trisN(0), pixelSz(0), isEnvMapping(false), isShowObjColor(true) {};
+	TM() :vertsN(0), trisN(0), pixelSz(0), isEnvMapping(false), isShowObjColor(true),id(tmIDCounter++) {};
 	void SetRectangle(V3 O, float rw, float rh);
 	void SetTriangle(PointProperty p0, PointProperty p1, PointProperty p2);
 	void SetQuad(PointProperty p0, PointProperty p1, PointProperty p2, PointProperty p3);
+	void SetQuad(V3 O, V3 n, V3 up, float sz, float s = 1.0f, float t = 1.0f);
 	void SetBillboard(V3 O, V3 n, V3 up, float sz, float s = 1.0f, float t = 1.0f);
 	void SetText(std::string tf);
 	void Allocate();
@@ -52,15 +55,16 @@ public:
 	V3 Light(PPC *ppc, PointProperty& pp, int u, int v, float w); // Per pixel  light 
 	bool ComputeShadowEffect(PPC* ppc, int u, int v, float z, float &sdEffect);
 	bool IsPixelInProjection(int u, int v, float z, V3 &color, float &alpha);
-	V3 EnvMapping(PPC *ppc, FrameBuffer *fb, CubeMap *cubemap, V3 p, V3 n);
+	V3 EnvMapping(PPC *ppc, FrameBuffer *fb, CubeMap *cubemap, V3 p, V3 n, float& envAffect);
 	V3 ClampColor(V3 color);
 	V3 HomographMapping(V3 uvw, PPC* ppc1, PPC* ppc2);
-
+	void SetAllPointsColor(V3 color);
 
 	// Morphing
 	void SphereMorph(V3 c,float r, float fract);
 	void WaterAnimation(float t);
 
 	~TM();
+	static int tmIDCounter;
 };
-
+ 

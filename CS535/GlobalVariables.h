@@ -20,12 +20,14 @@ public:
 	bool debugZbuffer;
 	bool isSaveLodTextures;
 	bool isLight;
-	
+	float dbgParameter;
+
 	// For HW5
 	bool isRefraction;
 	float refractRatio;
 	string checkerBoxTexName;
 	bool isShadow;
+	int tmAnimationID;
 
 private:
 	GlobalVariables();

@@ -3,18 +3,18 @@
 #include "m33.h"
 #include <stdlib.h>
 #include <algorithm>
+#include <fstream>
+#include <iostream>
+#include <string>
+#include <ctime>
+
 #include "MathTool.h"
 #include "AABB.h"
 #include "TM.h"
-#include <string>
-#include <ctime>
 #include "GlobalVariables.h"
 
 Scene* scene;
-
-#include <fstream>
-
-#include <iostream>
+int TM::tmIDCounter = 0;
 
 Scene::Scene(): isRenderAABB(false)
 {
@@ -93,13 +93,13 @@ void Scene::Render(PPC* currPPC, FrameBuffer* currFB)
 			if (isRenderAABB)
 				t->RenderAABB(currPPC, currFB);
 		}
-
-		for (auto b : billboards)
-		{
-			b->mesh->RenderFill(currPPC, currFB);
-			if (isRenderAABB)
-				b->mesh->RenderAABB(currPPC, currFB);
-		}
+//
+//		for (auto b : billboards)
+//		{
+//			b->mesh->RenderFill(currPPC, currFB);
+//			if (isRenderAABB)
+//				b->mesh->RenderAABB(currPPC, currFB);
+//		}
 
 		currFB->redraw();
 	}
@@ -389,20 +389,27 @@ void Scene::InitDemo()
 	cubemap->LoadCubeMap(fnames, cubemapPPCs);
 
 	// Init objects
+	TM* ground = new TM();
 	TM* teapot = new TM();
 	TM* teapot1 = new TM();
 	TM* teapot2 = new TM();
 	shared_ptr<BillBoard> billboard = make_shared<BillBoard>();
 	teapot->LoadModelBin("geometry/teapot1K.bin");
 	teapot->isEnvMapping = true;
-	teapot->isShowObjColor = true;
+	teapot->isShowObjColor = false;
 	teapot1->LoadModelBin("geometry/teapot1K.bin");
 	teapot1->isEnvMapping = true;
-	teapot1->isShowObjColor = false;
+	teapot1->isShowObjColor = true;
+	teapot1->SetAllPointsColor(V3(0.0f, 0.0f, 0.7f));
+
 	teapot2->LoadModelBin("geometry/teapot1K.bin");
 	teapot2->isEnvMapping = true;
 	teapot2->isShowObjColor = false;
 
+	ground->isEnvMapping = false;
+	ground->isShowObjColor = true;
+
+	ground->SetQuad(V3(0.0f), V3(0.0f, 1.0f, 0.0f), V3(0.0f, 0.0f, -1.0f), 1.0f, 1.0f, 1.0f);
 	billboard->SetBillboard(V3(0.0f), V3(0.0f, 1.0f, 0.0f), V3(0.0f,0.0f,-1.0f) , 1.0f, 1.0f,1.0f);
 
 	float obsz = 50.0f;
@@ -412,24 +419,25 @@ void Scene::InitDemo()
 	teapot2->PositionAndSize(V3(-obsz * 0.75f, 0.0f, -obsz * 0.75f), obsz);
 
 	// Textures
-	string bbTexName = GlobalVariables::Instance()->projectedTextureName;
 	string checkerBoxTexName = GlobalVariables::Instance()->checkerBoxTexName;
-	fb->LoadTexture(bbTexName);
 	fb->LoadTexture(checkerBoxTexName);
 
+	ground->PositionAndSize(teapot->GetCenter() + V3(0.0f, -obsz * 0.3f, 0.0f), obsz * 2.0f);
+	ground->SetText(checkerBoxTexName);
 	billboard->mesh->PositionAndSize(teapot->GetCenter() + V3(0.0f, -obsz * 0.3f, 0.0f), obsz * 2.0f);
 	billboard->mesh->SetText(checkerBoxTexName);
 
+	meshes.push_back(ground);
 	meshes.push_back(teapot);
 	meshes.push_back(teapot1);
 	meshes.push_back(teapot2);
 	billboards.push_back(billboard);
 
 	ppc->C = ppc->C - tmC + V3(0.0f, 15.0f, 0.0f);
-	ppc->PositionAndOrient(ppc->C, meshes[0]->GetCenter(), V3(0.0f, 1.0f, 0.0f));
+	ppc->PositionAndOrient(ppc->C, meshes[GlobalVariables::Instance()->tmAnimationID]->GetCenter(), V3(0.0f, 1.0f, 0.0f));
 
 	ppc3->C = ppc3->C + V3(330.0f, 150.0f, 300.0f);
-	ppc3->PositionAndOrient(ppc3->C, meshes[0]->GetCenter(), V3(0.0f, 1.0f, 0.0f));
+	ppc3->PositionAndOrient(ppc3->C, meshes[1]->GetCenter(), V3(0.0f, 1.0f, 0.0f));
 
 	InitializeLights();
 }
@@ -437,16 +445,17 @@ void Scene::InitDemo()
 void Scene::Demonstration()
 {
 	// Morphing 
-	auto teapotC = meshes[0]->GetCenter();
+	auto teapotC = meshes[GlobalVariables::Instance()->tmAnimationID]->GetCenter();
 	int stepN = 360;
 	for(int stepi = 0; stepi < stepN; ++stepi)
 	{
 		float fract = static_cast<float>(stepi) / static_cast<float>(stepN - 1);
-		meshes[0]->SphereMorph(teapotC, 13.0f, fract); 
-		meshes[0]->WaterAnimation(stepi);
+		 meshes[GlobalVariables::Instance()->tmAnimationID]->SphereMorph(teapotC, 13.0f, fract);
+		 meshes[GlobalVariables::Instance()->tmAnimationID]->WaterAnimation(stepi);
 		
 		// ppc->RevolveH(meshes[0]->GetCenter(), 1.0f);
 		// billboards[0]->mesh->Translate(V3(0.0f, 0.0f, -1.0f));
+		
 		Render();
 		Fl::check();
 
