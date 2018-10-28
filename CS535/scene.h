@@ -20,7 +20,8 @@ public:
 	std::vector<shared_ptr<FrameBuffer>> shadowMaps;
 	PPC* ppc, *ppc3, *projectPPC;
 	vector<TM*> meshes;
-	vector<shared_ptr<BillBoard>> billboards;
+	vector<shared_ptr<TM>> refletors;
+	vector<shared_ptr<BillBoard>> sceneBillboard;
 	shared_ptr<CubeMap> cubemap;
 
 	Scene();
@@ -32,10 +33,18 @@ public:
 	void RenderZbuffer(PPC *currPPC, FrameBuffer *currFB);
 	void UpdateSM();
 
+	// HW5, Implement part of the paper
+	// https://www.cs.purdue.edu/cgvlab/papers/popescu/popescuGemEG06.pdf
+	// Render all other tm except id mesh to id's billboards
+	void RenderBB();
+	void RenderBB(PPC *ppc, FrameBuffer *fb, TM *reflectors);
+
 	V3 GetSceneCenter();
 	~Scene();
 
 private:
+	bool isRenderAABB;
+
 	bool DBGFramebuffer();
 	bool DBGV3();
 	bool DBGM3();
@@ -43,7 +52,6 @@ private:
 	bool DBGPPC();
 	void Demonstration();
 	void InitDemo();
-	bool isRenderAABB;
 	void InitializeLights();
 };
 

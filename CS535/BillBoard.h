@@ -5,6 +5,7 @@ class BillBoard
 {
 public:
 	shared_ptr<TM> mesh;
+	shared_ptr<FrameBuffer> texture;
 
 	BillBoard();
 	~BillBoard();

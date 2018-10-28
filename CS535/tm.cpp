@@ -271,7 +271,7 @@ void TM::RenderFill(PPC* ppc, FrameBuffer* fb)
 					// shading
 					float alpha = 1.0f;
 					V3 color = Shading(ppc, fb, u, v, wv, pp, alpha);
-					
+
 					// alpha blending 
 					if(!FloatEqual(alpha,1.0f))
 					{
@@ -723,7 +723,7 @@ V3 TM::EnvMapping(PPC* ppc, FrameBuffer *fb, CubeMap* cubemap, V3 p, V3 n, float
 		viewDir = viewDir.Reflect(n);
 
 	// Check intersections
-	auto &billboards = gv->curScene->billboards;
+	auto &billboards = gv->curScene->sceneBillboard;
 	float distance = 0.0f;
 	V3 bbColor(0.0f);
 	float alpha = 0.0f;

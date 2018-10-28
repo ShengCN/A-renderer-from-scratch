@@ -93,8 +93,16 @@ void Scene::Render(PPC* currPPC, FrameBuffer* currFB)
 			if (isRenderAABB)
 				t->RenderAABB(currPPC, currFB);
 		}
+
+		for (auto r : refletors)
+		{
+			r->RenderFill(currPPC, currFB);
+			if (isRenderAABB)
+				r->RenderAABB(currPPC, currFB);
+		}
+
 //
-//		for (auto b : billboards)
+//		for (auto b : sceneBillboard)
 //		{
 //			b->mesh->RenderFill(currPPC, currFB);
 //			if (isRenderAABB)
@@ -141,6 +149,61 @@ void Scene::UpdateSM()
 	for (size_t li = 0; li < lightPPCs.size(); ++li)
 	{
 		RenderZbuffer(lightPPCs[li].get(), shadowMaps[li].get());
+	}
+}
+
+void Scene::RenderBB()
+{
+	// Steps:
+	// 1. For specific reflector tmId, rendfer all other reflective objects into tmId's billboards for rendering
+	for (auto r : refletors)
+	{
+		auto tmId = r->id;
+
+		// for each other object
+		for (auto otherTM : refletors)
+		{
+			if (otherTM->id == tmId)
+				continue;
+
+			// Update all bb
+			otherTM->reflectorBB.clear();
+			otherTM->reflectorBB.reserve(refletors.size() - 1);
+
+			// prepare bb, currPPC, currFB
+			shared_ptr<BillBoard> bb = make_shared<BillBoard>();
+			V3 O = otherTM->GetCenter();
+			V3 n = (r->GetCenter() - O).UnitVector();
+			float sz = otherTM->ComputeAABB().GetDiagnoalLength();
+			// Assump up is y axis
+			bb->SetBillboard(O, n, V3(0.0f, 1.0f, 0.0f), sz);
+
+			int w = GlobalVariables::Instance()->resoW;
+			int h = GlobalVariables::Instance()->resoH;
+			float fovf = 10.0f;
+			shared_ptr<PPC> ppc = make_shared<PPC>(w, h, fovf);
+			shared_ptr<FrameBuffer> bbFB = make_shared<FrameBuffer>(0, 0, w, h);
+
+			// render it into the currFB
+			RenderBB(ppc.get(), bbFB.get(), otherTM.get());
+
+			// Save the result 
+			bb->texture = bbFB;
+
+			// commit the new billboard for the reflector
+			r->reflectorBB.push_back(bb);
+		}
+	}
+}
+
+// Only render the target
+void Scene::RenderBB(PPC* currPPC, FrameBuffer* currFB, TM *reflector)
+{
+	if (currPPC && currFB && reflector)
+	{
+		currFB->ClearBGR(0x00999999, 0.0f);
+		reflector->RenderFill(currPPC, currFB);
+		currFB->redraw();
 	}
 }
 
@@ -390,9 +453,9 @@ void Scene::InitDemo()
 
 	// Init objects
 	TM* ground = new TM();
-	TM* teapot = new TM();
-	TM* teapot1 = new TM();
-	TM* teapot2 = new TM();
+	auto teapot = make_shared<TM>();
+	auto teapot1 = make_shared<TM>();
+	auto teapot2 = make_shared<TM>();
 	shared_ptr<BillBoard> billboard = make_shared<BillBoard>();
 	teapot->LoadModelBin("geometry/teapot1K.bin");
 	teapot->isEnvMapping = true;
@@ -428,16 +491,16 @@ void Scene::InitDemo()
 	billboard->mesh->SetText(checkerBoxTexName);
 
 	meshes.push_back(ground);
-	meshes.push_back(teapot);
-	meshes.push_back(teapot1);
-	meshes.push_back(teapot2);
-	billboards.push_back(billboard);
+	refletors.push_back(teapot);
+	refletors.push_back(teapot1);
+	refletors.push_back(teapot2);
+	sceneBillboard.push_back(billboard);
 
 	ppc->C = ppc->C - tmC + V3(0.0f, 15.0f, 0.0f);
-	ppc->PositionAndOrient(ppc->C, meshes[GlobalVariables::Instance()->tmAnimationID]->GetCenter(), V3(0.0f, 1.0f, 0.0f));
+	ppc->PositionAndOrient(ppc->C, refletors[GlobalVariables::Instance()->tmAnimationID]->GetCenter(), V3(0.0f, 1.0f, 0.0f));
 
 	ppc3->C = ppc3->C + V3(330.0f, 150.0f, 300.0f);
-	ppc3->PositionAndOrient(ppc3->C, meshes[1]->GetCenter(), V3(0.0f, 1.0f, 0.0f));
+	ppc3->PositionAndOrient(ppc3->C, refletors[GlobalVariables::Instance()->tmAnimationID]->GetCenter(), V3(0.0f, 1.0f, 0.0f));
 
 	InitializeLights();
 }
@@ -445,16 +508,16 @@ void Scene::InitDemo()
 void Scene::Demonstration()
 {
 	// Morphing 
-	auto teapotC = meshes[GlobalVariables::Instance()->tmAnimationID]->GetCenter();
+	auto teapotC = refletors[GlobalVariables::Instance()->tmAnimationID]->GetCenter();
 	int stepN = 360;
 	for(int stepi = 0; stepi < stepN; ++stepi)
 	{
 		float fract = static_cast<float>(stepi) / static_cast<float>(stepN - 1);
-		 meshes[GlobalVariables::Instance()->tmAnimationID]->SphereMorph(teapotC, 13.0f, fract);
-		 meshes[GlobalVariables::Instance()->tmAnimationID]->WaterAnimation(stepi);
+		refletors[GlobalVariables::Instance()->tmAnimationID]->SphereMorph(teapotC, 13.0f, fract);
+		 refletors[GlobalVariables::Instance()->tmAnimationID]->WaterAnimation(stepi);
 		
 		// ppc->RevolveH(meshes[0]->GetCenter(), 1.0f);
-		// billboards[0]->mesh->Translate(V3(0.0f, 0.0f, -1.0f));
+		// sceneBillboard[0]->mesh->Translate(V3(0.0f, 0.0f, -1.0f));
 		
 		Render();
 		Fl::check();

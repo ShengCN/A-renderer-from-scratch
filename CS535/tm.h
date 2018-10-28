@@ -4,7 +4,9 @@
 #include "AABB.h"
 #include <vector>
 #include "cubemap.h"
+
 using std::vector;
+class BillBoard;
 
 struct PointProperty
 {
@@ -22,6 +24,7 @@ public:
 	vector<unsigned int>  tris;		// indices
 	int vertsN, trisN;
 	int id;
+	vector<shared_ptr<BillBoard>> reflectorBB;	// all the possible reflections
 
 	std::string tex;
 	int pixelSz;		// approximate projected aabb size
