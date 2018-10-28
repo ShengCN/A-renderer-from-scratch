@@ -96,7 +96,7 @@ void Scene::Render(PPC* currPPC, FrameBuffer* currFB)
 
 		for (auto r : refletors)
 		{
-			r->RenderFill(currPPC, currFB);
+//			r->RenderFill(currPPC, currFB);
 
 			// DEBUG Render BB
 			for(auto bb : r->reflectorBB)
@@ -161,19 +161,20 @@ void Scene::RenderBB()
 		auto rCenter = r->GetCenter();
 		auto rSize = r->ComputeAABB().GetDiagnoalLength();
 
+		// Update all bb
+		r->reflectorBB.clear();
+		r->reflectorBB.reserve(refletors.size() - 1);
+
 		// for each other object
 		for (auto otherTM : refletors)
 		{
 			if (otherTM->id == tmId)
 				continue;
 
-			// Update all bb
-			r->reflectorBB.clear();
-			r->reflectorBB.reserve(refletors.size() - 1);
-
 			// prepare bb, currPPC, currFB
+			auto otherTmCenter = otherTM->GetCenter();
 			shared_ptr<BillBoard> bb = make_shared<BillBoard>();
-			V3 n = (rCenter - otherTM->GetCenter()).UnitVector();
+			V3 n = (rCenter - otherTmCenter).UnitVector();
 			
 			// Assump up is y axis
 			bb->SetBillboard(rCenter, n, V3(0.0f, 1.0f, 0.0f), rSize);
@@ -183,14 +184,14 @@ void Scene::RenderBB()
 			float fovf = 55.0f;
 			shared_ptr<PPC> ppc = make_shared<PPC>(w, h, fovf);
 			shared_ptr<FrameBuffer> bbFB = make_shared<FrameBuffer>(0, 0, w, h);
-			ppc->PositionAndOrient(rCenter, otherTM->GetCenter(), V3(0.0f, 1.0f, 0.0f));
+			ppc->PositionAndOrient(rCenter, otherTmCenter, V3(0.0f, 1.0f, 0.0f));
 
 			// render it into the currFB
 			RenderBB(ppc.get(), bbFB.get(), otherTM.get());
 
 			// Save the result 
 			bb->fbTexture = bbFB;
-			bb->mesh->PositionAndSize(rCenter, rSize);
+			bb->mesh->PositionAndSize(otherTmCenter, rSize);
 
 			// commit the new billboard for the reflector
 			r->reflectorBB.push_back(bb);
