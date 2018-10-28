@@ -494,11 +494,6 @@ void TM::RenderBB(PPC* ppc, FrameBuffer* fb, FrameBuffer* bbTexture)
 					V3 st = st0 + (st1 - st0) * k + (st2 - st0) * l;
 
 					// shading
-					if(u == 719 && v == 408)
-					{
-						int stop = 5;
-					}
-
 					float s = st[0], t = st[1], alpha = 0.0f;
 					V3 color = bbTexture->BilinearLookupColor(s, t, alpha);
 
@@ -821,7 +816,7 @@ V3 TM::EnvMapping(PPC* ppc, FrameBuffer *fb, CubeMap* cubemap, V3 p, V3 n, float
 	auto gv = GlobalVariables::Instance();
 	V3 viewDir = ppc->C - p;
 
-	if (gv->isRefraction)
+	if (isRefraction)
 		viewDir = viewDir.Refract(n, gv->refractRatio);
 	else
 		viewDir = viewDir.Reflect(n);
@@ -840,7 +835,7 @@ V3 TM::EnvMapping(PPC* ppc, FrameBuffer *fb, CubeMap* cubemap, V3 p, V3 n, float
 	{
 		distance = 1.0f / distance;
 		float disAttenauation = max(pow(distance*10.0f, 2), 1.0f);
-		envEffect = Clamp(1.0f / disAttenauation,0.0f,1.0f);
+		// envEffect = Clamp(1.0f / disAttenauation,0.0f,1.0f);
 		return bbColor;
 	}
 

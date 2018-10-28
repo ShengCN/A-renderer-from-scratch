@@ -30,8 +30,9 @@ public:
 	int pixelSz;		// approximate projected aabb size
 	bool isEnvMapping;
 	bool isShowObjColor;
+	bool isRefraction;
 
-	TM() :vertsN(0), trisN(0), pixelSz(0), isEnvMapping(false), isShowObjColor(true),id(tmIDCounter++) {};
+	TM() :vertsN(0), trisN(0), pixelSz(0), isEnvMapping(false), isShowObjColor(true),id(tmIDCounter++), isRefraction(false) {};
 	void SetRectangle(V3 O, float rw, float rh);
 	void SetTriangle(PointProperty p0, PointProperty p1, PointProperty p2);
 	void SetQuad(PointProperty p0, PointProperty p1, PointProperty p2, PointProperty p3);

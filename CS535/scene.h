@@ -36,7 +36,7 @@ public:
 	// HW5, Implement part of the paper
 	// https://www.cs.purdue.edu/cgvlab/papers/popescu/popescuGemEG06.pdf
 	// Render all other tm except id mesh to id's billboards
-	void RenderBB();
+	void UpdateBBs();
 	void RenderBB(PPC *ppc, FrameBuffer *fb, TM *reflectors);
 
 	V3 GetSceneCenter();
