@@ -63,6 +63,7 @@ public:
 	V3 ClampColor(V3 color);
 	V3 HomographMapping(V3 uvw, PPC* ppc1, PPC* ppc2);
 	void SetAllPointsColor(V3 color);
+	int EnvBBIntersection(vector<shared_ptr<BillBoard>> bbs, V3 p, V3 viewDir, float &distance,V3 &color, float &alpha);
 
 	// Morphing
 	void SphereMorph(V3 c,float r, float fract);

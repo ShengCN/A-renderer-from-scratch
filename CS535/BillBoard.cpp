@@ -45,6 +45,20 @@ bool BillBoard::InsideBillboard(V3 p)
 	return !(xf < 0.0f || yf < 0.0f || xf / x.Length() > x.Length() || yf / y.Length() > y.Length());
 }
 
+V3 BillBoard::GetColor(V3 p, float& alpha)
+{
+	if (!fbTexture || !InsideBillboard(p))
+	{
+		alpha = 0.0f;
+		return V3(0.0f);
+	}
+
+	float s, t;
+	GetST(p, s, t);
+
+	return fbTexture->BilinearLookupColor(s, t, alpha);
+}
+
 V3 BillBoard::GetColor(FrameBuffer *fb, V3 p)
 {
 	if (!InsideBillboard(p))
@@ -60,8 +74,10 @@ V3 BillBoard::GetColor(FrameBuffer *fb, V3 p)
 V3 BillBoard::GetColor(FrameBuffer* fb, V3 p, float& alpha)
 {
 	if (!InsideBillboard(p))
+	{
+		alpha = 0.0f;
 		return V3(0.0f);
-
+	}
 	float s, t;
 	GetST(p, s, t);
 

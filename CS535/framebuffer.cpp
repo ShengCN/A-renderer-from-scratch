@@ -120,7 +120,15 @@ void FrameBuffer::KeyboardHandle()
 
 void FrameBuffer::SetBGR(unsigned int bgr)
 {
-	memset(pix, bgr, sizeof(unsigned int) * w * h);
+//	memset(pix, bgr, sizeof(unsigned int) * w * h);
+
+	for(int v = 0; v < h - 1; ++v)
+	{
+		for(int u = 0; u < w -1; ++u)
+		{
+			pix[(h - 1 - v) * w + u] = bgr;
+		}
+	}
 }
 
 void FrameBuffer::Set(int u, int v, int color)
@@ -740,8 +748,8 @@ V3 FrameBuffer::BilinearLookupColor(float s, float t, float  &alpha)
 	float textT = t * static_cast<float>(texH - 1);
 
 	// corner case
-	int u0 = max(0, static_cast<int>(textS - 0.5f)), v0 = max(0, static_cast<int>(textT - 0.5f));
-	int u1 = min(texW - 1, static_cast<int>(textS + 0.5f)), v1 = min(texH, static_cast<int>(textT + 0.5f));
+	int u0 = Clamp(static_cast<int>(textS - 0.5f), 0, texW -1), v0 = Clamp(static_cast<int>(textT - 0.5f),0, texH -1);
+	int u1 = Clamp(static_cast<int>(textS + 0.5f), 0, texW - 1), v1 = Clamp(static_cast<int>(textT + 0.5f), 0, texH - 1);
 
 	unsigned int ori0 = pix[(texH - 1 - v0) * texW + u0];
 	unsigned int ori1 = pix[(texH - 1 - v0) * texW + u1];
@@ -784,8 +792,8 @@ V3 FrameBuffer::BilinearLookupColor(shared_ptr<TextureInfo> tex, float s, float 
 	float textT = t * static_cast<float>(texH - 1);
 
 	// corner case
-	int u0 = max(0, static_cast<int>(textS - 0.5f)), v0 = max(0, static_cast<int>(textT - 0.5f));
-	int u1 = min(texW - 1, static_cast<int>(textS + 0.5f)), v1 = min(texH, static_cast<int>(textT + 0.5f));
+	int u0 = Clamp(static_cast<int>(textS - 0.5f), 0, texW - 1), v0 = Clamp(static_cast<int>(textT - 0.5f), 0, texH - 1);
+	int u1 = Clamp(static_cast<int>(textS + 0.5f), 0, texW - 1), v1 = Clamp(static_cast<int>(textT + 0.5f), 0, texH - 1);
 
 	unsigned int ori0 = tex->texture[(texH - 1 - v0) * texW + u0];
 	unsigned int ori1 = tex->texture[(texH - 1 - v0) * texW + u1];
@@ -812,8 +820,8 @@ V3 FrameBuffer::BilinearLookupColor(shared_ptr<TextureInfo> tex, float s, float 
 	float textT = t * static_cast<float>(texH - 1);
 
 	// corner case
-	int u0 = max(0, static_cast<int>(textS - 0.5f)), v0 = max(0, static_cast<int>(textT - 0.5f));
-	int u1 = min(texW - 1, static_cast<int>(textS + 0.5f)), v1 = min(texH, static_cast<int>(textT + 0.5f));
+	int u0 = Clamp(static_cast<int>(textS - 0.5f), 0, texW - 1), v0 = Clamp(static_cast<int>(textT - 0.5f), 0, texH - 1);
+	int u1 = Clamp(static_cast<int>(textS + 0.5f), 0, texW - 1), v1 = Clamp(static_cast<int>(textT + 0.5f), 0, texH - 1);
 
 	unsigned int ori0 = tex->texture[(texH - 1 - v0) * texW + u0];
 	unsigned int ori1 = tex->texture[(texH - 1 - v0) * texW + u1];

@@ -70,12 +70,20 @@ void Scene::Render()
 		fb->VisualizeCurrView(ppc, currf, ppc3, fb3); // using a 3rd ppc to visualize current ppc
 		fb->VisualizeCurrView3D(ppc, ppc3, fb3); // using a 3rd ppc to visualize current ppc
 		
-		// debug cube map
+		// Visualize lights
 		for(auto l:lightPPCs)
 		{
 			fb3->Draw3DPoint(ppc3, l->C, 0xFFFFFF00, 10);
 		}
 
+		// Visualize bbs
+		for (auto r : refletors)
+		{
+			for (auto rb : r->reflectorBB)
+			{
+				rb->RenderBB(ppc3,fb3);
+			}
+		}
 		fb3->redraw();
 	}
 }
@@ -96,13 +104,7 @@ void Scene::Render(PPC* currPPC, FrameBuffer* currFB)
 
 		for (auto r : refletors)
 		{
-//			r->RenderFill(currPPC, currFB);
-
-			// DEBUG Render BB
-			for(auto bb : r->reflectorBB)
-			{
-				bb->RenderBB(currPPC,currFB);
-			}
+			r->RenderFill(currPPC, currFB);
 
 			if (isRenderAABB)
 				r->RenderAABB(currPPC, currFB);

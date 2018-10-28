@@ -494,6 +494,11 @@ void TM::RenderBB(PPC* ppc, FrameBuffer* fb, FrameBuffer* bbTexture)
 					V3 st = st0 + (st1 - st0) * k + (st2 - st0) * l;
 
 					// shading
+					if(u == 719 && v == 408)
+					{
+						int stop = 5;
+					}
+
 					float s = st[0], t = st[1], alpha = 0.0f;
 					V3 color = bbTexture->BilinearLookupColor(s, t, alpha);
 
@@ -822,33 +827,13 @@ V3 TM::EnvMapping(PPC* ppc, FrameBuffer *fb, CubeMap* cubemap, V3 p, V3 n, float
 		viewDir = viewDir.Reflect(n);
 
 	// Check intersections
-	auto &billboards = gv->curScene->sceneBillboard;
+	auto sceneBBs = gv->curScene->sceneBillboard;
 	float distance = 0.0f;
 	V3 bbColor(0.0f);
 	float alpha = 0.0f;
-	for (auto b : billboards)
-	{
-		float t = 0.0f;
-		if (!b->Intersect(p, viewDir, t))
-			continue;
-
-  		t = 1.0 / t;
-
-		// Find the closest Billboard
-		if (distance < t)
-		{
-			distance = t;
-
-			// update closest color
-			t = 1.0f / t;
-			V3 pBB = p + viewDir * t;
-			bbColor = b->GetColor(fb, pBB, alpha);
-
-			// intersect 0 alpha part of billbard
-			if (FloatEqual(alpha, 0.0f))
-				distance = 0.0f;
-		}
-	}
+	EnvBBIntersection(sceneBBs, p, viewDir, distance, bbColor, alpha);
+	EnvBBIntersection(reflectorBB, p, viewDir, distance, bbColor, alpha);
+	bbColor = bbColor * alpha;
 
 	// intersect with bb
 	if (!FloatEqual(distance, 0.0f))
@@ -861,6 +846,37 @@ V3 TM::EnvMapping(PPC* ppc, FrameBuffer *fb, CubeMap* cubemap, V3 p, V3 n, float
 
 	envEffect = 0.3f;
 	return cubemap->LookupColor(viewDir, pixelSz);
+}
+
+int TM::EnvBBIntersection(vector<shared_ptr<BillBoard>> bbs, V3 p, V3 viewDir, float& distance, V3& bbColor, float& alpha)
+{
+	int ret = 0;
+	for (auto b : bbs)
+	{
+		float t = 0.0f;
+		if (!b->Intersect(p, viewDir, t))
+			continue;
+
+		ret = 1;
+		t = 1.0 / t;
+
+		// Find the closest Billboard
+		if (distance < t)
+		{
+			distance = t;
+
+			// update closest color
+			t = 1.0f / t;
+			V3 pBB = p + viewDir * t;
+			bbColor = b->GetColor(pBB, alpha);
+
+			// intersect 0 alpha part of billbard
+			if (FloatEqual(alpha, 0.0f))
+				distance = 0.0f;
+		}
+	}
+
+	return ret;
 }
 
 V3 TM::ClampColor(V3 color)
@@ -905,6 +921,8 @@ void TM::SetAllPointsColor(V3 color)
 		colors[vi] = color;
 	}
 }
+
+
 
 void TM::SphereMorph(V3 c, float r, float fract)
 {
