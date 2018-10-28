@@ -814,7 +814,7 @@ V3 TM::EnvMapping(PPC* ppc, FrameBuffer *fb, CubeMap* cubemap, V3 p, V3 n, float
 		return V3(0.0f);
 
 	auto gv = GlobalVariables::Instance();
-	V3 viewDir = (ppc->C - p).uni;
+	V3 viewDir = (ppc->C - p).UnitVector();
 
 	if (isRefraction)
 		viewDir = viewDir.Refract(n, gv->refractRatio);
@@ -863,7 +863,7 @@ int TM::EnvBBIntersection(vector<shared_ptr<BillBoard>> bbs, V3 p, V3 viewDir, f
 			// update closest color
 			t = 1.0f / t;
 			V3 pBB = p + viewDir * t;
-			bbColor = b->GetColor(pBB, alpha);
+			bbColor = b->mesh->tex.empty()? b->GetColor(pBB, alpha) : b->GetColor(b->fbTexture.get(),pBB,alpha);
 
 			// intersect 0 alpha part of billbard
 			if (FloatEqual(alpha, 0.0f))
