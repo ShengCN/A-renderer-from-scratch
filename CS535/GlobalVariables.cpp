@@ -34,7 +34,7 @@ GlobalVariables::GlobalVariables()
 	isLight = true;
 	isShadow = false;
 	isRefraction = false;
-	refractRatio = 0.95f;
+	refractRatio = 0.8f;
 
 	isRecording = true;
 }

@@ -183,7 +183,7 @@ void Scene::UpdateBBs()
 
 			int w = GlobalVariables::Instance()->resoW;
 			int h = GlobalVariables::Instance()->resoH;
-			float fovf = 55.0f;
+			float fovf = 45.0f;
 			shared_ptr<PPC> ppc = make_shared<PPC>(w, h, fovf);
 			shared_ptr<FrameBuffer> bbFB = make_shared<FrameBuffer>(0, 0, w, h);
 			ppc->PositionAndOrient(rCenter, otherTmCenter, V3(0.0f, 1.0f, 0.0f));
@@ -479,8 +479,8 @@ void Scene::InitDemo()
 	ground->isEnvMapping = false;
 	ground->isShowObjColor = true;
 
-	ground->SetQuad(V3(0.0f), V3(0.0f, 1.0f, 0.0f), V3(0.0f, 0.0f, -1.0f), 1.0f, 1.0f, 1.0f);
-	billboard->SetBillboard(V3(0.0f), V3(0.0f, 1.0f, 0.0f), V3(0.0f, 0.0f, -1.0f), 1.0f, 1.0f, 1.0f);
+	ground->SetQuad(V3(0.0f), V3(0.0f, 0.0f, 1.0f), V3(0.0f, 1.0f, 0.0f), 1.0f, 1.0f, 1.0f);
+	billboard->SetBillboard(V3(0.0f), V3(0.0f, 0.0f, 1.0f), V3(0.0f, 1.0f, 0.0f), 1.0f, 1.0f, 1.0f);
 
 	float obsz = 50.0f;
 	teapot->PositionAndSize(V3(0.0f), obsz);
@@ -503,7 +503,7 @@ void Scene::InitDemo()
 	sceneBillboard.push_back(billboard);
 
 	V3 tmC = ppc->C + ppc->GetVD() * 50.0f;
-	ppc->C = refletors[GlobalVariables::Instance()->tmAnimationID]->GetCenter() - tmC + V3(0.0f, 50.0f, 0.0f);
+	ppc->C = refletors[GlobalVariables::Instance()->tmAnimationID]->GetCenter() - tmC + V3(0.0f, 10.0f, 0.0f);
 	ppc->PositionAndOrient(ppc->C, refletors[GlobalVariables::Instance()->tmAnimationID]->GetCenter(),
 	                       V3(0.0f, 1.0f, 0.0f));
 

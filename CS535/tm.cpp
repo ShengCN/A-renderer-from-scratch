@@ -814,7 +814,7 @@ V3 TM::EnvMapping(PPC* ppc, FrameBuffer *fb, CubeMap* cubemap, V3 p, V3 n, float
 		return V3(0.0f);
 
 	auto gv = GlobalVariables::Instance();
-	V3 viewDir = ppc->C - p;
+	V3 viewDir = (ppc->C - p).uni;
 
 	if (isRefraction)
 		viewDir = viewDir.Refract(n, gv->refractRatio);
