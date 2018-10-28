@@ -5,7 +5,7 @@ class BillBoard
 {
 public:
 	shared_ptr<TM> mesh;
-	shared_ptr<FrameBuffer> texture;
+	shared_ptr<FrameBuffer> fbTexture;
 
 	BillBoard();
 	~BillBoard();
@@ -16,6 +16,7 @@ public:
 	V3 GetColor(FrameBuffer *fb, V3 p);
 	V3 GetColor(FrameBuffer *fb, V3 p, float &alpha);
 
+	void RenderBB(PPC *ppc, FrameBuffer *fb);
 private:
 	void GetST(V3 p, float &s, float &t);
 };

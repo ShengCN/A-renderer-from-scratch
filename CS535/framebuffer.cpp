@@ -16,6 +16,7 @@
 // #define SCREEN_SPACE_INTERPOLATION
 #define PERSPECTIVE_CORRECT_INTERPOLATION
 
+unordered_map<std::string, vector<shared_ptr<TextureInfo>>> FrameBuffer::textures;
 FrameBuffer::FrameBuffer(int u0, int v0, int _w, int _h)
 	: Fl_Gl_Window(u0, v0, _w, _h, nullptr)
 {
@@ -212,17 +213,17 @@ void FrameBuffer::SaveTextureAsTiff(string fname, const string textureName, int 
 		return;
 	}
 
-	TIFFSetField(out, TIFFTAG_IMAGEWIDTH, tex.w);
-	TIFFSetField(out, TIFFTAG_IMAGELENGTH, tex.h);
+	TIFFSetField(out, TIFFTAG_IMAGEWIDTH,  tex->w);
+	TIFFSetField(out, TIFFTAG_IMAGELENGTH, tex->h);
 	TIFFSetField(out, TIFFTAG_SAMPLESPERPIXEL, 4);
 	TIFFSetField(out, TIFFTAG_BITSPERSAMPLE, 8);
 	TIFFSetField(out, TIFFTAG_ORIENTATION, ORIENTATION_TOPLEFT);
 	TIFFSetField(out, TIFFTAG_PLANARCONFIG, PLANARCONFIG_CONTIG);
 	TIFFSetField(out, TIFFTAG_PHOTOMETRIC, PHOTOMETRIC_RGB);
 
-	for (uint32 row = 0; row < (unsigned int)tex.h; row++)
+	for (uint32 row = 0; row < (unsigned int)tex->h; row++)
 	{
-		TIFFWriteScanline(out, &tex.texture[(tex.h - row - 1) * tex.w], row);
+		TIFFWriteScanline(out, &tex->texture[(tex->h - row - 1) * tex->w], row);
 	}
 
 	TIFFClose(out);
@@ -341,10 +342,10 @@ bool FrameBuffer::LoadTexture(const std::string texFile)
 	{
 		textures.erase(texFile);
 	}
-	TextureInfo newTex;
-	newTex.texture = texMemory;
-	newTex.w = width;
-	newTex.h = height;
+	shared_ptr<TextureInfo> newTex = make_shared<TextureInfo>();
+	newTex->texture = texMemory;
+	newTex->w = width;
+	newTex->h = height;
 	textures[texFile].push_back(newTex);
 	TIFFClose(in);
 
@@ -611,10 +612,10 @@ void FrameBuffer::DrawTexture(const std::string texFile, int LoD)
 
 	auto tex = textures.at(texFile).back();
 	delete[] pix;
-	w = tex.w;
-	h = tex.h;
+	w = tex->w;
+	h = tex->h;
 	pix = new unsigned int[w*h];
-	copy(tex.texture.begin(), tex.texture.end(), pix);
+	copy(tex->texture.begin(), tex->texture.end(), pix);
 }
 
 void FrameBuffer::DrawCubeMap(PPC* ppc, CubeMap *cubemap)
@@ -732,9 +733,9 @@ V3 FrameBuffer::LookupColor(std::string texFile, float s, float t, float &alpha,
 	return c0 * (1.0f - fract) + c1 * fract;
 }
 
-V3 FrameBuffer::BilinearLookupColor(TextureInfo& tex, float s, float t)
+V3 FrameBuffer::BilinearLookupColor(float s, float t, float  &alpha)
 {
-	int texW = tex.w, texH = tex.h;
+	int texW = w, texH = h;
 	float textS = s * static_cast<float>(texW - 1);
 	float textT = t * static_cast<float>(texH - 1);
 
@@ -742,10 +743,54 @@ V3 FrameBuffer::BilinearLookupColor(TextureInfo& tex, float s, float t)
 	int u0 = max(0, static_cast<int>(textS - 0.5f)), v0 = max(0, static_cast<int>(textT - 0.5f));
 	int u1 = min(texW - 1, static_cast<int>(textS + 0.5f)), v1 = min(texH, static_cast<int>(textT + 0.5f));
 
-	unsigned int ori0 = tex.texture[(texH - 1 - v0) * texW + u0];
-	unsigned int ori1 = tex.texture[(texH - 1 - v0) * texW + u1];
-	unsigned int ori2 = tex.texture[(texH - 1 - v1) * texW + u0];
-	unsigned int ori3 = tex.texture[(texH - 1 - v1) * texW + u1];
+	unsigned int ori0 = pix[(texH - 1 - v0) * texW + u0];
+	unsigned int ori1 = pix[(texH - 1 - v0) * texW + u1];
+	unsigned int ori2 = pix[(texH - 1 - v1) * texW + u0];
+	unsigned int ori3 = pix[(texH - 1 - v1) * texW + u1];
+	V3 c0, c1, c2, c3;
+	c0.SetColor(ori0);
+	c1.SetColor(ori1);
+	c2.SetColor(ori2);
+	c3.SetColor(ori3);
+
+	auto GetAlpha = [&](unsigned int c)
+	{
+		float alpha = 0.0f;
+		unsigned char* rgba = (unsigned char*)&c;
+		alpha = static_cast<float>(rgba[3]) / 255.0f;
+		return alpha;
+	};
+
+	float a0, a1, a2, a3; // alpha
+	a0 = GetAlpha(ori0);
+	a1 = GetAlpha(ori1);
+	a2 = GetAlpha(ori2);
+	a3 = GetAlpha(ori3);
+
+	float uf0 = static_cast<float>(u0) + 0.5f, vf0 = static_cast<float>(v0) + 0.5f;
+	float intpS = Clamp(textS - uf0, 0.0f, 1.0f), intpT = Clamp(textT - vf0, 0.0f, 1.0f);
+
+	// commit result
+	alpha = a0 * (1.0f - intpS) * (1.0f - intpT) + a1 * intpS * (1.0f - intpT) + a2 * (1.0f - intpS) * intpT + a3 *
+		intpS * intpT;
+	return c0 * (1.0f - intpS) * (1.0f - intpT) + c1 * intpS * (1.0f - intpT) + c2 * (1.0f - intpS) * intpT + c3 * intpS
+		* intpT;
+}
+
+V3 FrameBuffer::BilinearLookupColor(shared_ptr<TextureInfo> tex, float s, float t)
+{
+	int texW = tex->w, texH = tex->h;
+	float textS = s * static_cast<float>(texW - 1);
+	float textT = t * static_cast<float>(texH - 1);
+
+	// corner case
+	int u0 = max(0, static_cast<int>(textS - 0.5f)), v0 = max(0, static_cast<int>(textT - 0.5f));
+	int u1 = min(texW - 1, static_cast<int>(textS + 0.5f)), v1 = min(texH, static_cast<int>(textT + 0.5f));
+
+	unsigned int ori0 = tex->texture[(texH - 1 - v0) * texW + u0];
+	unsigned int ori1 = tex->texture[(texH - 1 - v0) * texW + u1];
+	unsigned int ori2 = tex->texture[(texH - 1 - v1) * texW + u0];
+	unsigned int ori3 = tex->texture[(texH - 1 - v1) * texW + u1];
 	V3 c0, c1, c2, c3;
 	c0.SetColor(ori0);
 	c1.SetColor(ori1);
@@ -760,27 +805,20 @@ V3 FrameBuffer::BilinearLookupColor(TextureInfo& tex, float s, float t)
 		* intpT;
 }
 
-V3 FrameBuffer::BilinearLookupColor(TextureInfo &tex, float s, float t, float& alpha)
+V3 FrameBuffer::BilinearLookupColor(shared_ptr<TextureInfo> tex, float s, float t, float& alpha)
 {
-	int texW = tex.w, texH = tex.h;
+	int texW = tex->w, texH = tex->h;
 	float textS = s * static_cast<float>(texW - 1);
 	float textT = t * static_cast<float>(texH - 1);
-
-	// nearest
-	//	int u = int(textS);
-	//	int v = int(textT);
-	//	V3 c;
-	//	c.SetColor(tex.texture[(texH - 1 - v)*texW + u]);
-	//	return c;
 
 	// corner case
 	int u0 = max(0, static_cast<int>(textS - 0.5f)), v0 = max(0, static_cast<int>(textT - 0.5f));
 	int u1 = min(texW - 1, static_cast<int>(textS + 0.5f)), v1 = min(texH, static_cast<int>(textT + 0.5f));
 
-	unsigned int ori0 = tex.texture[(texH - 1 - v0) * texW + u0];
-	unsigned int ori1 = tex.texture[(texH - 1 - v0) * texW + u1];
-	unsigned int ori2 = tex.texture[(texH - 1 - v1) * texW + u0];
-	unsigned int ori3 = tex.texture[(texH - 1 - v1) * texW + u1];
+	unsigned int ori0 = tex->texture[(texH - 1 - v0) * texW + u0];
+	unsigned int ori1 = tex->texture[(texH - 1 - v0) * texW + u1];
+	unsigned int ori2 = tex->texture[(texH - 1 - v1) * texW + u0];
+	unsigned int ori3 = tex->texture[(texH - 1 - v1) * texW + u1];
 	V3 c0, c1, c2, c3;
 	c0.SetColor(ori0);
 	c1.SetColor(ori1);
@@ -830,18 +868,18 @@ void FrameBuffer::PrepareTextureLoD(const string texFile)
 	// continue downsampling to logn = 1
 	// Assumption: square image
 	auto curTex = textures[texFile][0];
-	int loDMax = static_cast<int>(log2(curTex.w)), curLoD = loDMax;
+	int loDMax = static_cast<int>(log2(curTex->w)), curLoD = loDMax;
 	textures[texFile].clear();
 	textures[texFile].resize(loDMax + 1);
 	textures[texFile][curLoD] = curTex;
 	
-	while (curTex.w >= 2)
+	while (curTex->w >= 2)
 	{
-		int nextW = curTex.w / 2, newLoD = curLoD - 1;
-		TextureInfo newTex;
-		newTex.w = nextW;
-		newTex.h = nextW;
-		newTex.texture.resize(nextW * nextW);
+		int nextW = curTex->w / 2, newLoD = curLoD - 1;
+		shared_ptr<TextureInfo> newTex = make_shared<TextureInfo>();
+		newTex->w = nextW;
+		newTex->h = nextW;
+		newTex->texture.resize(nextW * nextW);
 
 		auto GetPixColor = [&](vector<unsigned int>& pix,int w, int h, int u, int v)
 		{
@@ -854,19 +892,19 @@ void FrameBuffer::PrepareTextureLoD(const string texFile)
 		};
 
 		// filtering original image to get new texture
-		for (int ustep = 0; ustep < curTex.w / 2; ++ustep)
+		for (int ustep = 0; ustep < curTex->w / 2; ++ustep)
 		{
-			for (int vstep = 0; vstep < curTex.h / 2; ++vstep)
+			for (int vstep = 0; vstep < curTex->h / 2; ++vstep)
 			{
 				int u0 = ustep * 2 + 0, u1 = ustep * 2 + 1;
 				int v0 = vstep * 2 + 0, v1 = vstep * 2 + 1;
 				V3 c0(0.0f), c1(0.0f), c2(0.0f), c3(0.0f);
-				c0.SetColor(GetPixColor(curTex.texture, curTex.w, curTex.h, u0, v0));
-				c1.SetColor(GetPixColor(curTex.texture, curTex.w, curTex.h, u0, v1));
-				c2.SetColor(GetPixColor(curTex.texture, curTex.w, curTex.h, u1, v0));
-				c3.SetColor(GetPixColor(curTex.texture, curTex.w, curTex.h, u1, v1));
+				c0.SetColor(GetPixColor(curTex->texture, curTex->w, curTex->h, u0, v0));
+				c1.SetColor(GetPixColor(curTex->texture, curTex->w, curTex->h, u0, v1));
+				c2.SetColor(GetPixColor(curTex->texture, curTex->w, curTex->h, u1, v0));
+				c3.SetColor(GetPixColor(curTex->texture, curTex->w, curTex->h, u1, v1));
 				V3 c = (c0 + c1 + c2 + c3) * 0.25f;
-				SetPixColor(newTex.texture, c, newTex.w, newTex.h, ustep, vstep);
+				SetPixColor(newTex->texture, c, newTex->w, newTex->h, ustep, vstep);
 			}
 		}
 

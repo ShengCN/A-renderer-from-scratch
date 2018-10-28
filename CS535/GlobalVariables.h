@@ -3,6 +3,7 @@
 #include "TM.h"
 #include "scene.h"
 
+// Singleton object to capsulate all global variables
 class GlobalVariables
 {
 public:

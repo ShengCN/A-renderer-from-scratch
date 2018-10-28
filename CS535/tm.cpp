@@ -252,23 +252,22 @@ void TM::RenderFill(PPC* ppc, FrameBuffer* fb)
 						continue;
 
 					div = 1.0f / div;
-					float k = V3(u, v, 1.0f) * qM[1] * div;
-					float l = V3(u, v, 1.0f) * qM[2] * div;
 					float wv = qM.GetColumn(0) * V3(u, u, u) + qM.GetColumn(1) * V3(v, v, v) + qM.GetColumn(2) * V3(1.0f);
-					V3 st0(p0.s, p0.t, 0.0f), st1(p1.s, p1.t, 0.0f), st2(p2.s, p2.t, 0.0f);
 
 					if (gv->depthTest && !fb->Visible(u, v, wv))
 						continue;
 
 					uvP[2] = wv;
+					float k = V3(u, v, 1.0f) * qM[1] * div;
+					float l = V3(u, v, 1.0f) * qM[2] * div;
+					V3 st0(p0.s, p0.t, 0.0f), st1(p1.s, p1.t, 0.0f), st2(p2.s, p2.t, 0.0f);
 					V3 st = st0 + (st1 - st0) * k + (st2 - st0) * l;
 					V3 pc = p0.c + (p1.c - p0.c) * k + (p2.c - p0.c) * l;
 					V3 pn = p0.n + (p1.n - p0.n) * k + (p2.n - p0.n) * l;
 					V3 p = ppc->Unproject(uvP);
 
-					PointProperty pp(p, pc, pn, st[0], st[1]);
-
 					// shading
+					PointProperty pp(p, pc, pn, st[0], st[1]);
 					float alpha = 1.0f;
 					V3 color = Shading(ppc, fb, u, v, wv, pp, alpha);
 
@@ -411,6 +410,106 @@ void TM::RenderAABB(PPC* ppc, FrameBuffer* fb)
 	fb->Draw3DSegment(ppc, p4, blue, p6, blue);
 	fb->Draw3DSegment(ppc, p5, blue, p7, blue);
 	fb->Draw3DSegment(ppc, p6, blue, p7, blue);
+}
+
+void TM::RenderBB(PPC* ppc, FrameBuffer* fb, FrameBuffer* bbTexture)
+{
+	auto gv = GlobalVariables::Instance();
+	for (int ti = 0; ti < trisN; ++ti)
+	{
+		int vi0 = tris[ti * 3 + 0];
+		int vi1 = tris[ti * 3 + 1];
+		int vi2 = tris[ti * 3 + 2];
+
+		bool hasTexture = false;
+		if (vertST.size() == verts.size() * 2) hasTexture = true;
+
+		PointProperty p0(verts[vi0], colors[vi0], normals[vi0], hasTexture ? vertST[vi0 * 2] : 0.0f,
+			hasTexture ? vertST[vi0 * 2 + 1] : 0.0f);
+		PointProperty p1(verts[vi1], colors[vi1], normals[vi1], hasTexture ? vertST[vi1 * 2] : 0.0f,
+			hasTexture ? vertST[vi1 * 2 + 1] : 0.0f);
+		PointProperty p2(verts[vi2], colors[vi2], normals[vi2], hasTexture ? vertST[vi2 * 2] : 0.0f,
+			hasTexture ? vertST[vi2 * 2 + 1] : 0.0f);
+
+		// According to loD, do trilinear in texture look up
+		V3 pp0, pp1, pp2;
+		if (!ppc->Project(p0.p, pp0))
+			return;
+		if (!ppc->Project(p1.p, pp1))
+			return;
+		if (!ppc->Project(p2.p, pp2))
+			return;
+
+		if (pp0[0] == FLT_MAX ||
+			pp1[0] == FLT_MAX ||
+			pp2[0] == FLT_MAX)
+			return;
+
+		AABB bbTri(pp0);
+		bbTri.AddPoint(pp1);
+		bbTri.AddPoint(pp2);
+		if (!bbTri.Clip2D(0, fb->w - 1, 0, fb->h - 1))
+			return;
+
+		M33 abcM;
+		abcM.SetColumn(0, ppc->a);
+		abcM.SetColumn(1, ppc->b);
+		abcM.SetColumn(2, ppc->c);
+		M33 vcM;
+		vcM.SetColumn(0, p0.p - ppc->C);
+		vcM.SetColumn(1, p1.p - ppc->C);
+		vcM.SetColumn(2, p2.p - ppc->C);
+		M33 qM = vcM.Inverse() * abcM;
+
+		// Rasterize bbox
+		int left = static_cast<int>(bbTri.corners[0][0] + 0.5f), right = static_cast<int>(bbTri.corners[1][0] - 0.5f);
+		int top = static_cast<int>(bbTri.corners[0][1] + 0.5f), bottom = static_cast<int>(bbTri.corners[1][1] - 0.5f);
+
+		for (int v = top; v <= bottom; ++v)
+		{
+			for (int u = left; u <= right; ++u)
+			{
+				V3 uvP(static_cast<float>(u) + 0.5f, static_cast<float>(v) + 0.5f, 1.0f);
+				bool s1 = Side2D(uvP, pp0, pp1, pp2);
+				bool s2 = Side2D(uvP, pp1, pp2, pp0);
+				bool s3 = Side2D(uvP, pp2, pp0, pp1);
+
+				if (s1 && s2 && s3)
+				{
+					float div = (qM.GetColumn(0) * V3(u, u, u) + qM.GetColumn(1) * V3(v, v, v) + qM.GetColumn(2) * V3(1.0f));
+
+					if (FloatEqual(div, 0.0f) || isnan(div))
+						continue;
+
+					div = 1.0f / div;
+					float wv = qM.GetColumn(0) * V3(u, u, u) + qM.GetColumn(1) * V3(v, v, v) + qM.GetColumn(2) * V3(1.0f);
+
+					if (gv->depthTest && !fb->Visible(u, v, wv))
+						continue;
+
+					uvP[2] = wv;
+					float k = V3(u, v, 1.0f) * qM[1] * div;
+					float l = V3(u, v, 1.0f) * qM[2] * div;
+					V3 st0(p0.s, p0.t, 0.0f), st1(p1.s, p1.t, 0.0f), st2(p2.s, p2.t, 0.0f);
+					V3 st = st0 + (st1 - st0) * k + (st2 - st0) * l;
+
+					// shading
+					float s = st[0], t = st[1], alpha = 0.0f;
+					V3 color = bbTexture->BilinearLookupColor(s, t, alpha);
+
+					// alpha blending 
+					if (!FloatEqual(alpha, 1.0f))
+					{
+						V3 bgC(0.0f);
+						bgC.SetColor(fb->Get(u, v));
+						color = color * alpha + bgC * (1.0f - alpha);
+					}
+
+					fb->DrawPoint(u, v, color.GetColor());
+				}
+			}
+		}
+	}
 }
 
 void TM::RotateAboutArbitraryAxis(V3 O, V3 a, float angled)

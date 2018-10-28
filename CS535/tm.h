@@ -44,6 +44,7 @@ public:
 	void RenderFill(PPC *ppc, FrameBuffer *fb);
 	void RenderFillZ(PPC *ppc, FrameBuffer *fb); // only draw z buffer
 	void RenderAABB(PPC *ppc, FrameBuffer *fb);
+	void RenderBB(PPC *ppc, FrameBuffer *fb, FrameBuffer *bbTexture);
 	void RotateAboutArbitraryAxis(V3 O, V3 a, float angled);
 	void Translate(V3 tv);
 	void Scale(float scf);		// normalize size to some scf

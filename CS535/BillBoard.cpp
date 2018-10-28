@@ -68,6 +68,11 @@ V3 BillBoard::GetColor(FrameBuffer* fb, V3 p, float& alpha)
 	return  fb->LookupColor(mesh->tex, s, t, alpha);
 }
 
+void BillBoard::RenderBB(PPC* ppc, FrameBuffer* fb)
+{
+	mesh->RenderBB(ppc, fb, fbTexture.get());
+}
+
 void BillBoard::GetST(V3 p, float& s, float& t)
 {
 	V3 p0 = mesh->verts[0];

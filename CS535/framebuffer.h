@@ -27,7 +27,7 @@ public:
 	float *zb;			// z buffer
 	int w, h;
 
-	unordered_map<std::string, vector<TextureInfo>> textures; // use file name as index, different Lod, 0 is default
+	static unordered_map<std::string, vector<shared_ptr<TextureInfo>>> textures; 
 
 	FrameBuffer(int u0, int v0, int _w, int _h);
 	void draw();
@@ -65,8 +65,9 @@ public:
 	void VisualizeCurrView(PPC *ppc0, float currf, PPC *ppc1, FrameBuffer *fb1);
 	void VisualizeCurrView3D(PPC *ppc0, PPC *ppc1, FrameBuffer *fb1); 
 	V3 LookupColor(std::string texFile, float s, float t, float &alpha, int pixelSz = -1);
-	V3 BilinearLookupColor(TextureInfo &tex, float s, float t);
-	V3 BilinearLookupColor(TextureInfo &tex, float s, float t, float &alpha);
+	V3 BilinearLookupColor(float s, float t, float &alpha);
+	V3 BilinearLookupColor(shared_ptr<TextureInfo> tex, float s, float t);
+	V3 BilinearLookupColor(shared_ptr<TextureInfo> tex, float s, float t, float &alpha);
 	V3 Light(PointProperty pp, V3 L, PPC *ppc);	// point property, ppc
 
 	// Texture downsampling
