@@ -479,8 +479,8 @@ void Scene::InitDemo()
 	ground->isEnvMapping = false;
 	ground->isShowObjColor = true;
 
-	ground->SetQuad(V3(0.0f), V3(0.0f, 0.0f, 1.0f), V3(0.0f, 1.0f, 0.0f), 1.0f, 1.0f, 1.0f);
-	billboard->SetBillboard(V3(0.0f), V3(0.0f, 0.0f, 1.0f), V3(0.0f, 1.0f, 0.0f), 1.0f, 1.0f, 1.0f);
+	ground->SetQuad(V3(0.0f), V3(0.0f, 1.0f, 0.0f), V3(0.0f, 0.0f, -1.0f), 1.0f, 1.0f, 1.0f);
+	billboard->SetBillboard(V3(0.0f), V3(0.0f, 1.0f, 0.0f), V3(0.0f, 0.0f, -1.0f), 1.0f, 1.0f, 1.0f);
 
 	float obsz = 50.0f;
 	teapot->PositionAndSize(V3(0.0f), obsz);
@@ -527,9 +527,9 @@ void Scene::Demonstration()
 	for (int stepi = 0; stepi < stepN; ++stepi)
 	{
 		float fract = static_cast<float>(stepi) / static_cast<float>(stepN - 1);
-		refletors[GlobalVariables::Instance()->tmAnimationID]->SphereMorph(teapotC, 13.0f, fract);
-		refletors[GlobalVariables::Instance()->tmAnimationID]->WaterAnimation(stepi);
-		refletors[2]->Translate(disAB * 0.6f);
+		refletors[GlobalVariables::Instance()->tmAnimationID]->SphereMorph(teapotC, 13.0f, 0.01f);
+		refletors[GlobalVariables::Instance()->tmAnimationID]->WaterAnimation(stepi * 0.5f);
+		refletors[2]->Translate(disAB * 0.4f);
 
 		// ppc->RevolveH(refletors[0]->GetCenter(), 1.0f);
 		// sceneBillboard[0]->mesh->Translate(V3(0.0f, 0.0f, -1.0f));
@@ -545,4 +545,6 @@ void Scene::Demonstration()
 			fb->SaveAsTiff(buffer);
 		}
 	}
+	cerr << "Finished! \n";
+
 }
