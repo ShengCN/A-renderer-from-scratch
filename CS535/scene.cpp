@@ -466,7 +466,7 @@ void Scene::InitDemo()
 	teapot->LoadModelBin("geometry/teapot1K.bin");
 	teapot->isEnvMapping = true;
 	teapot->isShowObjColor = false;
-	teapot->isRefraction = true;
+	teapot->isRefraction = false;
 	teapot1->LoadModelBin("geometry/teapot1K.bin");
 	teapot1->isEnvMapping = true;
 	teapot1->isShowObjColor = true;
