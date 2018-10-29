@@ -282,7 +282,7 @@ bool FrameBuffer::IsInScreen(int u, int v)
 	return true;
 }
 
-void FrameBuffer::ClearBGR(unsigned bgr, float z0)
+void FrameBuffer::ClearBGRZ(unsigned bgr, float z0)
 {
 	SetBGR(bgr);
 	ClearZ(z0);
@@ -293,7 +293,7 @@ void FrameBuffer::ClearZ(float z0)
 	 memset(zb, z0, sizeof(float) * w * h);
 }
 
-bool FrameBuffer::Visible(int u, int v, float curz)
+bool FrameBuffer::DepthTest(int u, int v, float curz)
 {
 	// First, u, v should be in screen
 	if (!IsInScreen(u, v))
@@ -390,7 +390,7 @@ void FrameBuffer::DrawSegment(V3 p0, V3 c0, V3 p1, V3 c1)
 		int v = static_cast<int>(point[1]);
 
 		// Depth test
-		if (Visible(u, v, point[2]))
+		if (DepthTest(u, v, point[2]))
 			SetGuarded(u, v, color.GetColor());
 	}
 }
@@ -515,7 +515,7 @@ void FrameBuffer::Draw3DTriangle(PPC* camera, V3 p1, V3 p2, V3 p3, V3 color)
 
 				// Depth test
 				float ppz = ABC * V3(pp0[2], pp0[2], pp1[2]);
-				if (Visible(u, v, ppz))
+				if (DepthTest(u, v, ppz))
 					DrawPoint(u, v, color.GetColor());
 			}
 		}
@@ -591,7 +591,7 @@ void FrameBuffer::Draw3DTriangle(PPC* ppc, V3 p0, V3 c0, V3 p1, V3 c1, V3 p2, V3
 				  float ppb = abcB * pp;
 				  float ppz = abcZ * pp;
 				  c = V3(ppr, ppg, ppb);
-				  if(Visible(u,v,ppz))
+				  if(DepthTest(u,v,ppz))
 				  	DrawPoint(u, v, c.GetColor()); 
 
 #elif defined(PERSPECTIVE_CORRECT_INTERPOLATION)
@@ -602,7 +602,7 @@ void FrameBuffer::Draw3DTriangle(PPC* ppc, V3 p0, V3 c0, V3 p1, V3 c1, V3 p2, V3
 				float l = V3(u, v, 1.0f) * qM[2] / (qM.GetColumn(0) * V3(u, u, u) + qM.GetColumn(1) * V3(v, v, v) + qM.
 					GetColumn(2) * V3(1.0f));
 				float w = qM.GetColumn(0) * V3(u, u, u) + qM.GetColumn(1) * V3(v, v, v) + qM.GetColumn(2) * V3(1.0f);
-				if (Visible(u, v, w))
+				if (DepthTest(u, v, w))
 				{
 					V3 c = c0 + (c1 - c0) * k + (c2 - c0) * l;
 					DrawPoint(u, v, c.GetColor());

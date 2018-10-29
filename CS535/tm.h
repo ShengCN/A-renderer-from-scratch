@@ -40,6 +40,8 @@ public:
 	void SetBillboard(V3 O, V3 n, V3 up, float sz, float s = 1.0f, float t = 1.0f);
 	void SetText(std::string tf);
 	void Allocate();
+
+	// Rasterization
 	void RenderPoints(PPC *ppc, FrameBuffer *fb);
 	void RenderWireFrame(PPC *ppc, FrameBuffer *fb);
 	void RenderFill(PPC *ppc, FrameBuffer *fb);
@@ -53,6 +55,9 @@ public:
 	AABB ComputeAABB();
 	void PositionAndSize(V3 tmC, float tmSize);
 	V3 GetCenter();
+
+	// Ray tracing
+	void RayTracing(PPC *ppc, FrameBuffer *fb);
 
 	// Shading
 	V3 Shading(PPC *ppc, FrameBuffer *fb, int u, int v, float w, PointProperty& pp, float &alpha);
@@ -69,6 +74,9 @@ public:
 	// Morphing
 	void SphereMorph(V3 c,float r, float fract);
 	void WaterAnimation(float t);
+
+	// Rendering process
+	tuple<float, float, float, float> RayTriangleIntersect(V3 C, V3 ray, V3 p0, V3 p1, V3 p2);
 
 	~TM();
 	static int tmIDCounter;

@@ -254,7 +254,7 @@ void TM::RenderFill(PPC* ppc, FrameBuffer* fb)
 					div = 1.0f / div;
 					float wv = qM.GetColumn(0) * V3(u, u, u) + qM.GetColumn(1) * V3(v, v, v) + qM.GetColumn(2) * V3(1.0f);
 
-					if (gv->depthTest && !fb->Visible(u, v, wv))
+					if (gv->depthTest && !fb->DepthTest(u, v, wv))
 						continue;
 
 					uvP[2] = wv;
@@ -363,7 +363,7 @@ void TM::RenderFillZ(PPC* ppc, FrameBuffer* fb)
 				if (s1 && s2 && s3)
 				{
 					float wv = qM.GetColumn(0) * V3(u, u, u) + qM.GetColumn(1) * V3(v, v, v) + qM.GetColumn(2) * V3(1.0f);
-					if (gv->depthTest && !fb->Visible(u, v, wv))
+					if (gv->depthTest && !fb->DepthTest(u, v, wv))
 						continue;
 
 					if (gv->debugZbuffer)
@@ -484,7 +484,7 @@ void TM::RenderBB(PPC* ppc, FrameBuffer* fb, FrameBuffer* bbTexture)
 					div = 1.0f / div;
 					float wv = qM.GetColumn(0) * V3(u, u, u) + qM.GetColumn(1) * V3(v, v, v) + qM.GetColumn(2) * V3(1.0f);
 
-					if (gv->depthTest && !fb->Visible(u, v, wv))
+					if (gv->depthTest && !fb->DepthTest(u, v, wv))
 						continue;
 
 					uvP[2] = wv;
@@ -635,6 +635,42 @@ V3 TM::GetCenter()
 	AABB aabb(verts[0]);
 	aabb = ComputeAABB();
 	return aabb.GetCenter();
+}
+
+void TM::RayTracing(PPC* ppc, FrameBuffer* fb)
+{
+	auto C = ppc->C;
+
+
+	for (int v = 0; v < fb->h; ++v)
+	{
+		fb->DrawRectangle(0, v, fb->w - 1, v + 1, 0xFF0000FF);
+		fb->redraw();
+		Fl::check();
+
+		fb->DrawRectangle(0, v, fb->w - 1, v + 1, 0xFFFFFFFF);
+		for (int u = 0; u < fb->w; ++u)
+		{
+			for(int ti = 0; ti < trisN; ++ti)
+			{
+				auto index0 = tris[3 * ti + 0], index1 = tris[3 * ti + 1], index2 = tris[3 * ti + 2];
+				V3 p0 = verts[index0];
+				V3 p1 = verts[index1];
+				V3 p2 = verts[index2];
+				auto[a, b, c, w] = RayTriangleIntersect(ppc->C, ppc->GetRay(u, v), p0, p1, p2);
+
+				// pruning branches
+				if( a < 0.0f || b < 0.0f || c < 0.0f || w < 0.0f)
+					continue;
+				if(!fb->DepthTest(u,v,w))
+					continue;
+
+				// Shading
+				V3 color = colors[index0] * a + colors[index1] * b + colors[index2] * c;
+				fb->SetGuarded(u, v, color.GetColor());
+			}
+		}
+	}
 }
 
 V3 TM::Shading(PPC* ppc, FrameBuffer *fb, int u, int v, float w, PointProperty& pp, float &alpha)
@@ -957,6 +993,21 @@ void TM::WaterAnimation(float t)
 		// commit result
 		verts[vi] = vp;
 	}
+}
+
+tuple<float, float, float, float> TM::RayTriangleIntersect(V3 C, V3 ray, V3 p0, V3 p1, V3 p2)
+{
+	M33 m;
+	m.SetColumn(0, p0);
+	m.SetColumn(1, p1);
+	m.SetColumn(2, p2);
+	m = m.Inverse();
+	V3 q1 = m * C, q2 = m * ray;
+
+	float w = (1.0f - V3(1.0f) * q1) / (V3(1.0f) * q2);
+	V3 abc = q1 + q2 * w;
+
+	return tuple<float, float, float, float>(abc[0], abc[1], abc[2], 1.0f / w);
 }
 
 TM::~TM()

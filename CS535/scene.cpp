@@ -44,8 +44,6 @@ Scene::Scene(): isRenderAABB(false)
 	gui->uiw->position(u0, v0 + fb->h + 60);
 
 	InitDemo();
-
-	Render();
 }
 
 void Scene::Render()
@@ -65,7 +63,7 @@ void Scene::Render()
 	{
 		float currf = 40.0f;
 
-		fb3->ClearBGR(0xFFFFFFFF, 0.0f);
+		fb3->ClearBGRZ(0xFFFFFFFF, 0.0f);
 		fb3->DrawPPC(ppc3, ppc, currf);
 		fb->VisualizeCurrView(ppc, currf, ppc3, fb3); // using a 3rd ppc to visualize current ppc
 		fb->VisualizeCurrView3D(ppc, ppc3, fb3); // using a 3rd ppc to visualize current ppc
@@ -92,7 +90,7 @@ void Scene::Render(PPC* currPPC, FrameBuffer* currFB)
 {
 	if (currFB)
 	{
-		currFB->ClearBGR(0xFF999999, 0.0f);
+		currFB->ClearBGRZ(0xFF999999, 0.0f);
 		currFB->DrawCubeMap(currPPC, cubemap.get());
 
 		for (auto t : meshes)
@@ -116,7 +114,7 @@ void Scene::Render(PPC* currPPC, FrameBuffer* currFB)
 
 void Scene::RenderWireFrame()
 {
-	fb->ClearBGR(0xFFFFFFFF, 0.0f);
+	fb->ClearBGRZ(0xFFFFFFFF, 0.0f);
 
 	// Draw all triangles
 	for_each(meshes.begin(), meshes.end(), [&](TM* t) { t->RenderWireFrame(ppc, fb); });
@@ -132,7 +130,7 @@ void Scene::RenderZbuffer(PPC* currPPC, FrameBuffer* currFB)
 		currFB->ClearZ(0.0f);
 
 		if (GlobalVariables::Instance()->debugZbuffer)
-			currFB->ClearBGR(0xFF000000, 0.0f);
+			currFB->ClearBGRZ(0xFF000000, 0.0f);
 
 		// Draw all triangles
 		for (auto m : meshes)
@@ -206,7 +204,7 @@ void Scene::RenderBB(PPC* currPPC, FrameBuffer* currFB, TM* reflector)
 {
 	if (currPPC && currFB && reflector)
 	{
-		currFB->ClearBGR(0x00999999, 0.0f);
+		currFB->ClearBGRZ(0x00999999, 0.0f);
 		reflector->RenderFill(currPPC, currFB);
 		currFB->redraw();
 	}
@@ -418,7 +416,7 @@ void Scene::InitializeLights()
 	shared_ptr<FrameBuffer> l0SM = make_shared<FrameBuffer>(u0 + fb->w * 2 + 30, v0, w, h);
 	l0SM->label("Light 1 Shadows");
 
-	l0SM->ClearBGR(0xFFFFFFFF, 0.0f);
+	l0SM->ClearBGRZ(0xFFFFFFFF, 0.0f);
 	l0PPC->PositionAndOrient(L0, meshes[0]->GetCenter(), V3(0.0f, 1.0f, 0.0f));
 
 	// commit to framebuffer
@@ -429,92 +427,117 @@ void Scene::InitializeLights()
 
 void Scene::InitDemo()
 {
-	cubemap = make_shared<CubeMap>();
+	{
+		// Try ray tracing
+		TM *mesh = new TM();
+		mesh->LoadModelBin("geometry/teapot1K.bin");
+		mesh->PositionAndSize(0.0f, 50.0f);
+		meshes.push_back(mesh);
 
-	// prepare cubemap
-	string folder = "images/cubemaps/";
-	vector<string> fnames{
-		folder + "top.tiff",
-		folder + "front.tiff",
-		folder + "ground.tiff",
-		folder + "back.tiff",
-		folder + "right.tiff",
-		folder + "left.tiff"
-	};
-	float fovf = 90.0f;
-	vector<shared_ptr<PPC>> cubemapPPCs;
-	cubemapPPCs.push_back(make_shared<PPC>(480, 480, fovf));
-	cubemapPPCs.push_back(make_shared<PPC>(480, 480, fovf));
-	cubemapPPCs.push_back(make_shared<PPC>(480, 480, fovf));
-	cubemapPPCs.push_back(make_shared<PPC>(480, 480, fovf));
-	cubemapPPCs.push_back(make_shared<PPC>(480, 480, fovf));
-	cubemapPPCs.push_back(make_shared<PPC>(480, 480, fovf));
-	cubemapPPCs[0]->PositionAndOrient(V3(0.0f), V3(0.0f, 1.0f, 0.0f), V3(0.0f, 0.0f, 1.0f));
-	cubemapPPCs[1]->PositionAndOrient(V3(0.0f), V3(0.0f, 0.0f, -1.0f), V3(0.0f, 1.0f, 0.0f));
-	cubemapPPCs[2]->PositionAndOrient(V3(0.0f), V3(0.0f, -1.0f, 0.0f), V3(0.0f, 0.0f, -1.0f));
-	cubemapPPCs[3]->PositionAndOrient(V3(0.0f), V3(0.0f, 0.0f, 1.0f), V3(0.0f, 1.0f, 0.0f));
-	cubemapPPCs[4]->PositionAndOrient(V3(0.0f), V3(-1.0f, 0.0f, 0.0f), V3(0.0f, 1.0f, 0.0f));
-	cubemapPPCs[5]->PositionAndOrient(V3(0.0f), V3(1.0f, 0.0f, 0.0f), V3(0.0f, 1.0f, 0.0f));
-	cubemap->LoadCubeMap(fnames, cubemapPPCs);
+		// Position PPCs
+		V3 tmC = ppc->C + ppc->GetVD() * 50.0f;
+		ppc->C = meshes[0]->GetCenter() - tmC;
+		ppc->PositionAndOrient(ppc->C, meshes[0]->GetCenter(), V3(0.0f, 1.0f, 0.0f));
 
-	// Init objects
-	TM* ground = new TM();
-	auto teapot = make_shared<TM>();
-	auto teapot1 = make_shared<TM>();
-	auto teapot2 = make_shared<TM>();
-	shared_ptr<BillBoard> billboard = make_shared<BillBoard>();
-	teapot->LoadModelBin("geometry/teapot1K.bin");
-	teapot->isEnvMapping = true;
-	teapot->isShowObjColor = false;
-	teapot->isRefraction = false;
-	teapot1->LoadModelBin("geometry/teapot1K.bin");
-	teapot1->isEnvMapping = true;
-	teapot1->isShowObjColor = true;
-	teapot1->SetAllPointsColor(V3(0.0f, 0.0f, 0.7f));
+		ppc3->C = ppc3->C + V3(330.0f, 150.0f, 300.0f);
+		ppc3->PositionAndOrient(ppc3->C, meshes[0]->GetCenter(), V3(0.0f, 1.0f, 0.0f));
 
-	teapot2->LoadModelBin("geometry/teapot1K.bin");
-	teapot2->isEnvMapping = true;
-	teapot2->isShowObjColor = false;
+		fb->ClearBGRZ(0xFFFFFFFF, 0.0f);
+		meshes[0]->RayTracing(ppc, fb);
+		fb->redraw();
+		return;
+	}
 
-	ground->isEnvMapping = false;
-	ground->isShowObjColor = true;
+	{
+		cubemap = make_shared<CubeMap>();
 
-	ground->SetQuad(V3(0.0f), V3(0.0f, 1.0f, 0.0f), V3(0.0f, 0.0f, -1.0f), 1.0f, 1.0f, 1.0f);
-	billboard->SetBillboard(V3(0.0f), V3(0.0f, 1.0f, 0.0f), V3(0.0f, 0.0f, -1.0f), 1.0f, 1.0f, 1.0f);
+		// prepare cubemap
+		string folder = "images/cubemaps/";
+		vector<string> fnames{
+			folder + "top.tiff",
+			folder + "front.tiff",
+			folder + "ground.tiff",
+			folder + "back.tiff",
+			folder + "right.tiff",
+			folder + "left.tiff"
+		};
+		float fovf = 90.0f;
+		vector<shared_ptr<PPC>> cubemapPPCs;
+		cubemapPPCs.push_back(make_shared<PPC>(480, 480, fovf));
+		cubemapPPCs.push_back(make_shared<PPC>(480, 480, fovf));
+		cubemapPPCs.push_back(make_shared<PPC>(480, 480, fovf));
+		cubemapPPCs.push_back(make_shared<PPC>(480, 480, fovf));
+		cubemapPPCs.push_back(make_shared<PPC>(480, 480, fovf));
+		cubemapPPCs.push_back(make_shared<PPC>(480, 480, fovf));
+		cubemapPPCs[0]->PositionAndOrient(V3(0.0f), V3(0.0f, 1.0f, 0.0f), V3(0.0f, 0.0f, 1.0f));
+		cubemapPPCs[1]->PositionAndOrient(V3(0.0f), V3(0.0f, 0.0f, -1.0f), V3(0.0f, 1.0f, 0.0f));
+		cubemapPPCs[2]->PositionAndOrient(V3(0.0f), V3(0.0f, -1.0f, 0.0f), V3(0.0f, 0.0f, -1.0f));
+		cubemapPPCs[3]->PositionAndOrient(V3(0.0f), V3(0.0f, 0.0f, 1.0f), V3(0.0f, 1.0f, 0.0f));
+		cubemapPPCs[4]->PositionAndOrient(V3(0.0f), V3(-1.0f, 0.0f, 0.0f), V3(0.0f, 1.0f, 0.0f));
+		cubemapPPCs[5]->PositionAndOrient(V3(0.0f), V3(1.0f, 0.0f, 0.0f), V3(0.0f, 1.0f, 0.0f));
+		cubemap->LoadCubeMap(fnames, cubemapPPCs);
 
-	float obsz = 50.0f;
-	teapot->PositionAndSize(V3(0.0f), obsz);
-	teapot1->PositionAndSize(V3(obsz * 0.75f, 0.0f, -obsz * 0.75f), obsz);
-	teapot2->PositionAndSize(V3(-obsz * 0.75f, 0.0f, -obsz * 0.75f), obsz);
+		// Init objects
+		TM* ground = new TM();
+		auto teapot = make_shared<TM>();
+		auto teapot1 = make_shared<TM>();
+		auto teapot2 = make_shared<TM>();
+		shared_ptr<BillBoard> billboard = make_shared<BillBoard>();
+		teapot->LoadModelBin("geometry/teapot1K.bin");
+		teapot->isEnvMapping = true;
+		teapot->isShowObjColor = false;
+		teapot->isRefraction = false;
+		teapot1->LoadModelBin("geometry/teapot1K.bin");
+		teapot1->isEnvMapping = true;
+		teapot1->isShowObjColor = true;
+		teapot1->SetAllPointsColor(V3(0.0f, 0.0f, 0.7f));
 
-	// Textures
-	string checkerBoxTexName = GlobalVariables::Instance()->checkerBoxTexName;
-	fb->LoadTexture(checkerBoxTexName);
+		teapot2->LoadModelBin("geometry/teapot1K.bin");
+		teapot2->isEnvMapping = true;
+		teapot2->isShowObjColor = false;
 
-	ground->PositionAndSize(teapot->GetCenter() + V3(0.0f, -obsz * 0.3f, 0.0f), obsz * 2.0f);
-	ground->SetText(checkerBoxTexName);
-	billboard->mesh->PositionAndSize(teapot->GetCenter() + V3(0.0f, -obsz * 0.3f, 0.0f), obsz * 2.0f);
-	billboard->mesh->SetText(checkerBoxTexName);
+		ground->isEnvMapping = false;
+		ground->isShowObjColor = true;
 
-	meshes.push_back(ground);
-	refletors.push_back(teapot);
-	refletors.push_back(teapot1);
-	refletors.push_back(teapot2);
-	sceneBillboard.push_back(billboard);
+		ground->SetQuad(V3(0.0f), V3(0.0f, 1.0f, 0.0f), V3(0.0f, 0.0f, -1.0f), 1.0f, 1.0f, 1.0f);
+		billboard->SetBillboard(V3(0.0f), V3(0.0f, 1.0f, 0.0f), V3(0.0f, 0.0f, -1.0f), 1.0f, 1.0f, 1.0f);
 
-	V3 tmC = ppc->C + ppc->GetVD() * 50.0f;
-	ppc->C = refletors[GlobalVariables::Instance()->tmAnimationID]->GetCenter() - tmC + V3(0.0f, 10.0f, 0.0f);
-	ppc->PositionAndOrient(ppc->C, refletors[GlobalVariables::Instance()->tmAnimationID]->GetCenter(),
-	                       V3(0.0f, 1.0f, 0.0f));
+		float obsz = 50.0f;
+		teapot->PositionAndSize(V3(0.0f), obsz);
+		teapot1->PositionAndSize(V3(obsz * 0.75f, 0.0f, -obsz * 0.75f), obsz);
+		teapot2->PositionAndSize(V3(-obsz * 0.75f, 0.0f, -obsz * 0.75f), obsz);
 
-	ppc3->C = ppc3->C + V3(330.0f, 150.0f, 300.0f);
-	ppc3->PositionAndOrient(ppc3->C, refletors[GlobalVariables::Instance()->tmAnimationID]->GetCenter(),
-	                        V3(0.0f, 1.0f, 0.0f));
+		// Textures
+		string checkerBoxTexName = GlobalVariables::Instance()->checkerBoxTexName;
+		fb->LoadTexture(checkerBoxTexName);
 
-	InitializeLights();
+		ground->PositionAndSize(teapot->GetCenter() + V3(0.0f, -obsz * 0.3f, 0.0f), obsz * 2.0f);
+		ground->SetText(checkerBoxTexName);
+		billboard->mesh->PositionAndSize(teapot->GetCenter() + V3(0.0f, -obsz * 0.3f, 0.0f), obsz * 2.0f);
+		billboard->mesh->SetText(checkerBoxTexName);
 
-	// Prepare BB
-	UpdateBBs();
+		meshes.push_back(ground);
+		refletors.push_back(teapot);
+		refletors.push_back(teapot1);
+		refletors.push_back(teapot2);
+		sceneBillboard.push_back(billboard);
+
+		V3 tmC = ppc->C + ppc->GetVD() * 50.0f;
+		ppc->C = refletors[GlobalVariables::Instance()->tmAnimationID]->GetCenter() - tmC + V3(0.0f, 10.0f, 0.0f);
+		ppc->PositionAndOrient(ppc->C, refletors[GlobalVariables::Instance()->tmAnimationID]->GetCenter(),
+			V3(0.0f, 1.0f, 0.0f));
+
+		ppc3->C = ppc3->C + V3(330.0f, 150.0f, 300.0f);
+		ppc3->PositionAndOrient(ppc3->C, refletors[GlobalVariables::Instance()->tmAnimationID]->GetCenter(),
+			V3(0.0f, 1.0f, 0.0f));
+
+		InitializeLights();
+
+		// Prepare BB
+		UpdateBBs();
+
+		Render();
+	}
 }
 
 void Scene::Demonstration()
