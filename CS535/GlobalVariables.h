@@ -22,6 +22,7 @@ public:
 	bool isSaveLodTextures;
 	bool isLight;
 	float dbgParameter;
+	bool isRayTracing;
 
 	// For HW5
 	bool isRefraction;

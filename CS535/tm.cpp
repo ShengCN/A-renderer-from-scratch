@@ -1,5 +1,7 @@
 #include <fstream>
 #include <algorithm>
+#include <complex>
+#include <omp.h>
 
 #include "TM.h"
 #include "MathTool.h"
@@ -167,7 +169,7 @@ void TM::RenderWireFrame(PPC* ppc, FrameBuffer* fb)
 void TM::RenderFill(PPC* ppc, FrameBuffer* fb)
 {
 	auto gv = GlobalVariables::Instance();
-	
+
 	if (gv->lodTexture)
 	{
 		// Lod Level, use bbox to estimate how many pixels do we need
@@ -246,13 +248,15 @@ void TM::RenderFill(PPC* ppc, FrameBuffer* fb)
 
 				if (s1 && s2 && s3)
 				{
-					float div = (qM.GetColumn(0) * V3(u, u, u) + qM.GetColumn(1) * V3(v, v, v) + qM.GetColumn(2) * V3(1.0f));
+					float div = (qM.GetColumn(0) * V3(u, u, u) + qM.GetColumn(1) * V3(v, v, v) + qM.GetColumn(2) *
+						V3(1.0f));
 
-					if(FloatEqual(div,0.0f))
+					if (FloatEqual(div, 0.0f))
 						continue;
 
 					div = 1.0f / div;
-					float wv = qM.GetColumn(0) * V3(u, u, u) + qM.GetColumn(1) * V3(v, v, v) + qM.GetColumn(2) * V3(1.0f);
+					float wv = qM.GetColumn(0) * V3(u, u, u) + qM.GetColumn(1) * V3(v, v, v) + qM.GetColumn(2) *
+						V3(1.0f);
 
 					if (gv->depthTest && !fb->DepthTest(u, v, wv))
 						continue;
@@ -272,7 +276,7 @@ void TM::RenderFill(PPC* ppc, FrameBuffer* fb)
 					V3 color = Shading(ppc, fb, u, v, wv, pp, alpha);
 
 					// alpha blending 
-					if(!FloatEqual(alpha,1.0f))
+					if (!FloatEqual(alpha, 1.0f))
 					{
 						V3 bgC(0.0f);
 						bgC.SetColor(fb->Get(u, v));
@@ -311,11 +315,11 @@ void TM::RenderFillZ(PPC* ppc, FrameBuffer* fb)
 		if (vertST.size() == verts.size() * 2) hasTexture = true;
 
 		PointProperty p0(verts[vi0], colors[vi0], normals[vi0], hasTexture ? vertST[vi0 * 2] : 0.0f,
-			hasTexture ? vertST[vi0 * 2 + 1] : 0.0f);
+		                 hasTexture ? vertST[vi0 * 2 + 1] : 0.0f);
 		PointProperty p1(verts[vi1], colors[vi1], normals[vi1], hasTexture ? vertST[vi1 * 2] : 0.0f,
-			hasTexture ? vertST[vi1 * 2 + 1] : 0.0f);
+		                 hasTexture ? vertST[vi1 * 2 + 1] : 0.0f);
 		PointProperty p2(verts[vi2], colors[vi2], normals[vi2], hasTexture ? vertST[vi2 * 2] : 0.0f,
-			hasTexture ? vertST[vi2 * 2 + 1] : 0.0f);
+		                 hasTexture ? vertST[vi2 * 2 + 1] : 0.0f);
 
 		// According to loD, do trilinear in texture look up
 		V3 pp0, pp1, pp2;
@@ -362,7 +366,8 @@ void TM::RenderFillZ(PPC* ppc, FrameBuffer* fb)
 
 				if (s1 && s2 && s3)
 				{
-					float wv = qM.GetColumn(0) * V3(u, u, u) + qM.GetColumn(1) * V3(v, v, v) + qM.GetColumn(2) * V3(1.0f);
+					float wv = qM.GetColumn(0) * V3(u, u, u) + qM.GetColumn(1) * V3(v, v, v) + qM.GetColumn(2) *
+						V3(1.0f);
 					if (gv->depthTest && !fb->DepthTest(u, v, wv))
 						continue;
 
@@ -425,11 +430,11 @@ void TM::RenderBB(PPC* ppc, FrameBuffer* fb, FrameBuffer* bbTexture)
 		if (vertST.size() == verts.size() * 2) hasTexture = true;
 
 		PointProperty p0(verts[vi0], colors[vi0], normals[vi0], hasTexture ? vertST[vi0 * 2] : 0.0f,
-			hasTexture ? vertST[vi0 * 2 + 1] : 0.0f);
+		                 hasTexture ? vertST[vi0 * 2 + 1] : 0.0f);
 		PointProperty p1(verts[vi1], colors[vi1], normals[vi1], hasTexture ? vertST[vi1 * 2] : 0.0f,
-			hasTexture ? vertST[vi1 * 2 + 1] : 0.0f);
+		                 hasTexture ? vertST[vi1 * 2 + 1] : 0.0f);
 		PointProperty p2(verts[vi2], colors[vi2], normals[vi2], hasTexture ? vertST[vi2 * 2] : 0.0f,
-			hasTexture ? vertST[vi2 * 2 + 1] : 0.0f);
+		                 hasTexture ? vertST[vi2 * 2 + 1] : 0.0f);
 
 		// According to loD, do trilinear in texture look up
 		V3 pp0, pp1, pp2;
@@ -476,13 +481,15 @@ void TM::RenderBB(PPC* ppc, FrameBuffer* fb, FrameBuffer* bbTexture)
 
 				if (s1 && s2 && s3)
 				{
-					float div = (qM.GetColumn(0) * V3(u, u, u) + qM.GetColumn(1) * V3(v, v, v) + qM.GetColumn(2) * V3(1.0f));
+					float div = (qM.GetColumn(0) * V3(u, u, u) + qM.GetColumn(1) * V3(v, v, v) + qM.GetColumn(2) *
+						V3(1.0f));
 
 					if (FloatEqual(div, 0.0f) || isnan(div))
 						continue;
 
 					div = 1.0f / div;
-					float wv = qM.GetColumn(0) * V3(u, u, u) + qM.GetColumn(1) * V3(v, v, v) + qM.GetColumn(2) * V3(1.0f);
+					float wv = qM.GetColumn(0) * V3(u, u, u) + qM.GetColumn(1) * V3(v, v, v) + qM.GetColumn(2) *
+						V3(1.0f);
 
 					if (gv->depthTest && !fb->DepthTest(u, v, wv))
 						continue;
@@ -639,41 +646,49 @@ V3 TM::GetCenter()
 
 void TM::RayTracing(PPC* ppc, FrameBuffer* fb)
 {
-	auto C = ppc->C;
-
-
 	for (int v = 0; v < fb->h; ++v)
 	{
-		fb->DrawRectangle(0, v, fb->w - 1, v + 1, 0xFF0000FF);
-		fb->redraw();
-		Fl::check();
-
-		fb->DrawRectangle(0, v, fb->w - 1, v + 1, 0xFFFFFFFF);
 		for (int u = 0; u < fb->w; ++u)
 		{
-			for(int ti = 0; ti < trisN; ++ti)
+			for (int ti = 0; ti < trisN; ++ti)
 			{
 				auto index0 = tris[3 * ti + 0], index1 = tris[3 * ti + 1], index2 = tris[3 * ti + 2];
 				V3 p0 = verts[index0];
 				V3 p1 = verts[index1];
 				V3 p2 = verts[index2];
-				auto[a, b, c, w] = RayTriangleIntersect(ppc->C, ppc->GetRay(u, v), p0, p1, p2);
+				auto [a, b, c, w] = RayTriangleIntersect(ppc->C, ppc->GetRay(u, v), p0, p1, p2);
 
 				// pruning branches
-				if( a < 0.0f || b < 0.0f || c < 0.0f || w < 0.0f)
+				if (a < 0.0f || b < 0.0f || c < 0.0f || w < 0.0f)
 					continue;
-				if(!fb->DepthTest(u,v,w))
+				if (!fb->DepthTest(u, v, w))
 					continue;
 
 				// Shading
-				V3 color = colors[index0] * a + colors[index1] * b + colors[index2] * c;
-				fb->SetGuarded(u, v, color.GetColor());
+				V3 p = p0 * a + p1 * b + p2 * c;
+				V3 pc = colors[index0] * a + colors[index1] * b + colors[index2] * c;
+				V3 pn = normals[index0] * a + normals[index1] * b + normals[index2] * c;
+				float s = vertST[index0 * 2 + 0] * a + vertST[index1 * 2 + 0] * b + vertST[index2 * 2 + 0] * c;
+				float t = vertST[index0 * 2 + 1] * a + vertST[index1 * 2 + 1] * b + vertST[index2 * 2 + 1] * c;
+				PointProperty pp(p, pc, pn, s, t);
+				float alpha = 1.0f;
+				V3 color = Shading(ppc, fb, u, v, w, pp, alpha);
+
+				// alpha blending 
+				if (!FloatEqual(alpha, 1.0f))
+				{
+					V3 bgC(0.0f);
+					bgC.SetColor(fb->Get(u, v));
+					color = color * alpha + bgC * (1.0f - alpha);
+				}
+
+				fb->DrawPoint(u, v, color.GetColor());
 			}
 		}
 	}
 }
 
-V3 TM::Shading(PPC* ppc, FrameBuffer *fb, int u, int v, float w, PointProperty& pp, float &alpha)
+V3 TM::Shading(PPC* ppc, FrameBuffer* fb, int u, int v, float w, PointProperty& pp, float& alpha)
 {
 	V3 color(0.0f);
 	if (fb->textures.find(tex) != fb->textures.end())
@@ -690,7 +705,8 @@ V3 TM::Shading(PPC* ppc, FrameBuffer *fb, int u, int v, float w, PointProperty& 
 	{
 		float envEffect = 1.0f;
 
-		auto envColor = EnvMapping(ppc, fb, GlobalVariables::Instance()->curScene->cubemap.get(), pp.p, pp.n, envEffect);
+		auto envColor = EnvMapping(ppc, fb, GlobalVariables::Instance()->curScene->cubemap.get(), pp.p, pp.n,
+		                           envEffect);
 
 		envEffect = isShowObjColor ? envEffect : 1.0f;
 		pp.c = ClampColor(pp.c * (1.0f - envEffect) + envColor * envEffect);
@@ -746,7 +762,7 @@ V3 TM::Light(PPC* ppc, PointProperty& pp, int u, int v, float w)
 		ks += pow(max(liks, 0.0f), 200);
 
 		// Shadow
-		if(gv->isShadow && !gv->curScene->shadowMaps.empty())
+		if (gv->isShadow && !gv->curScene->shadowMaps.empty())
 		{
 			auto SM = gv->curScene->shadowMaps[li];
 			float uf = static_cast<float>(u), vf = static_cast<float>(v), z = w;
@@ -768,14 +784,14 @@ V3 TM::Light(PPC* ppc, PointProperty& pp, int u, int v, float w)
 	ks = Clamp(ks, 0.0f, 1.0f);
 
 	ret = pp.c * (ka + (1.0f - ka) * kd) + V3(1.0f) * ks;
-	ret = ret * sd;	// shadow
+	ret = ret * sd; // shadow
 	return ret;
 }
 
 bool TM::ComputeShadowEffect(PPC* ppc, int u, int v, float z, float& sdEffect)
 {
 	bool isInSS = false;
-	sdEffect = 1.0f;	// shadow effect
+	sdEffect = 1.0f; // shadow effect
 	auto gv = GlobalVariables::Instance();
 	if (gv->curScene->shadowMaps.empty())
 		return isInSS;
@@ -817,16 +833,16 @@ bool TM::IsPixelInProjection(int u, int v, float z, V3& color, float& alpha)
 	string projTexName = gv->projectedTextureName;
 
 	if (!ppc1 || !ppc1 || !projFB)
-		return 0;
+		return false;
 
 	V3 v2 = HomographMapping(V3(uf, vf, z), ppc1, ppc2);
 
 	if (v2[2] < 0.0f)
-		return 0;
+		return false;
 
 	AABB aabb(v2);
 	if (!aabb.Clip2D(0, projFB->w - 1, 0, projFB->h - 1))
-		return 0;
+		return false;
 
 	float eps = 0.01f;
 
@@ -834,17 +850,17 @@ bool TM::IsPixelInProjection(int u, int v, float z, V3& color, float& alpha)
 	{
 		unsigned int c = projFB->Get(v2[0], v2[1]);
 		color.SetColor(c);
-		unsigned char*rgba = (unsigned char*)&c;
+		unsigned char* rgba = (unsigned char*)&c;
 		alpha = static_cast<float>(rgba[3]) / 255.0f;
-		return 1;
+		return true;
 	}
 
-	return 0;
+	return false;
 }
 
 // envEffect (0,1)
 // 1 means should igore point color
-V3 TM::EnvMapping(PPC* ppc, FrameBuffer *fb, CubeMap* cubemap, V3 p, V3 n, float &envEffect)
+V3 TM::EnvMapping(PPC* ppc, FrameBuffer* fb, CubeMap* cubemap, V3 p, V3 n, float& envEffect)
 {
 	if (!cubemap)
 		return V3(0.0f);
@@ -870,7 +886,7 @@ V3 TM::EnvMapping(PPC* ppc, FrameBuffer *fb, CubeMap* cubemap, V3 p, V3 n, float
 	if (!FloatEqual(distance, 0.0f))
 	{
 		distance = 1.0f / distance;
-		float disAttenauation = max(pow(distance*10.0f, 2), 1.0f);
+		float disAttenauation = max(pow(distance * 10.0f, 2), 1.0f);
 		// envEffect = Clamp(1.0f / disAttenauation,0.0f,1.0f);
 		return bbColor;
 	}
@@ -879,7 +895,8 @@ V3 TM::EnvMapping(PPC* ppc, FrameBuffer *fb, CubeMap* cubemap, V3 p, V3 n, float
 	return cubemap->LookupColor(viewDir, pixelSz);
 }
 
-int TM::EnvBBIntersection(vector<shared_ptr<BillBoard>> bbs, V3 p, V3 viewDir, float& distance, V3& bbColor, float& alpha)
+int TM::EnvBBIntersection(vector<shared_ptr<BillBoard>> bbs, V3 p, V3 viewDir, float& distance, V3& bbColor,
+                          float& alpha)
 {
 	int ret = 0;
 	for (auto b : bbs)
@@ -899,7 +916,7 @@ int TM::EnvBBIntersection(vector<shared_ptr<BillBoard>> bbs, V3 p, V3 viewDir, f
 			// update closest color
 			t = 1.0f / t;
 			V3 pBB = p + viewDir * t;
-			bbColor = b->mesh->tex.empty()? b->GetColor(pBB, alpha) : b->GetColor(b->fbTexture.get(),pBB,alpha);
+			bbColor = b->mesh->tex.empty() ? b->GetColor(pBB, alpha) : b->GetColor(b->fbTexture.get(), pBB, alpha);
 
 			// intersect 0 alpha part of billbard
 			if (FloatEqual(alpha, 0.0f))
@@ -947,12 +964,11 @@ V3 TM::HomographMapping(V3 uvw, PPC* ppc1, PPC* ppc2)
 
 void TM::SetAllPointsColor(V3 color)
 {
-	for(int vi = 0; vi < vertsN; ++vi)
+	for (int vi = 0; vi < vertsN; ++vi)
 	{
 		colors[vi] = color;
 	}
 }
-
 
 
 void TM::SphereMorph(V3 c, float r, float fract)
@@ -961,7 +977,7 @@ void TM::SphereMorph(V3 c, float r, float fract)
 	if (staticVerts.empty())
 		staticVerts = verts;
 
-	for(int vi =0; vi < vertsN; ++vi)
+	for (int vi = 0; vi < vertsN; ++vi)
 	{
 		V3 vp = staticVerts[vi];
 		V3 dis = vp - c;

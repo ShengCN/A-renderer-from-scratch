@@ -19,6 +19,7 @@ GlobalVariables::GlobalVariables()
 	highResoH = 720;
 	resoW = 640;
 	resoH = 480;
+	isRayTracing = true;
 
 	tmAnimationID = 0;
 	dbgParameter = 10.0f;

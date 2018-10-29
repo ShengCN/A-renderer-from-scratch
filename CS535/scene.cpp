@@ -93,21 +93,40 @@ void Scene::Render(PPC* currPPC, FrameBuffer* currFB)
 		currFB->ClearBGRZ(0xFF999999, 0.0f);
 		currFB->DrawCubeMap(currPPC, cubemap.get());
 
-		for (auto t : meshes)
+		if (!GlobalVariables::Instance()->isRayTracing)
 		{
-			t->RenderFill(currPPC, currFB);
-			if (isRenderAABB)
-				t->RenderAABB(currPPC, currFB);
-		}
+			for (auto t : meshes)
+			{
+				t->RenderFill(currPPC, currFB);
+				if (isRenderAABB)
+					t->RenderAABB(currPPC, currFB);
+			}
 
-		for (auto r : refletors)
+			for (auto r : refletors)
+			{
+				r->RenderFill(currPPC, currFB);
+
+				if (isRenderAABB)
+					r->RenderAABB(currPPC, currFB);
+			}
+		}
+		else
 		{
-			r->RenderFill(currPPC, currFB);
+			for (auto t : meshes)
+			{
+				t->RayTracing(currPPC, currFB);
+				// if (isRenderAABB)
+				// 	t->RenderAABB(currPPC, currFB);
+			}
 
-			if (isRenderAABB)
-				r->RenderAABB(currPPC, currFB);
+			for (auto r : refletors)
+			{
+				r->RayTracing(currPPC, currFB);
+
+				// if (isRenderAABB)
+				// 	r->RenderAABB(currPPC, currFB);
+			}
 		}
-
 		currFB->redraw();
 	}
 }
@@ -427,26 +446,26 @@ void Scene::InitializeLights()
 
 void Scene::InitDemo()
 {
-	{
-		// Try ray tracing
-		TM *mesh = new TM();
-		mesh->LoadModelBin("geometry/teapot1K.bin");
-		mesh->PositionAndSize(0.0f, 50.0f);
-		meshes.push_back(mesh);
-
-		// Position PPCs
-		V3 tmC = ppc->C + ppc->GetVD() * 50.0f;
-		ppc->C = meshes[0]->GetCenter() - tmC;
-		ppc->PositionAndOrient(ppc->C, meshes[0]->GetCenter(), V3(0.0f, 1.0f, 0.0f));
-
-		ppc3->C = ppc3->C + V3(330.0f, 150.0f, 300.0f);
-		ppc3->PositionAndOrient(ppc3->C, meshes[0]->GetCenter(), V3(0.0f, 1.0f, 0.0f));
-
-		fb->ClearBGRZ(0xFFFFFFFF, 0.0f);
-		meshes[0]->RayTracing(ppc, fb);
-		fb->redraw();
-		return;
-	}
+	// {
+	// 	// Try ray tracing
+	// 	TM *mesh = new TM();
+	// 	mesh->LoadModelBin("geometry/teapot1K.bin");
+	// 	mesh->PositionAndSize(0.0f, 50.0f);
+	// 	meshes.push_back(mesh);
+	//
+	// 	// Position PPCs
+	// 	V3 tmC = ppc->C + ppc->GetVD() * 50.0f;
+	// 	ppc->C = meshes[0]->GetCenter() - tmC;
+	// 	ppc->PositionAndOrient(ppc->C, meshes[0]->GetCenter(), V3(0.0f, 1.0f, 0.0f));
+	//
+	// 	ppc3->C = ppc3->C + V3(330.0f, 150.0f, 300.0f);
+	// 	ppc3->PositionAndOrient(ppc3->C, meshes[0]->GetCenter(), V3(0.0f, 1.0f, 0.0f));
+	//
+	// 	fb->ClearBGRZ(0xFFFFFFFF, 0.0f);
+	// 	meshes[0]->RayTracing(ppc, fb);
+	// 	fb->redraw();
+	// 	return;
+	// }
 
 	{
 		cubemap = make_shared<CubeMap>();
