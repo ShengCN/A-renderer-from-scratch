@@ -58,7 +58,7 @@ public:
 
 	// Ray tracing
 	void RayTracing(PPC *ppc, FrameBuffer *fb);
-
+	
 	// Shading
 	V3 Shading(PPC *ppc, FrameBuffer *fb, int u, int v, float w, PointProperty& pp, float &alpha);
 	void Light(V3 mc, V3 L, PPC *ppc);	  // Per vertex light
@@ -77,6 +77,7 @@ public:
 
 	// Rendering process
 	tuple<float, float, float, float> RayTriangleIntersect(V3 C, V3 ray, V3 p0, V3 p1, V3 p2);
+	tuple<PointProperty, float> RayMeshIntersect(V3 C, V3 ray);									// Return pp and closest w
 
 	~TM();
 	static int tmIDCounter;

@@ -29,7 +29,7 @@ V3 CubeMap::LookupColor(V3 dir, int pixSz)
 	dir = dir.UnitVector();
 	V3 p = dir, pp(0.0f);
 
-	for(int count =0; count < 6; ++count)
+	for(int count = 0; count < ppcs.size(); ++count)
 	{
 		auto curPPC = ppcs[_lastFB];
 		curPPC->Project(p, pp);

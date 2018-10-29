@@ -648,6 +648,15 @@ void TM::RayTracing(PPC* ppc, FrameBuffer* fb)
 {
 	for (int v = 0; v < fb->h; ++v)
 	{
+		if(GlobalVariables::Instance()->isDBGRaytracing)
+		{
+			fb->DrawRectangle(0, v, fb->w - 1, v + 1, 0xFFFF0000);
+			fb->redraw();
+			Fl::check();
+
+			fb->DrawRectangle(0, v, fb->w - 1, v + 1, 0xFFFFFFFF);
+		}
+
 		for (int u = 0; u < fb->w; ++u)
 		{
 			for (int ti = 0; ti < trisN; ++ti)
@@ -1024,6 +1033,37 @@ tuple<float, float, float, float> TM::RayTriangleIntersect(V3 C, V3 ray, V3 p0, 
 	V3 abc = q1 + q2 * w;
 
 	return tuple<float, float, float, float>(abc[0], abc[1], abc[2], 1.0f / w);
+}
+
+tuple<PointProperty, float> TM::RayMeshIntersect(V3 C, V3 ray)
+{
+	float closestW = 0.0f;
+	PointProperty closestPP(0.0f, 0.0f, 0.0f, 0.0f, 0.0f);
+	for (int ti = 0; ti < trisN; ++ti)
+	{
+		auto index0 = tris[3 * ti + 0], index1 = tris[3 * ti + 1], index2 = tris[3 * ti + 2];
+		V3 p0 = verts[index0];
+		V3 p1 = verts[index1];
+		V3 p2 = verts[index2];
+		auto[a, b, c, w] = RayTriangleIntersect(C, ray, p0, p1, p2);
+
+		// pruning branches
+		if (a < 0.0f || b < 0.0f || c < 0.0f || w < 0.0f)
+			continue;
+		if (closestW > w)
+			continue;
+
+		// Update Closest Point property
+		closestW = w;
+		V3 p = p0 * a + p1 * b + p2 * c;
+		V3 pc = colors[index0] * a + colors[index1] * b + colors[index2] * c;
+		V3 pn = normals[index0] * a + normals[index1] * b + normals[index2] * c;
+		float s = vertST[index0 * 2 + 0] * a + vertST[index1 * 2 + 0] * b + vertST[index2 * 2 + 0] * c;
+		float t = vertST[index0 * 2 + 1] * a + vertST[index1 * 2 + 1] * b + vertST[index2 * 2 + 1] * c;
+		closestPP = PointProperty(p, pc, pn, s, t);
+	}
+
+	return tuple<PointProperty, float>(closestPP, closestW);
 }
 
 TM::~TM()

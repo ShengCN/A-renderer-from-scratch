@@ -91,7 +91,7 @@ void Scene::Render(PPC* currPPC, FrameBuffer* currFB)
 	if (currFB)
 	{
 		currFB->ClearBGRZ(0xFF999999, 0.0f);
-		currFB->DrawCubeMap(currPPC, cubemap.get());
+		// currFB->DrawCubeMap(currPPC, cubemap.get());
 
 		if (!GlobalVariables::Instance()->isRayTracing)
 		{
@@ -112,20 +112,7 @@ void Scene::Render(PPC* currPPC, FrameBuffer* currFB)
 		}
 		else
 		{
-			for (auto t : meshes)
-			{
-				t->RayTracing(currPPC, currFB);
-				// if (isRenderAABB)
-				// 	t->RenderAABB(currPPC, currFB);
-			}
-
-			for (auto r : refletors)
-			{
-				r->RayTracing(currPPC, currFB);
-
-				// if (isRenderAABB)
-				// 	r->RenderAABB(currPPC, currFB);
-			}
+			RaytracingScene(currPPC, currFB);
 		}
 		currFB->redraw();
 	}
@@ -168,6 +155,66 @@ void Scene::UpdateSM()
 	{
 		RenderZbuffer(lightPPCs[li].get(), shadowMaps[li].get());
 	}
+}
+
+void Scene::RaytracingScene(PPC* currPPC, FrameBuffer* currFB)
+{
+	for (int v = 0; v < currFB->h; ++v)
+	{
+		if (GlobalVariables::Instance()->isDBGRaytracing)
+		{
+			currFB->DrawRectangle(0, v, currFB->w - 1, v + 1, 0xFFFF0000);
+			currFB->redraw();
+			Fl::check();
+
+			currFB->DrawRectangle(0, v, currFB->w - 1, v + 1, 0xFFFFFFFF);
+		}
+
+		for (int u = 0; u < currFB->w; ++u)
+		{
+			// For each meshes, find the closest intersection
+			float closestZ = 0.0f;
+			TM *shadingMesh = meshes[0];
+			PointProperty closestPP(0.0f,0.0f,0.0f,0.0f,0.0f);
+			for(auto m : meshes)
+			{
+				auto [pp, w] = m->RayMeshIntersect(currPPC->C, currPPC->GetRay(u, v));
+
+				if(w > closestZ)
+				{
+					// Update point property
+					closestZ = w;
+					shadingMesh = m;
+					closestPP = pp;
+				}
+			}
+
+			// Background
+			if (FloatEqual(closestZ, 0.0f))
+				continue;
+
+			if(!currFB->DepthTest(u,v,closestZ))
+				continue;
+	
+			float alpha = 1.0f;
+			V3 color = shadingMesh->Shading(currPPC, currFB, u, v, closestZ, closestPP, alpha);
+			
+			// alpha blending 
+			if (!FloatEqual(alpha, 1.0f))
+			{
+				V3 bgC(0.0f);
+				bgC.SetColor(currFB->Get(u, v));
+				color = color * alpha + bgC * (1.0f - alpha);
+			}
+	
+			currFB->DrawPoint(u, v, color.GetColor());
+		}
+	}
+
+	// for(auto m:meshes)
+	// {
+	// 	m->RayTracing(currPPC, currFB);
+	// }
 }
 
 void Scene::UpdateBBs()
@@ -446,26 +493,24 @@ void Scene::InitializeLights()
 
 void Scene::InitDemo()
 {
-	// {
-	// 	// Try ray tracing
-	// 	TM *mesh = new TM();
-	// 	mesh->LoadModelBin("geometry/teapot1K.bin");
-	// 	mesh->PositionAndSize(0.0f, 50.0f);
-	// 	meshes.push_back(mesh);
-	//
-	// 	// Position PPCs
-	// 	V3 tmC = ppc->C + ppc->GetVD() * 50.0f;
-	// 	ppc->C = meshes[0]->GetCenter() - tmC;
-	// 	ppc->PositionAndOrient(ppc->C, meshes[0]->GetCenter(), V3(0.0f, 1.0f, 0.0f));
-	//
-	// 	ppc3->C = ppc3->C + V3(330.0f, 150.0f, 300.0f);
-	// 	ppc3->PositionAndOrient(ppc3->C, meshes[0]->GetCenter(), V3(0.0f, 1.0f, 0.0f));
-	//
-	// 	fb->ClearBGRZ(0xFFFFFFFF, 0.0f);
-	// 	meshes[0]->RayTracing(ppc, fb);
-	// 	fb->redraw();
-	// 	return;
-	// }
+	{
+		// Try ray tracing
+		TM *mesh = new TM();
+		mesh->LoadModelBin("geometry/teapot1K.bin");
+		mesh->PositionAndSize(0.0f, 50.0f);
+		meshes.push_back(mesh);
+	
+		// Position PPCs
+		V3 tmC = ppc->C + ppc->GetVD() * 50.0f;
+		ppc->C = meshes[0]->GetCenter() - tmC;
+		ppc->PositionAndOrient(ppc->C, meshes[0]->GetCenter(), V3(0.0f, 1.0f, 0.0f));
+	
+		ppc3->C = ppc3->C + V3(330.0f, 150.0f, 300.0f);
+		ppc3->PositionAndOrient(ppc3->C, meshes[0]->GetCenter(), V3(0.0f, 1.0f, 0.0f));
+
+		Render();
+		return;
+	}
 
 	{
 		cubemap = make_shared<CubeMap>();

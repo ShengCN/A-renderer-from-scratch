@@ -33,6 +33,8 @@ public:
 	void RenderZbuffer(PPC *currPPC, FrameBuffer *currFB);
 	void UpdateSM();
 
+	void RaytracingScene(PPC *ppc, FrameBuffer *fb);
+
 	// HW5, Implement part of the paper
 	// https://www.cs.purdue.edu/cgvlab/papers/popescu/popescuGemEG06.pdf
 	// Render all other tm except id mesh to id's billboards

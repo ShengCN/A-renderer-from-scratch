@@ -30,6 +30,7 @@ public:
 	string checkerBoxTexName;
 	bool isShadow;
 	int tmAnimationID;
+	bool isDBGRaytracing;
 
 private:
 	GlobalVariables();
