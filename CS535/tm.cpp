@@ -272,8 +272,8 @@ void TM::RenderFill(PPC* ppc, FrameBuffer* fb)
 
 					// shading
 					PointProperty pp(p, pc, pn, st[0], st[1]);
-					float alpha = 1.0f;
-					V3 color = Shading(ppc, fb, u, v, wv, pp, alpha);
+
+					auto [color , alpha] = Shading(ppc, fb, u, v, wv, pp);
 
 					// alpha blending 
 					if (!FloatEqual(alpha, 1.0f))
@@ -371,7 +371,7 @@ void TM::RenderFillZ(PPC* ppc, FrameBuffer* fb)
 					if (gv->depthTest && !fb->DepthTest(u, v, wv))
 						continue;
 
-					if (gv->debugZbuffer)
+					if (gv->isDebugZbuffer)
 						fb->DrawPoint(u, v, V3(1.0f / wv).GetColor());
 				}
 			}
@@ -680,8 +680,7 @@ void TM::RayTracing(PPC* ppc, FrameBuffer* fb)
 				float s = vertST[index0 * 2 + 0] * a + vertST[index1 * 2 + 0] * b + vertST[index2 * 2 + 0] * c;
 				float t = vertST[index0 * 2 + 1] * a + vertST[index1 * 2 + 1] * b + vertST[index2 * 2 + 1] * c;
 				PointProperty pp(p, pc, pn, s, t);
-				float alpha = 1.0f;
-				V3 color = Shading(ppc, fb, u, v, w, pp, alpha);
+				auto [color, alpha] = Shading(ppc, fb, u, v, w, pp);
 
 				// alpha blending 
 				if (!FloatEqual(alpha, 1.0f))
@@ -697,9 +696,9 @@ void TM::RayTracing(PPC* ppc, FrameBuffer* fb)
 	}
 }
 
-V3 TM::Shading(PPC* ppc, FrameBuffer* fb, int u, int v, float w, PointProperty& pp, float& alpha)
+tuple<V3, float> TM::Shading(PPC* ppc, FrameBuffer* fb, int u, int v, float w, PointProperty& pp)
 {
-	V3 color(0.0f);
+	V3 color(0.0f); float alpha = 1.0f;
 	if (fb->textures.find(tex) != fb->textures.end())
 	{
 		// s and t in (0.0f,1.0f)
@@ -735,7 +734,7 @@ V3 TM::Shading(PPC* ppc, FrameBuffer* fb, int u, int v, float w, PointProperty& 
 	else
 		color = pp.c;
 
-	return color;
+	return tuple<V3, float>(color, alpha);
 }
 
 void TM::Light(V3 mc, V3 L, PPC* ppc)

@@ -57,6 +57,9 @@
     <ClInclude Include="BillBoard.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="SBB.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="scene.cpp">
@@ -93,6 +96,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="BillBoard.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SBB.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

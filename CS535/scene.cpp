@@ -91,10 +91,10 @@ void Scene::Render(PPC* currPPC, FrameBuffer* currFB)
 	if (currFB)
 	{
 		currFB->ClearBGRZ(0xFF999999, 0.0f);
-		// currFB->DrawCubeMap(currPPC, cubemap.get());
 
 		if (!GlobalVariables::Instance()->isRayTracing)
 		{
+			currFB->DrawCubeMap(currPPC, cubemap.get());
 			for (auto t : meshes)
 			{
 				t->RenderFill(currPPC, currFB);
@@ -112,7 +112,10 @@ void Scene::Render(PPC* currPPC, FrameBuffer* currFB)
 		}
 		else
 		{
+			auto begin = std::clock();
 			RaytracingScene(currPPC, currFB);
+			auto end = std::clock();
+			cerr << "Ray tracing per frame used: " << (end - begin) / CLOCKS_PER_SEC << endl;
 		}
 		currFB->redraw();
 	}
@@ -135,7 +138,7 @@ void Scene::RenderZbuffer(PPC* currPPC, FrameBuffer* currFB)
 	{
 		currFB->ClearZ(0.0f);
 
-		if (GlobalVariables::Instance()->debugZbuffer)
+		if (GlobalVariables::Instance()->isDebugZbuffer)
 			currFB->ClearBGRZ(0xFF000000, 0.0f);
 
 		// Draw all triangles
@@ -172,19 +175,54 @@ void Scene::RaytracingScene(PPC* currPPC, FrameBuffer* currFB)
 
 		for (int u = 0; u < currFB->w; ++u)
 		{
+			V3 ray = currPPC->GetRay(u, v);
+
+			// Draw cube map
+			fb->DrawPoint(u,v, cubemap->LookupColor(ray).GetColor());
+
+			// use SBB to prune branches
+			if (GlobalVariables::Instance()->isUseSBB)
+			{
+				bool isMissing = true;
+				for(auto sbb:raytracingSBB)
+				{
+					auto[isIntersect, t] = sbb->RaySBB(currPPC->C, ray);
+					if (isIntersect)
+						isMissing = false;
+				}
+
+				if (isMissing)
+				{
+					continue;
+				}
+			}
+
 			// For each meshes, find the closest intersection
 			float closestZ = 0.0f;
 			TM *shadingMesh = meshes[0];
 			PointProperty closestPP(0.0f,0.0f,0.0f,0.0f,0.0f);
 			for(auto m : meshes)
 			{
-				auto [pp, w] = m->RayMeshIntersect(currPPC->C, currPPC->GetRay(u, v));
+				auto [pp, w] = m->RayMeshIntersect(currPPC->C,ray);
 
 				if(w > closestZ)
 				{
 					// Update point property
 					closestZ = w;
 					shadingMesh = m;
+					closestPP = pp;
+				}
+			}
+
+			for (auto r : refletors)
+			{
+				auto[pp, w] = r->RayMeshIntersect(currPPC->C, currPPC->GetRay(u, v));
+
+				if (w > closestZ)
+				{
+					// Update point property
+					closestZ = w;
+					shadingMesh = r.get();
 					closestPP = pp;
 				}
 			}
@@ -196,8 +234,7 @@ void Scene::RaytracingScene(PPC* currPPC, FrameBuffer* currFB)
 			if(!currFB->DepthTest(u,v,closestZ))
 				continue;
 	
-			float alpha = 1.0f;
-			V3 color = shadingMesh->Shading(currPPC, currFB, u, v, closestZ, closestPP, alpha);
+			auto [color, alpha]= shadingMesh->Shading(currPPC, currFB, u, v, closestZ, closestPP);
 			
 			// alpha blending 
 			if (!FloatEqual(alpha, 1.0f))
@@ -210,11 +247,6 @@ void Scene::RaytracingScene(PPC* currPPC, FrameBuffer* currFB)
 			currFB->DrawPoint(u, v, color.GetColor());
 		}
 	}
-
-	// for(auto m:meshes)
-	// {
-	// 	m->RayTracing(currPPC, currFB);
-	// }
 }
 
 void Scene::UpdateBBs()
@@ -440,13 +472,6 @@ bool Scene::DBGPPC()
 
 void Scene::DBG()
 {
-	// cerr << "INFO: pressed DBG" << endl;
-	cerr << "Begin DBG\n";
-	if (DBGV3() && DBGM3() && DBGFramebuffer() && DBGAABB() && DBGPPC()) // && DBGTM())
-		cerr << "All pased! \n";
-	else
-		cerr << "Not pass!\n";
-
 	Demonstration();
 	fb->redraw();
 }
@@ -493,28 +518,28 @@ void Scene::InitializeLights()
 
 void Scene::InitDemo()
 {
-	{
-		// Try ray tracing
-		TM *mesh = new TM();
-		mesh->LoadModelBin("geometry/teapot1K.bin");
-		mesh->PositionAndSize(0.0f, 50.0f);
-		meshes.push_back(mesh);
-	
-		// Position PPCs
-		V3 tmC = ppc->C + ppc->GetVD() * 50.0f;
-		ppc->C = meshes[0]->GetCenter() - tmC;
-		ppc->PositionAndOrient(ppc->C, meshes[0]->GetCenter(), V3(0.0f, 1.0f, 0.0f));
-	
-		ppc3->C = ppc3->C + V3(330.0f, 150.0f, 300.0f);
-		ppc3->PositionAndOrient(ppc3->C, meshes[0]->GetCenter(), V3(0.0f, 1.0f, 0.0f));
-
-		Render();
-		return;
-	}
+//	{
+//		// Try ray tracing
+//		TM *mesh = new TM();
+//		mesh->LoadModelBin("geometry/teapot1K.bin");
+//		mesh->PositionAndSize(0.0f, 50.0f);
+//		meshes.push_back(mesh);
+//	
+//		// Position PPCs
+//		V3 tmC = ppc->C + ppc->GetVD() * 50.0f;
+//		ppc->C = meshes[0]->GetCenter() - tmC;
+//		ppc->PositionAndOrient(ppc->C, meshes[0]->GetCenter(), V3(0.0f, 1.0f, 0.0f));
+//	
+//		ppc3->C = ppc3->C + V3(330.0f, 150.0f, 300.0f);
+//		ppc3->PositionAndOrient(ppc3->C, meshes[0]->GetCenter(), V3(0.0f, 1.0f, 0.0f));
+//
+//		Render();
+//		return;
+//	}
 
 	{
 		cubemap = make_shared<CubeMap>();
-
+		isRenderAABB = true;
 		// prepare cubemap
 		string folder = "images/cubemaps/";
 		vector<string> fnames{
@@ -550,7 +575,7 @@ void Scene::InitDemo()
 		teapot->LoadModelBin("geometry/teapot1K.bin");
 		teapot->isEnvMapping = true;
 		teapot->isShowObjColor = false;
-		teapot->isRefraction = false;
+		teapot->isRefraction = true;
 		teapot1->LoadModelBin("geometry/teapot1K.bin");
 		teapot1->isEnvMapping = true;
 		teapot1->isShowObjColor = true;
@@ -586,6 +611,12 @@ void Scene::InitDemo()
 		refletors.push_back(teapot2);
 		sceneBillboard.push_back(billboard);
 
+		// Currently, use naive AABB info for SBB, not tight!
+		auto groundAABB = ground->ComputeAABB();
+		auto teapotAABB = teapot->ComputeAABB(); 
+		auto teapot1AABB = teapot1->ComputeAABB();
+		auto teapot2AABB = teapot2->ComputeAABB();
+
 		V3 tmC = ppc->C + ppc->GetVD() * 50.0f;
 		ppc->C = refletors[GlobalVariables::Instance()->tmAnimationID]->GetCenter() - tmC + V3(0.0f, 10.0f, 0.0f);
 		ppc->PositionAndOrient(ppc->C, refletors[GlobalVariables::Instance()->tmAnimationID]->GetCenter(),
@@ -596,7 +627,6 @@ void Scene::InitDemo()
 			V3(0.0f, 1.0f, 0.0f));
 
 		InitializeLights();
-
 		// Prepare BB
 		UpdateBBs();
 
@@ -606,6 +636,12 @@ void Scene::InitDemo()
 
 void Scene::Demonstration()
 {
+	{
+		GlobalVariables::Instance()->isUseSBB = true;
+		Render();
+		return;
+	}
+
 	// Morphing 
 	auto teapotC = refletors[GlobalVariables::Instance()->tmAnimationID]->GetCenter();
 	int stepN = 360;
@@ -628,7 +664,7 @@ void Scene::Demonstration()
 		if (GlobalVariables::Instance()->isRecording)
 		{
 			char buffer[50];
-			sprintf_s(buffer, "images/Recording/reflect-%03d.tiff", stepi);
+			sprintf_s(buffer, "images/Recording/ray-traced-BB-%03d.tiff", stepi);
 			fb->SaveAsTiff(buffer);
 		}
 	}

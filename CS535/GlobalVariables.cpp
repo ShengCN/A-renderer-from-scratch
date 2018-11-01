@@ -14,13 +14,14 @@ GlobalVariables* GlobalVariables::Instance()
 
 GlobalVariables::GlobalVariables()
 {
-	isHighResolution = true;
+	isHighResolution = false;
 	highResoW = 1020;
 	highResoH = 720;
 	resoW = 640;
 	resoH = 480;
 	isRayTracing = true;
 	isDBGRaytracing = true;
+	isUseSBB = true;
 
 	tmAnimationID = 0;
 	dbgParameter = 10.0f;
@@ -31,7 +32,7 @@ GlobalVariables::GlobalVariables()
 	projectedTextureName = "images/jojo.tiff";
 	checkerBoxTexName = "images/Checkerboard_pattern.tiff";
 
-	debugZbuffer = false;
+	isDebugZbuffer = false;
 	isSaveLodTextures = false;
 	isLight = true;
 	isShadow = false;

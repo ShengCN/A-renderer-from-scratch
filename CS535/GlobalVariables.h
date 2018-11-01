@@ -13,16 +13,20 @@ public:
 	bool isHighResolution;
 	int highResoW, highResoH;
 	int resoW, resoH;
+
 	Scene *curScene;
-	bool isRenderProjectedTexture;
 	string projectedTextureName;
+
+	bool isRenderProjectedTexture;
 	bool depthTest, lodTexture;
 	bool isRecording;
-	bool debugZbuffer;
+	bool isDebugZbuffer;
 	bool isSaveLodTextures;
 	bool isLight;
-	float dbgParameter;
 	bool isRayTracing;
+	bool isUseSBB;
+	
+	float dbgParameter;
 
 	// For HW5
 	bool isRefraction;

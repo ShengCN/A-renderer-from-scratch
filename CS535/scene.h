@@ -7,6 +7,7 @@
 #include "TM.h"
 #include "cubemap.h"
 #include "BillBoard.h"
+#include "SBB.h"
 using std::vector;
 using std::unique_ptr;
 
@@ -23,6 +24,7 @@ public:
 	vector<shared_ptr<TM>> refletors;
 	vector<shared_ptr<BillBoard>> sceneBillboard;
 	shared_ptr<CubeMap> cubemap;
+	vector<shared_ptr<SBB>> raytracingSBB;	// Sphere BB
 
 	Scene();
 	void DBG();
