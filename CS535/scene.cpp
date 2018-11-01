@@ -6,12 +6,12 @@
 #include <fstream>
 #include <iostream>
 #include <string>
-#include <ctime>
 
 #include "MathTool.h"
 #include "AABB.h"
 #include "TM.h"
 #include "GlobalVariables.h"
+
 
 Scene* scene;
 int TM::tmIDCounter = 0;
@@ -27,8 +27,7 @@ Scene::Scene(): isRenderAABB(false)
 	int v0 = 20;
 	int w = gv->isHighResolution ? gv->highResoW : gv->resoW;
 	int h = gv->isHighResolution ? gv->highResoH : gv->resoH;
-	//	int w = 1280;
-	//	int h = 720;
+
 	int fovf = 70.0f;
 	fb = new FrameBuffer(u0, v0, w, h);
 	fb->label("SW Framebuffer");
@@ -97,14 +96,18 @@ void Scene::Render(PPC* currPPC, FrameBuffer* currFB)
 			currFB->DrawCubeMap(currPPC, cubemap.get());
 			for (auto t : meshes)
 			{
+				BeginCountingTime();
 				t->RenderFill(currPPC, currFB);
+				PrintTime(string("Mesh ") + to_string(t->id) + string(" spends: "));
 				if (isRenderAABB)
 					t->RenderAABB(currPPC, currFB);
 			}
 
 			for (auto r : refletors)
 			{
+				BeginCountingTime();
 				r->RenderFill(currPPC, currFB);
+				PrintTime(string("Mesh ") + to_string(r->id) + string(" spends: "));
 
 				if (isRenderAABB)
 					r->RenderAABB(currPPC, currFB);
@@ -112,10 +115,9 @@ void Scene::Render(PPC* currPPC, FrameBuffer* currFB)
 		}
 		else
 		{
-			auto begin = std::clock();
+			BeginCountingTime();
 			RaytracingScene(currPPC, currFB);
-			auto end = std::clock();
-			cerr << "Ray tracing per frame used: " << (end - begin) / CLOCKS_PER_SEC << endl;
+			PrintTime("Ray tracing per frame used: ");
 		}
 		currFB->redraw();
 	}
@@ -178,9 +180,10 @@ void Scene::RaytracingScene(PPC* currPPC, FrameBuffer* currFB)
 			V3 ray = currPPC->GetRay(u, v);
 
 			// Draw cube map
-			fb->DrawPoint(u,v, cubemap->LookupColor(ray).GetColor());
+			currFB->DrawPoint(u,v, cubemap->LookupColor(ray).GetColor());
 
 			// use SBB to prune branches
+			// But find it is not efficient
 			if (GlobalVariables::Instance()->isUseSBB)
 			{
 				bool isMissing = true;
@@ -188,7 +191,10 @@ void Scene::RaytracingScene(PPC* currPPC, FrameBuffer* currFB)
 				{
 					auto[isIntersect, t] = sbb->RaySBB(currPPC->C, ray);
 					if (isIntersect)
+					{
 						isMissing = false;
+						break;
+					}
 				}
 
 				if (isMissing)
@@ -516,6 +522,12 @@ void Scene::InitializeLights()
 	UpdateSM();
 }
 
+void Scene::PrintTime(const string dbgInfo)
+{
+	endTime = Clock::now();
+	cerr << dbgInfo << std::chrono::duration_cast<chrono::nanoseconds>(endTime - beginTime).count() * 1e-9 << "s"<< endl;
+}
+
 void Scene::InitDemo()
 {
 //	{
@@ -539,7 +551,7 @@ void Scene::InitDemo()
 
 	{
 		cubemap = make_shared<CubeMap>();
-		isRenderAABB = true;
+		
 		// prepare cubemap
 		string folder = "images/cubemaps/";
 		vector<string> fnames{
@@ -612,13 +624,19 @@ void Scene::InitDemo()
 		sceneBillboard.push_back(billboard);
 
 		// Currently, use naive AABB info for SBB, not tight!
-		auto groundAABB = ground->ComputeAABB();
-		auto teapotAABB = teapot->ComputeAABB(); 
-		auto teapot1AABB = teapot1->ComputeAABB();
-		auto teapot2AABB = teapot2->ComputeAABB();
+		auto groundAABBCenter  = ground->GetCenter();
+		auto teapotAABBCenter  = teapot->GetCenter();
+		auto teapot1AABBCenter = teapot1->GetCenter();
+		auto teapot2AABBCenter = teapot2->GetCenter();
 
-		V3 tmC = ppc->C + ppc->GetVD() * 50.0f;
-		ppc->C = refletors[GlobalVariables::Instance()->tmAnimationID]->GetCenter() - tmC + V3(0.0f, 10.0f, 0.0f);
+		// Naive compute Sphere BB
+		raytracingSBB.push_back(make_shared<SBB>(groundAABBCenter, ground->ComputeSBBR(groundAABBCenter)));
+		raytracingSBB.push_back(make_shared<SBB>(teapotAABBCenter, ground->ComputeSBBR(teapotAABBCenter)));
+		raytracingSBB.push_back(make_shared<SBB>(teapot1AABBCenter, ground->ComputeSBBR(teapot1AABBCenter)));
+		raytracingSBB.push_back(make_shared<SBB>(teapot2AABBCenter, ground->ComputeSBBR(teapot2AABBCenter)));
+
+		V3 tmC = ppc->C + ppc->GetVD() * 100.0f;
+		ppc->C = refletors[GlobalVariables::Instance()->tmAnimationID]->GetCenter() - tmC + V3(0.0f, 1.0f, 0.0f);
 		ppc->PositionAndOrient(ppc->C, refletors[GlobalVariables::Instance()->tmAnimationID]->GetCenter(),
 			V3(0.0f, 1.0f, 0.0f));
 
@@ -636,12 +654,6 @@ void Scene::InitDemo()
 
 void Scene::Demonstration()
 {
-	{
-		GlobalVariables::Instance()->isUseSBB = true;
-		Render();
-		return;
-	}
-
 	// Morphing 
 	auto teapotC = refletors[GlobalVariables::Instance()->tmAnimationID]->GetCenter();
 	int stepN = 360;

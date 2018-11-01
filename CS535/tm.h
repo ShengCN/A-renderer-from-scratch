@@ -54,6 +54,7 @@ public:
 	void Scale(float scf);		// normalize size to some scf
 	void LoadModelBin(char *fname);
 	AABB ComputeAABB();
+	float ComputeSBBR(V3 c);	// given c, compute r
 	void PositionAndSize(V3 tmC, float tmSize);
 	V3 GetCenter();
 
@@ -66,7 +67,7 @@ public:
 	V3 Light(PPC *ppc, PointProperty& pp, int u, int v, float w); // Per pixel  light 
 	bool ComputeShadowEffect(PPC* ppc, int u, int v, float z, float &sdEffect);
 	bool IsPixelInProjection(int u, int v, float z, V3 &color, float &alpha);
-	V3 EnvMapping(PPC *ppc, FrameBuffer *fb, CubeMap *cubemap, V3 p, V3 n, float& envAffect);
+	tuple<V3, float> EnvMapping(PPC *ppc, FrameBuffer *fb, CubeMap *cubemap, V3 p, V3 n);
 	V3 HomographMapping(V3 uvw, PPC* ppc1, PPC* ppc2);
 	int EnvBBIntersection(vector<shared_ptr<BillBoard>> bbs, V3 p, V3 viewDir, float &distance,V3 &color, float &alpha);
 	V3 ClampColor(V3 color);

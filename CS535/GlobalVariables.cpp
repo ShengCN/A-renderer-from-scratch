@@ -14,12 +14,12 @@ GlobalVariables* GlobalVariables::Instance()
 
 GlobalVariables::GlobalVariables()
 {
-	isHighResolution = false;
+	isHighResolution = true;
 	highResoW = 1020;
 	highResoH = 720;
 	resoW = 640;
 	resoH = 480;
-	isRayTracing = true;
+	isRayTracing = false;
 	isDBGRaytracing = true;
 	isUseSBB = true;
 
@@ -37,7 +37,7 @@ GlobalVariables::GlobalVariables()
 	isLight = true;
 	isShadow = false;
 	isRefraction = false;
-	refractRatio = 0.8f;
+	refractRatio = 0.9f;
 
 	isRecording = false;
 }

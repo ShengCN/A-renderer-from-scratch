@@ -8,8 +8,10 @@
 #include "cubemap.h"
 #include "BillBoard.h"
 #include "SBB.h"
+#include <chrono>
 using std::vector;
 using std::unique_ptr;
+using Clock = std::chrono::high_resolution_clock;
 
 class Scene
 {
@@ -57,6 +59,11 @@ private:
 	void Demonstration();
 	void InitDemo();
 	void InitializeLights();
+
+	void BeginCountingTime() { beginTime = Clock::now(); };
+	void PrintTime(const string dbgInfo);
+	chrono::time_point<chrono::steady_clock> beginTime;
+	chrono::time_point<chrono::steady_clock> endTime;
 };
 
 extern Scene* scene;

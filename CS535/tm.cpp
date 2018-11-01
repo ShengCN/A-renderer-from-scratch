@@ -626,6 +626,16 @@ AABB TM::ComputeAABB()
 	return aabb;
 }
 
+float TM::ComputeSBBR(V3 c)
+{
+	float ret = 0.0f;
+	for(auto v:verts)
+	{
+		ret = max((c - v).Length(), ret);
+	}
+	return ret;
+}
+
 void TM::PositionAndSize(V3 tmC, float tmSize)
 {
 	AABB aabb = ComputeAABB();
@@ -711,10 +721,7 @@ tuple<V3, float> TM::Shading(PPC* ppc, FrameBuffer* fb, int u, int v, float w, P
 	// environment mapping
 	if (isEnvMapping)
 	{
-		float envEffect = 1.0f;
-
-		auto envColor = EnvMapping(ppc, fb, GlobalVariables::Instance()->curScene->cubemap.get(), pp.p, pp.n,
-		                           envEffect);
+		auto [envColor, envEffect] = EnvMapping(ppc, fb, GlobalVariables::Instance()->curScene->cubemap.get(), pp.p, pp.n);
 
 		envEffect = isShowObjColor ? envEffect : 1.0f;
 		pp.c = ClampColor(pp.c * (1.0f - envEffect) + envColor * envEffect);
@@ -868,11 +875,14 @@ bool TM::IsPixelInProjection(int u, int v, float z, V3& color, float& alpha)
 
 // envEffect (0,1)
 // 1 means should igore point color
-V3 TM::EnvMapping(PPC* ppc, FrameBuffer* fb, CubeMap* cubemap, V3 p, V3 n, float& envEffect)
+tuple<V3, float> TM::EnvMapping(PPC* ppc, FrameBuffer* fb, CubeMap* cubemap, V3 p, V3 n)
 {
+	V3 c(0.0f);
+	float envEffect = 0.0f;
 	if (!cubemap)
-		return V3(0.0f);
+		return tuple<V3, float>(c,envEffect);
 
+	envEffect = 0.4f;
 	auto gv = GlobalVariables::Instance();
 	V3 viewDir = (ppc->C - p).UnitVector();
 
@@ -896,11 +906,10 @@ V3 TM::EnvMapping(PPC* ppc, FrameBuffer* fb, CubeMap* cubemap, V3 p, V3 n, float
 		distance = 1.0f / distance;
 		float disAttenauation = max(pow(distance * 10.0f, 2), 1.0f);
 		// envEffect = Clamp(1.0f / disAttenauation,0.0f,1.0f);
-		return bbColor;
+		return tuple<V3, float>(bbColor,0.3f);
 	}
 
-	envEffect = 0.3f;
-	return cubemap->LookupColor(viewDir, pixelSz);
+	return tuple<V3, float>(cubemap->LookupColor(viewDir, pixelSz), envEffect);
 }
 
 int TM::EnvBBIntersection(vector<shared_ptr<BillBoard>> bbs, V3 p, V3 viewDir, float& distance, V3& bbColor,

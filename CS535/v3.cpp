@@ -109,10 +109,10 @@ V3 V3::Refract(V3 n, float ratio)
 
 	V3 v = this->UnitVector();
 	float nv = n * v;
-
+	
 	if (FloatEqual(nv, 0.0f) || FloatEqual(nv,1.0f))
 		return *this;
-
+	
 	V3 newn = n * nv;
 	V3 ret = newn - v;
 	float l = ret.Length() / ratio;
