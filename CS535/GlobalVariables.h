@@ -35,6 +35,7 @@ public:
 	bool isShadow;
 	int tmAnimationID;
 	bool isDBGRaytracing;
+	bool isCubemapMipmap;
 
 private:
 	GlobalVariables();

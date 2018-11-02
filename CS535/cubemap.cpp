@@ -36,8 +36,7 @@ V3 CubeMap::LookupColor(V3 dir, int pixSz)
 		if (curPPC->IsInSideImagePlane(pp))
 		{
 			// catched by one ppc
-			float s = pp[0] / static_cast<float>(curPPC->w - 1), t = pp[1] / static_cast<float>(curPPC->h - 1);
-			auto &tex = cubemapFB->textures[mapOrder[_lastFB]].back();
+			float s = pp[0] / static_cast<float>(curPPC->w-1), t = pp[1] / static_cast<float>(curPPC->h-1);			
 			float a = 0.0f;
 			color = cubemapFB->LookupColor(mapOrder[_lastFB], s, t, a, pixSz);
 			break;

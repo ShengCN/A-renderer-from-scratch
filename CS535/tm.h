@@ -62,21 +62,25 @@ public:
 	void RayTracing(PPC *ppc, FrameBuffer *fb);
 	
 	// Shading
-	tuple<V3, float> Shading(PPC* ppc, FrameBuffer* fb, int u, int v, float w, PointProperty& pp);
+	tuple<V3, float> Shading(PPC* ppc, FrameBuffer* fb, int u, int v, float w, PointProperty& pp, V3 dn = V3(0.0f));
+
+	// Lighting 
 	void Light(V3 mc, V3 L, PPC *ppc);	  // Per vertex light
 	V3 Light(PPC *ppc, PointProperty& pp, int u, int v, float w); // Per pixel  light 
 	bool ComputeShadowEffect(PPC* ppc, int u, int v, float z, float &sdEffect);
 	bool IsPixelInProjection(int u, int v, float z, V3 &color, float &alpha);
-	tuple<V3, float> EnvMapping(PPC *ppc, FrameBuffer *fb, CubeMap *cubemap, V3 p, V3 n);
 	V3 HomographMapping(V3 uvw, PPC* ppc1, PPC* ppc2);
-	int EnvBBIntersection(vector<shared_ptr<BillBoard>> bbs, V3 p, V3 viewDir, float &distance,V3 &color, float &alpha);
 	V3 ClampColor(V3 color);
+
+	// Env mapping
+	tuple<V3, float> EnvMapping(PPC *ppc, FrameBuffer *fb, CubeMap *cubemap, V3 p, V3 n, V3 dn = V3(0.0f));
+	int EnvBBIntersection(vector<shared_ptr<BillBoard>> bbs, V3 p, V3 viewDir, float &distance, V3 &color, float &alpha);
 
 	// Morphing
 	void SphereMorph(V3 c,float r, float fract);
 	void WaterAnimation(float t);
 
-	// Rendering process
+	// Ray geometry intersection
 	tuple<float, float, float, float> RayTriangleIntersect(V3 C, V3 ray, V3 p0, V3 p1, V3 p2);
 	tuple<PointProperty, float> RayMeshIntersect(V3 C, V3 ray);									// Return pp and closest w
 

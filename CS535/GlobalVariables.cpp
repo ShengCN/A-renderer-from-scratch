@@ -28,7 +28,7 @@ GlobalVariables::GlobalVariables()
 	curScene = nullptr;
 	isRenderProjectedTexture = true;
 	depthTest = true;
-	lodTexture = false;
+	lodTexture = true;
 	projectedTextureName = "images/jojo.tiff";
 	checkerBoxTexName = "images/Checkerboard_pattern.tiff";
 
@@ -38,6 +38,8 @@ GlobalVariables::GlobalVariables()
 	isShadow = false;
 	isRefraction = false;
 	refractRatio = 1.05f;
+
+	isCubemapMipmap = false;
 
 	isRecording = false;
 }

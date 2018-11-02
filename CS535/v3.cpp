@@ -113,21 +113,12 @@ V3 V3::Refract(V3 n, float ratio)
 	V3 alphaX = alpha - alphaY;
 	float n1 = 1.0f, n2 = ratio;
 
-	if(cosi < 0.0f)
-	{
-		cosi = -cosi;
-	}
-	else
-	{
-		// reverse refract
-		swap(n1, n2);
-		n = V3(0.0f) -n;
-	}
+	cosi < 0.0f ? cosi = -cosi : swap(n1, n2);
 
 	float n1n2 = n1 / n2;
 	float k = 1.0f - n1n2 * n1n2 * (1.0f - cosi * cosi);
 
-	return alphaX * n1n2 + alphaY * (k <0.0f? 0.0f: (sqrt(k) / cosi));
+	return k < 0.0f ? V3(0.0f) : alphaX * n1n2 + alphaY * (sqrt(k) / cosi);
 }
 
 float& V3::operator[](int i)

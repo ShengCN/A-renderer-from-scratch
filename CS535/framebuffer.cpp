@@ -729,7 +729,8 @@ V3 FrameBuffer::LookupColor(std::string texFile, float s, float t, float &alpha,
 	}
 
 	// Debug
-	//cerr << "Selected LoD: " << curLoD << "\t" << nextLoD << endl;
+	// if(curLoD != maxLoD && maxLoD - curLoD > 1)
+	// 	cerr << "Selected LoD: " << curLoD << "\t" << nextLoD << endl;
 
 	// corner case
 	if (nextLoD == curLoD)
@@ -738,6 +739,7 @@ V3 FrameBuffer::LookupColor(std::string texFile, float s, float t, float &alpha,
 	V3 c0 = BilinearLookupColor(textures[texFile][curLoD], s, t, alpha);
 	V3 c1 = BilinearLookupColor(textures[texFile][nextLoD], s, t, alpha);
 	float fract = static_cast<float>(log2(pixelSz) - curLoD);
+
 	return c0 * (1.0f - fract) + c1 * fract;
 }
 

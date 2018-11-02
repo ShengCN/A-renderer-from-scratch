@@ -285,7 +285,7 @@ void Scene::UpdateBBs()
 
 			int w = GlobalVariables::Instance()->resoW;
 			int h = GlobalVariables::Instance()->resoH;
-			float fovf = 40.0f;
+			float fovf = 45.0f;
 			shared_ptr<PPC> ppc = make_shared<PPC>(w, h, fovf);
 			shared_ptr<FrameBuffer> bbFB = make_shared<FrameBuffer>(0, 0, w, h);
 			ppc->PositionAndOrient(rCenter, otherTmCenter, V3(0.0f, 1.0f, 0.0f));
@@ -587,7 +587,7 @@ void Scene::InitDemo()
 		teapot->LoadModelBin("geometry/teapot1K.bin");
 		teapot->isEnvMapping = true;
 		teapot->isShowObjColor = false;
-		teapot->isRefraction = true;
+		teapot->isRefraction = false;
 		teapot1->LoadModelBin("geometry/teapot1K.bin");
 		teapot1->isEnvMapping = true;
 		teapot1->isShowObjColor = true;
@@ -612,9 +612,9 @@ void Scene::InitDemo()
 		string checkerBoxTexName = GlobalVariables::Instance()->checkerBoxTexName;
 		fb->LoadTexture(checkerBoxTexName);
 
-		ground->PositionAndSize(teapot->GetCenter() + V3(0.0f, -obsz * 0.3f, 0.0f), obsz * 2.0f);
+		ground->PositionAndSize(teapot->GetCenter() + V3(0.0f, -obsz * 0.2f, 0.0f), obsz * 2.0f);
 		ground->SetText(checkerBoxTexName);
-		billboard->mesh->PositionAndSize(teapot->GetCenter() + V3(0.0f, -obsz * 0.3f, 0.0f), obsz * 2.0f);
+		billboard->mesh->PositionAndSize(teapot->GetCenter() + V3(0.0f, -obsz * 0.2f, 0.0f), obsz * 2.0f);
 		billboard->mesh->SetText(checkerBoxTexName);
 
 		meshes.push_back(ground);
@@ -629,23 +629,23 @@ void Scene::InitDemo()
 		auto teapot1AABBCenter = teapot1->GetCenter();
 		auto teapot2AABBCenter = teapot2->GetCenter();
 
-		// refletors[GlobalVariables::Instance()->tmAnimationID]->SphereMorph(teapot->GetCenter(), 12.0f, 1.0f);
-
-
 		// Naive compute Sphere BB
 		raytracingSBB.push_back(make_shared<SBB>(groundAABBCenter, ground->ComputeSBBR(groundAABBCenter)));
 		raytracingSBB.push_back(make_shared<SBB>(teapotAABBCenter, ground->ComputeSBBR(teapotAABBCenter)));
 		raytracingSBB.push_back(make_shared<SBB>(teapot1AABBCenter, ground->ComputeSBBR(teapot1AABBCenter)));
 		raytracingSBB.push_back(make_shared<SBB>(teapot2AABBCenter, ground->ComputeSBBR(teapot2AABBCenter)));
 
-		V3 tmC = ppc->C + ppc->GetVD() * 100.0f;
-		ppc->C = refletors[GlobalVariables::Instance()->tmAnimationID]->GetCenter() - tmC + V3(0.0f, 3.0f, 0.0f);
+		V3 tmC = ppc->C + ppc->GetVD() * 50.0f;
+		ppc->C = refletors[GlobalVariables::Instance()->tmAnimationID]->GetCenter() - tmC + V3(0.0f, 10.0f, 0.0f);
 		ppc->PositionAndOrient(ppc->C, refletors[GlobalVariables::Instance()->tmAnimationID]->GetCenter(),
 			V3(0.0f, 1.0f, 0.0f));
 
 		ppc3->C = ppc3->C + V3(330.0f, 150.0f, 300.0f);
 		ppc3->PositionAndOrient(ppc3->C, refletors[GlobalVariables::Instance()->tmAnimationID]->GetCenter(),
 			V3(0.0f, 1.0f, 0.0f));
+
+
+		refletors[GlobalVariables::Instance()->tmAnimationID]->SphereMorph(teapot->GetCenter(), 10.0f, 1.0f);
 
 		InitializeLights();
 		// Prepare BB
@@ -662,6 +662,7 @@ void Scene::Demonstration()
 	int stepN = 360;
 	auto disAB = (refletors[0]->GetCenter() - refletors[2]->GetCenter())/static_cast<float>(stepN);
 	refletors[GlobalVariables::Instance()->tmAnimationID]->SphereMorph(teapotC, 10.0f, 1.0f);
+	// GlobalVariables::Instance()->isCubemapMipmap = true;
 
 	for (int stepi = 0; stepi < stepN; ++stepi)
 	{
@@ -670,9 +671,9 @@ void Scene::Demonstration()
 		// refletors[GlobalVariables::Instance()->tmAnimationID]->WaterAnimation(stepi * 0.5f);
 		// refletors[2]->Translate(disAB * 0.4f);
 
-		refletors[GlobalVariables::Instance()->tmAnimationID]->Translate(V3(2.0f, 0.0f, 0.0f));
+		// refletors[GlobalVariables::Instance()->tmAnimationID]->Translate(V3(2.0f, 0.0f, 0.0f));
 
-		// ppc->RevolveH(refletors[0]->GetCenter(), 1.0f);
+		ppc->RevolveH(refletors[0]->GetCenter(), 1.0f);
 		// sceneBillboard[0]->mesh->Translate(V3(0.0f, 0.0f, -1.0f));
 
 		UpdateBBs();

@@ -270,10 +270,21 @@ void TM::RenderFill(PPC* ppc, FrameBuffer* fb)
 					V3 pn = p0.n + (p1.n - p0.n) * k + (p2.n - p0.n) * l;
 					V3 p = ppc->Unproject(uvP);
 
+					// normal derivative (approximately)
+					auto GetN = [&](int u, int v)
+					{
+						float k = V3(u, v, 1.0f) * qM[1] * div;
+						float l = V3(u, v, 1.0f) * qM[2] * div;
+						return p0.c + (p1.c - p0.c) * k + (p2.c - p0.c) * l;
+					};
+					V3 du = (GetN(u + 1, v) - GetN(u - 1, v)) * 0.5f;
+					V3 dv = (GetN(u, v + 1) - GetN(u, v - 1)) * 0.5f;
+					V3 dudv = du + dv;
+
 					// shading
 					PointProperty pp(p, pc, pn, st[0], st[1]);
 
-					auto [color , alpha] = Shading(ppc, fb, u, v, wv, pp);
+					auto [color , alpha] = gv->isCubemapMipmap ? Shading(ppc, fb, u, v, wv, pp, dudv) : Shading(ppc, fb, u, v, wv, pp);
 
 					// alpha blending 
 					if (!FloatEqual(alpha, 1.0f))
@@ -706,7 +717,7 @@ void TM::RayTracing(PPC* ppc, FrameBuffer* fb)
 	}
 }
 
-tuple<V3, float> TM::Shading(PPC* ppc, FrameBuffer* fb, int u, int v, float w, PointProperty& pp)
+tuple<V3, float> TM::Shading(PPC* ppc, FrameBuffer* fb, int u, int v, float w, PointProperty& pp, V3 dn)
 {
 	V3 color(0.0f); float alpha = 1.0f;
 	if (fb->textures.find(tex) != fb->textures.end())
@@ -721,7 +732,7 @@ tuple<V3, float> TM::Shading(PPC* ppc, FrameBuffer* fb, int u, int v, float w, P
 	// environment mapping
 	if (isEnvMapping)
 	{
-		auto [envColor, envEffect] = EnvMapping(ppc, fb, GlobalVariables::Instance()->curScene->cubemap.get(), pp.p, pp.n);
+		auto [envColor, envEffect] = EnvMapping(ppc, fb, GlobalVariables::Instance()->curScene->cubemap.get(), pp.p, pp.n, dn);
 
 		envEffect = isShowObjColor ? envEffect : 1.0f;
 		pp.c = ClampColor(pp.c * (1.0f - envEffect) + envColor * envEffect);
@@ -875,7 +886,7 @@ bool TM::IsPixelInProjection(int u, int v, float z, V3& color, float& alpha)
 
 // envEffect (0,1)
 // 1 means should igore point color
-tuple<V3, float> TM::EnvMapping(PPC* ppc, FrameBuffer* fb, CubeMap* cubemap, V3 p, V3 n)
+tuple<V3, float> TM::EnvMapping(PPC* ppc, FrameBuffer* fb, CubeMap* cubemap, V3 p, V3 n, V3 dn)
 {
 	V3 c(0.0f);
 	float envEffect = 0.0f;
@@ -909,7 +920,9 @@ tuple<V3, float> TM::EnvMapping(PPC* ppc, FrameBuffer* fb, CubeMap* cubemap, V3 
 		return tuple<V3, float>(bbColor,0.3f);
 	}
 
-	return tuple<V3, float>(cubemap->LookupColor(viewDir, pixelSz), envEffect);
+	// Chose mipmap level, use dn to approximate pixelsz
+	float pxSz = dn != V3(0.0f) ? abs((n + dn).UnitVector() * n.UnitVector()) * static_cast<float>(ppc->w) * 0.5f : -1;
+	return tuple<V3, float>(cubemap->LookupColor(viewDir, pxSz), envEffect);
 }
 
 int TM::EnvBBIntersection(vector<shared_ptr<BillBoard>> bbs, V3 p, V3 viewDir, float& distance, V3& bbColor,
