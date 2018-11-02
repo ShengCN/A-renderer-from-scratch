@@ -285,7 +285,7 @@ void Scene::UpdateBBs()
 
 			int w = GlobalVariables::Instance()->resoW;
 			int h = GlobalVariables::Instance()->resoH;
-			float fovf = 45.0f;
+			float fovf = 40.0f;
 			shared_ptr<PPC> ppc = make_shared<PPC>(w, h, fovf);
 			shared_ptr<FrameBuffer> bbFB = make_shared<FrameBuffer>(0, 0, w, h);
 			ppc->PositionAndOrient(rCenter, otherTmCenter, V3(0.0f, 1.0f, 0.0f));
@@ -605,8 +605,8 @@ void Scene::InitDemo()
 
 		float obsz = 50.0f;
 		teapot->PositionAndSize(V3(0.0f), obsz);
-		teapot1->PositionAndSize(V3(obsz * 0.75f, 0.0f, -obsz), obsz);
-		teapot2->PositionAndSize(V3(-obsz * 0.75f, 0.0f, -obsz), obsz);
+		teapot1->PositionAndSize(V3(obsz * 0.75f, 0.0f, -obsz * 1.2f), obsz);
+		teapot2->PositionAndSize(V3(-obsz * 0.75f, 0.0f, -obsz * 1.2f), obsz);
 
 		// Textures
 		string checkerBoxTexName = GlobalVariables::Instance()->checkerBoxTexName;
@@ -638,7 +638,7 @@ void Scene::InitDemo()
 		raytracingSBB.push_back(make_shared<SBB>(teapot1AABBCenter, ground->ComputeSBBR(teapot1AABBCenter)));
 		raytracingSBB.push_back(make_shared<SBB>(teapot2AABBCenter, ground->ComputeSBBR(teapot2AABBCenter)));
 
-		V3 tmC = ppc->C + ppc->GetVD() * 50.0f;
+		V3 tmC = ppc->C + ppc->GetVD() * 100.0f;
 		ppc->C = refletors[GlobalVariables::Instance()->tmAnimationID]->GetCenter() - tmC + V3(0.0f, 3.0f, 0.0f);
 		ppc->PositionAndOrient(ppc->C, refletors[GlobalVariables::Instance()->tmAnimationID]->GetCenter(),
 			V3(0.0f, 1.0f, 0.0f));
@@ -661,6 +661,7 @@ void Scene::Demonstration()
 	auto teapotC = refletors[GlobalVariables::Instance()->tmAnimationID]->GetCenter();
 	int stepN = 360;
 	auto disAB = (refletors[0]->GetCenter() - refletors[2]->GetCenter())/static_cast<float>(stepN);
+	refletors[GlobalVariables::Instance()->tmAnimationID]->SphereMorph(teapotC, 10.0f, 1.0f);
 
 	for (int stepi = 0; stepi < stepN; ++stepi)
 	{
@@ -669,7 +670,7 @@ void Scene::Demonstration()
 		// refletors[GlobalVariables::Instance()->tmAnimationID]->WaterAnimation(stepi * 0.5f);
 		// refletors[2]->Translate(disAB * 0.4f);
 
-		refletors[GlobalVariables::Instance()->tmAnimationID]->Translate(V3(1.0f, 0.0f, 0.0f));
+		refletors[GlobalVariables::Instance()->tmAnimationID]->Translate(V3(2.0f, 0.0f, 0.0f));
 
 		// ppc->RevolveH(refletors[0]->GetCenter(), 1.0f);
 		// sceneBillboard[0]->mesh->Translate(V3(0.0f, 0.0f, -1.0f));
