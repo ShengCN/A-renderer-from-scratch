@@ -12,7 +12,6 @@
 #include "TM.h"
 #include "GlobalVariables.h"
 
-
 Scene* scene;
 int TM::tmIDCounter = 0;
 
@@ -635,17 +634,18 @@ void Scene::InitDemo()
 		raytracingSBB.push_back(make_shared<SBB>(teapot1AABBCenter, ground->ComputeSBBR(teapot1AABBCenter)));
 		raytracingSBB.push_back(make_shared<SBB>(teapot2AABBCenter, ground->ComputeSBBR(teapot2AABBCenter)));
 
+		auto targetCenter = refletors[GlobalVariables::Instance()->tmAnimationID]->GetCenter();
 		V3 tmC = ppc->C + ppc->GetVD() * 50.0f;
-		ppc->C = refletors[GlobalVariables::Instance()->tmAnimationID]->GetCenter() - tmC + V3(0.0f, 10.0f, 0.0f);
-		ppc->PositionAndOrient(ppc->C, refletors[GlobalVariables::Instance()->tmAnimationID]->GetCenter(),
-			V3(0.0f, 1.0f, 0.0f));
+		ppc->C = targetCenter - tmC;
+		ppc->PositionAndOrient(ppc->C, targetCenter, V3(0.0f, 1.0f, 0.0f));
 
 		ppc3->C = ppc3->C + V3(330.0f, 150.0f, 300.0f);
-		ppc3->PositionAndOrient(ppc3->C, refletors[GlobalVariables::Instance()->tmAnimationID]->GetCenter(),
-			V3(0.0f, 1.0f, 0.0f));
+		ppc3->PositionAndOrient(ppc3->C, targetCenter, V3(0.0f, 1.0f, 0.0f));
 
 
-		refletors[GlobalVariables::Instance()->tmAnimationID]->SphereMorph(teapot->GetCenter(), 10.0f, 1.0f);
+		// for debugging
+		ppc->RevolveH(targetCenter, 45.0f);
+		refletors[GlobalVariables::Instance()->tmAnimationID]->SphereMorph(teapot->GetCenter(), 5.0f, 1.0f);
 
 		InitializeLights();
 		// Prepare BB
@@ -661,7 +661,7 @@ void Scene::Demonstration()
 	auto teapotC = refletors[GlobalVariables::Instance()->tmAnimationID]->GetCenter();
 	int stepN = 360;
 	auto disAB = (refletors[0]->GetCenter() - refletors[2]->GetCenter());
-	refletors[GlobalVariables::Instance()->tmAnimationID]->SphereMorph(teapotC, 5.0f, 1.0f);
+	// refletors[GlobalVariables::Instance()->tmAnimationID]->SphereMorph(teapotC, 5.0f, 1.0f);
 	refletors[2]->Translate(disAB * 0.3f);
 	// GlobalVariables::Instance()->isCubemapMipmap = true;
 
@@ -674,8 +674,8 @@ void Scene::Demonstration()
 
 		// refletors[GlobalVariables::Instance()->tmAnimationID]->Translate(V3(2.0f, 0.0f, 0.0f));
 
-		// ppc->RevolveH(refletors[0]->GetCenter(), 1.0f);
-		refletors[2]->RotateAboutArbitraryAxis(refletors[0]->GetCenter(), V3(0.0f, 1.0f, 0.0f), 3.0f);
+		ppc->RevolveH(refletors[0]->GetCenter(), -1.0f);
+		// refletors[2]->RotateAboutArbitraryAxis(refletors[0]->GetCenter(), V3(0.0f, 1.0f, 0.0f), 3.0f);
 
 		UpdateBBs();
 		Render();
