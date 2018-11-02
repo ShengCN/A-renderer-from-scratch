@@ -535,6 +535,7 @@ void TM::RotateAboutArbitraryAxis(V3 O, V3 a, float angled)
 	for (int vi = 0; vi < vertsN; ++vi)
 	{
 		verts[vi] = verts[vi].RotateThisPointAboutArbitraryAxis(O, a, angled);
+		normals[vi] = normals[vi].RotateThisPointAboutArbitraryAxis(O, a, angled);
 	}
 }
 
@@ -921,7 +922,7 @@ tuple<V3, float> TM::EnvMapping(PPC* ppc, FrameBuffer* fb, CubeMap* cubemap, V3 
 	}
 
 	// Chose mipmap level, use dn to approximate pixelsz
-	float pxSz = dn != V3(0.0f) ? abs((n + dn).UnitVector() * n.UnitVector()) * static_cast<float>(ppc->w) * 0.5f : -1;
+	float pxSz = dn != V3(0.0f) ? abs((n + dn).UnitVector() * n.UnitVector()) * static_cast<float>(ppc->h) * 0.5f : -1;
 	return tuple<V3, float>(cubemap->LookupColor(viewDir, pxSz), envEffect);
 }
 
