@@ -105,20 +105,32 @@ V3 V3::Reflect(V3 n)
 
 V3 V3::Refract(V3 n, float ratio)
 {
-	// sina / sinb = ratio
-
-	V3 v = this->UnitVector();
-	float nv = n * v;
-	
-	if (FloatEqual(nv, 0.0f) || FloatEqual(nv,1.0f))
+	// Default is eye vector
+	V3 alpha = V3(0.0f) - this->UnitVector();
+	n = n.UnitVector();
+	float cosI = clamp(alpha * n, -1.0f,1.0f);
+	if (FloatEqual(cosI, 0.0f))
 		return *this;
+
+	V3 alphaY = alpha * n;
+	V3 alphaX = alpha - alphaY;
+
+	// incoming: alpha
+	// out-coming: beta
+	// sina / sinb = n2 / n1 = ratio
+	float n1 = 1.0f, n2 = ratio;
+	float n1n2 = n1 / n2;
 	
-	V3 newn = n * nv;
-	V3 ret = newn - v;
-	float l = ret.Length() / ratio;
-	ret = ret.UnitVector() * l;
-	ret = V3(0.0f) - newn + ret;
-	return ret.UnitVector();
+	// if (cosI < 0.0f)
+	// 	cosI = -cosI;
+	// else
+	// {
+	// 	swap(n1, n2);
+	// 	n = V3(0.0f) - n;
+	// }
+
+	float k = 1.0f - n1n2 * n1n2 * (1.0f - cosI * cosI);
+	return alphaX * n1n2 + alphaY * (k < 0.0f ? 0.0f : sqrt(k)) / cosI;
 }
 
 float& V3::operator[](int i)

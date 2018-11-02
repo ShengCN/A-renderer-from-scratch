@@ -999,7 +999,7 @@ void TM::SphereMorph(V3 c, float r, float fract)
 		V3 vp = staticVerts[vi];
 		V3 dis = vp - c;
 		dis = dis.UnitVector() * r;
-		staticVerts[vi] = vp * (1.0f - fract) + (c + dis) * fract;
+		verts[vi] = vp * (1.0f - fract) + (c + dis) * fract;
 
 		V3 n = normals[vi];
 		V3 newn = dis.UnitVector();

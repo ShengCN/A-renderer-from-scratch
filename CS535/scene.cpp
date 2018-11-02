@@ -605,8 +605,8 @@ void Scene::InitDemo()
 
 		float obsz = 50.0f;
 		teapot->PositionAndSize(V3(0.0f), obsz);
-		teapot1->PositionAndSize(V3(obsz * 0.75f, 0.0f, -obsz * 0.75f), obsz);
-		teapot2->PositionAndSize(V3(-obsz * 0.75f, 0.0f, -obsz * 0.75f), obsz);
+		teapot1->PositionAndSize(V3(obsz * 0.75f, 0.0f, -obsz), obsz);
+		teapot2->PositionAndSize(V3(-obsz * 0.75f, 0.0f, -obsz), obsz);
 
 		// Textures
 		string checkerBoxTexName = GlobalVariables::Instance()->checkerBoxTexName;
@@ -629,14 +629,17 @@ void Scene::InitDemo()
 		auto teapot1AABBCenter = teapot1->GetCenter();
 		auto teapot2AABBCenter = teapot2->GetCenter();
 
+		// refletors[GlobalVariables::Instance()->tmAnimationID]->SphereMorph(teapot->GetCenter(), 12.0f, 1.0f);
+
+
 		// Naive compute Sphere BB
 		raytracingSBB.push_back(make_shared<SBB>(groundAABBCenter, ground->ComputeSBBR(groundAABBCenter)));
 		raytracingSBB.push_back(make_shared<SBB>(teapotAABBCenter, ground->ComputeSBBR(teapotAABBCenter)));
 		raytracingSBB.push_back(make_shared<SBB>(teapot1AABBCenter, ground->ComputeSBBR(teapot1AABBCenter)));
 		raytracingSBB.push_back(make_shared<SBB>(teapot2AABBCenter, ground->ComputeSBBR(teapot2AABBCenter)));
 
-		V3 tmC = ppc->C + ppc->GetVD() * 100.0f;
-		ppc->C = refletors[GlobalVariables::Instance()->tmAnimationID]->GetCenter() - tmC + V3(0.0f, 1.0f, 0.0f);
+		V3 tmC = ppc->C + ppc->GetVD() * 50.0f;
+		ppc->C = refletors[GlobalVariables::Instance()->tmAnimationID]->GetCenter() - tmC + V3(0.0f, 3.0f, 0.0f);
 		ppc->PositionAndOrient(ppc->C, refletors[GlobalVariables::Instance()->tmAnimationID]->GetCenter(),
 			V3(0.0f, 1.0f, 0.0f));
 
@@ -662,9 +665,11 @@ void Scene::Demonstration()
 	for (int stepi = 0; stepi < stepN; ++stepi)
 	{
 		float fract = static_cast<float>(stepi) / static_cast<float>(stepN - 1);
-		refletors[GlobalVariables::Instance()->tmAnimationID]->SphereMorph(teapotC, 13.0f, 0.01f);
-		refletors[GlobalVariables::Instance()->tmAnimationID]->WaterAnimation(stepi * 0.5f);
-		refletors[2]->Translate(disAB * 0.4f);
+		// refletors[GlobalVariables::Instance()->tmAnimationID]->SphereMorph(teapotC, 13.0f, 0.01f);
+		// refletors[GlobalVariables::Instance()->tmAnimationID]->WaterAnimation(stepi * 0.5f);
+		// refletors[2]->Translate(disAB * 0.4f);
+
+		refletors[GlobalVariables::Instance()->tmAnimationID]->Translate(V3(1.0f, 0.0f, 0.0f));
 
 		// ppc->RevolveH(refletors[0]->GetCenter(), 1.0f);
 		// sceneBillboard[0]->mesh->Translate(V3(0.0f, 0.0f, -1.0f));
