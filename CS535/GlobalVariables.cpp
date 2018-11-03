@@ -37,9 +37,9 @@ GlobalVariables::GlobalVariables()
 	isLight = true;
 	isShadow = false;
 	isRefraction = false;
-	refractRatio = 1.05f;
+	refractRatio = 1.15f;
 
 	isCubemapMipmap = false;
 
-	isRecording = false;
+	isRecording = true;
 }

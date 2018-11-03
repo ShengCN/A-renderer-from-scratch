@@ -552,7 +552,7 @@ void Scene::InitDemo()
 		cubemap = make_shared<CubeMap>();
 		
 		// prepare cubemap
-		string folder = "images/cubemaps/";
+		string folder = "images/purduecubemaps/";
 		vector<string> fnames{
 			folder + "top.tiff",
 			folder + "front.tiff",
@@ -602,10 +602,10 @@ void Scene::InitDemo()
 		ground->SetQuad(V3(0.0f), V3(0.0f, 1.0f, 0.0f), V3(0.0f, 0.0f, -1.0f), 1.0f, 1.0f, 1.0f);
 		billboard->SetBillboard(V3(0.0f), V3(0.0f, 1.0f, 0.0f), V3(0.0f, 0.0f, -1.0f), 1.0f, 1.0f, 1.0f);
 
-		float obsz = 20.0f;
+		float obsz = 13.0f;
 		teapot->PositionAndSize(V3(0.0f), obsz);
-		teapot1->PositionAndSize(V3(obsz * 0.75f, 0.0f, -obsz * 1.2f), obsz);
-		teapot2->PositionAndSize(V3(-obsz * 0.75f, 0.0f, -obsz * 1.2f), obsz);
+		teapot1->PositionAndSize(V3(obsz * 0.75f, 0.0f, 0.0f), obsz * 0.8f);
+		teapot2->PositionAndSize(V3(-obsz * 0.75f, 0.0f, 0.0f), obsz* 0.8f);
 
 		// Textures
 		string checkerBoxTexName = GlobalVariables::Instance()->checkerBoxTexName;
@@ -635,8 +635,8 @@ void Scene::InitDemo()
 		raytracingSBB.push_back(make_shared<SBB>(teapot2AABBCenter, ground->ComputeSBBR(teapot2AABBCenter)));
 
 		auto targetCenter = refletors[GlobalVariables::Instance()->tmAnimationID]->GetCenter();
-		V3 tmC = ppc->C + ppc->GetVD() * 50.0f;
-		ppc->C = targetCenter - tmC;
+		V3 tmC = ppc->C + ppc->GetVD() * 30.0f;
+		ppc->C = targetCenter - tmC + V3(0.0f, obsz * 0.3f, 0.0f);
 		ppc->PositionAndOrient(ppc->C, targetCenter, V3(0.0f, 1.0f, 0.0f));
 
 		ppc3->C = ppc3->C + V3(330.0f, 150.0f, 300.0f);
@@ -656,9 +656,9 @@ void Scene::Demonstration()
 	// Morphing 
 	auto teapotC = refletors[GlobalVariables::Instance()->tmAnimationID]->GetCenter();
 	int stepN = 360;
-	auto disAB = (refletors[0]->GetCenter() - refletors[2]->GetCenter());
+
 	// refletors[GlobalVariables::Instance()->tmAnimationID]->SphereMorph(teapotC, 5.0f, 1.0f);
-	refletors[2]->Translate(disAB * 0.3f);
+	// refletors[2]->Translate(disAB * 0.3f);
 	// GlobalVariables::Instance()->isCubemapMipmap = true;
 
 	for (int stepi = 0; stepi < stepN; ++stepi)
@@ -666,11 +666,39 @@ void Scene::Demonstration()
 		float fract = static_cast<float>(stepi) / static_cast<float>(stepN - 1);
 		// refletors[GlobalVariables::Instance()->tmAnimationID]->SphereMorph(teapotC, 13.0f, 0.01f);
 		// refletors[GlobalVariables::Instance()->tmAnimationID]->WaterAnimation(stepi * 0.5f);
-		// refletors[2]->Translate(disAB * 0.4f);
+
+		auto dis02 = (teapotC - refletors[2]->GetCenter()) / static_cast<float>(stepN);
+		auto dis01 = (teapotC - refletors[1]->GetCenter()) / static_cast<float>(stepN);
+
+		refletors[1]->Translate(dis01  * 0.3f);
+		refletors[2]->Translate(dis02  * 0.3f);
+		
+		refletors[1]->RotateAboutArbitraryAxis(teapotC, V3(0.0f, 1.0f, 0.0f), 5.0f);
+		refletors[2]->RotateAboutArbitraryAxis(teapotC, V3(0.0f, 1.0f, 0.0f), 5.0f);
 
 		// refletors[GlobalVariables::Instance()->tmAnimationID]->Translate(V3(2.0f, 0.0f, 0.0f));
 
-		ppc->RevolveH(refletors[0]->GetCenter(), -1.0f);
+		if(stepi < 45)
+			ppc->RevolveV(refletors[0]->GetCenter(), -1.0f);
+
+		if(stepi > 80 && stepi  < 180)
+		{
+			refletors[0]->isRefraction = true;
+			refletors[0]->SphereMorph(teapotC, 3.0f, (stepi-80)/100.0f * 10.0f);
+		}
+
+		if(stepi >=180 && stepi <= 300)
+		{
+			// refletors[0]->WaterAnimation(stepi * 5.0f);
+			ppc->RevolveV(refletors[0]->GetCenter(), 1.0f);
+		}
+
+		if(stepi >300)
+		{
+			float ratio = 1.15f * (1.0f - (stepi - 300) / 60) + 0.95f * (stepi - 300) / 60;
+			GlobalVariables::Instance()->refractRatio = ratio;
+		}
+
 		// refletors[2]->RotateAboutArbitraryAxis(refletors[0]->GetCenter(), V3(0.0f, 1.0f, 0.0f), 3.0f);
 
 		UpdateBBs();
@@ -680,7 +708,7 @@ void Scene::Demonstration()
 		if (GlobalVariables::Instance()->isRecording)
 		{
 			char buffer[50];
-			sprintf_s(buffer, "images/Recording/ray-traced-BB-%03d.tiff", stepi);
+			sprintf_s(buffer, "images/Recording/MovingCamera-%03d.tiff", stepi);
 			fb->SaveAsTiff(buffer);
 		}
 	}

@@ -1008,6 +1008,9 @@ void TM::SphereMorph(V3 c, float r, float fract)
 	if (staticVerts.empty())
 		staticVerts = verts;
 
+	if (staticNorms.empty())
+		staticNorms = normals;
+
 	for (int vi = 0; vi < vertsN; ++vi)
 	{
 		V3 vp = staticVerts[vi];
@@ -1015,7 +1018,7 @@ void TM::SphereMorph(V3 c, float r, float fract)
 		dis = dis.UnitVector() * r;
 		verts[vi] = vp * (1.0f - fract) + (c + dis) * fract;
 
-		V3 n = normals[vi];
+		V3 n = staticNorms[vi];
 		V3 newn = dis.UnitVector();
 		normals[vi] = n * (1.0f - fract) + newn * fract;
 	}
@@ -1030,7 +1033,7 @@ void TM::WaterAnimation(float t)
 	for (int vi = 0; vi < vertsN; ++vi)
 	{
 		// Normal not correct animation
-		V3 vp = staticVerts[vi];
+		V3 vp = verts[vi];
 		float scalef = vp[1];
 
 		float a = exp(-0.005f * t);
