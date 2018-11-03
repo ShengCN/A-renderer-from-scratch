@@ -586,7 +586,7 @@ void Scene::InitDemo()
 		teapot->LoadModelBin("geometry/teapot1K.bin");
 		teapot->isEnvMapping = true;
 		teapot->isShowObjColor = false;
-		teapot->isRefraction = true;
+		teapot->isRefraction = false;
 		teapot1->LoadModelBin("geometry/teapot1K.bin");
 		teapot1->isEnvMapping = true;
 		teapot1->isShowObjColor = true;
@@ -642,10 +642,6 @@ void Scene::InitDemo()
 		ppc3->C = ppc3->C + V3(330.0f, 150.0f, 300.0f);
 		ppc3->PositionAndOrient(ppc3->C, targetCenter, V3(0.0f, 1.0f, 0.0f));
 
-
-		// for debugging
-		ppc->RevolveH(targetCenter, 45.0f);
-		refletors[GlobalVariables::Instance()->tmAnimationID]->SphereMorph(teapot->GetCenter(), 5.0f, 1.0f);
 
 		InitializeLights();
 		// Prepare BB
