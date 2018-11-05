@@ -7,7 +7,7 @@ Current features:
 * Rasterization, Raytracing, screen-space and model space interpolation. 
 * Multiple lightings and shadow maps. 
 * Texture mapping, Projective texture, Bilinear texture filter, Trilinear Lod texture, Environment mapping 
-* mplemented the paper: “Popescu, V., Mei, C., Dauble, J., & Sacks, E. (2006, September). Reflectedscene impostors for realistic reflections at interactive rates. In Computer Graphics Forum (Vol. 25, No. 3, pp. 313-322). Oxford, UK and Boston, USA: Blackwell Publishing, Inc.” 
+* Implemented the paper: “Popescu, V., Mei, C., Dauble, J., & Sacks, E. (2006, September). Reflectedscene impostors for realistic reflections at interactive rates. In Computer Graphics Forum (Vol. 25, No. 3, pp. 313-322). Oxford, UK and Boston, USA: Blackwell Publishing, Inc.” 
 
 ## Sample Result
 The implementation of the paper: (A billboard method for rendering reflections in rasterization pipeline)
