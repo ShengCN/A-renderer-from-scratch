@@ -1,5 +1,5 @@
 # A-renderer-from-scratch
-This is a c++ renderer from scratch. Finished all the extra points. There are some paper implementations as well. More rendering techniques will be implemented into this pipeline.
+This is a c++ renderer from scratch. There are some paper implementations as well. More rendering techniques will be implemented into this pipeline.
 
 Current features: 
 
