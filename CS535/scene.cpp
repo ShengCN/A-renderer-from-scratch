@@ -534,7 +534,7 @@ void Scene::InitDemo()
 	auto color = [](const ray &r)
 	{
 		V3 unit_direction = r.direction().UnitVector();
-		float t = 0.5f * (unit_direction.y() + 1.0f);
+		float t = std::clamp(unit_direction.y() + 1.0f, 0.0f,1.0f);
 		return V3(1.0f) * (1.0f - t) + V3(0.5f, 0.7f, 1.0f) * t;
 	};
 
