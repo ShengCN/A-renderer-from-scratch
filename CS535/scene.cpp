@@ -548,30 +548,23 @@ void Scene::InitDemo()
 		return  discriminant > 0.0f;
 	};
 
-	// image plane
-	V3 lower_left_corner(-2.0f, -1.0f, -1.0f);
-	V3 horizontal(4.0f, 0.0f, 0.0f);
-	V3 vertical(0.0f, 2.0f, 0.0f);
-	V3 origin(0.0f);
-
 	// scene objects
 	V3 sphereC(0.0f, 0.0f, -5.0f);
-	float spherer = 3.0f;
+	float spherer = 1.0f;
 
-	for(int j = fb->h - 1; j >=0; --j)
+	for(int v = 0; v < fb->h; ++v)
 	{
-		for(int i = 0; i < fb->w; ++i)
+		for(int u = 0; u < fb->w; ++u)
 		{
-			float u = float(i) / float(fb->w);
-			float v = float(j) / float(fb->h);
-			ray r(origin, lower_left_corner + horizontal * u + vertical * v);
+			auto rd = ppc->GetRay(u,v);
+			ray r(ppc->C, rd);
 			V3 col(0.0f);
 			if (hit_sphere(sphereC, spherer, r))
 				col = V3(1.0f, 0.0f, 0.0f);
 			else
 				col = color(r);
 
-			fb->SetGuarded(i, j, col.GetColor());
+			fb->SetGuarded(u, v, col.GetColor());
 		}	
 	}
 }
