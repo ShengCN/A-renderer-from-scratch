@@ -32,4 +32,12 @@ public:
 	bool operator!=(V3 v1);
 	friend istream& operator>>(istream& ist, V3 &v);
 	friend ostream& operator<<(ostream& ost, V3 v);
+
+	inline float x() const { return xyz[0]; }
+	inline float y() const { return xyz[1]; }
+	inline float z() const { return xyz[2]; }
+
+	inline float r() const { return xyz[0]; }
+	inline float g() const { return xyz[1]; }
+	inline float b() const { return xyz[2]; }
 };
