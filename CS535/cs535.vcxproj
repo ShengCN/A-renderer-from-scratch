@@ -107,8 +107,11 @@
     <ClInclude Include="gui.h" />
     <ClInclude Include="hitable.h" />
     <ClInclude Include="hitable_list.h" />
+    <ClInclude Include="lambertian.h" />
     <ClInclude Include="m33.h" />
+    <ClInclude Include="material.h" />
     <ClInclude Include="MathTool.h" />
+    <ClInclude Include="metal.h" />
     <ClInclude Include="ppc.h" />
     <ClInclude Include="ray.h" />
     <ClInclude Include="SBB.h" />

@@ -1,5 +1,6 @@
 #include "MathTool.h"
 #include "V3.h"
+#include <random>
 
 bool FloatEqual(float a, float b)
 {
@@ -42,4 +43,18 @@ bool IsInsideTriangle2D(V3 p, V3 v1, V3 v2, V3 v3)
 	s3 = Side2D(p, v3, v1, v2);
 
 	return s1 && s2 && s3;
+}
+
+V3 random_in_unit_shpere()
+{
+	V3 p(0.0f);
+	do
+	{
+		auto dv = std::random_device();
+		std::mt19937 mt(dv());
+		std::uniform_real_distribution<double> dist(0.0f, 1.0f);
+		p = V3(dist(mt), dist(mt), dist(mt)) * 2.0f - V3(1.0f);
+	} while (p.Length() >= 1.0f);
+
+	return p;
 }

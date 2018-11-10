@@ -21,3 +21,5 @@ float Fract(float n);
 bool Side2D(V3 p, V3 v1, V3 v2, V3 v3);
 
 bool IsInsideTriangle2D(V3 p, V3 v1, V3 v2, V3 v3);
+
+V3 random_in_unit_shpere();

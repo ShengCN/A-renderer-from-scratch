@@ -1,10 +1,13 @@
 #pragma once
 #include "ray.h"
 
+class material;
+
 struct hit_record
 {
 	float t;
 	V3 p, n;
+	shared_ptr<material> mat_ptr;
 };
 
 class hitable

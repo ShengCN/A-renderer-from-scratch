@@ -6,9 +6,11 @@ class sphere :
 public:
 	V3 center;
 	float radius;
+	shared_ptr<material> mat_ptr;
 
 	sphere() = default; 
-	sphere(V3 cen, float r) : center(cen), radius(r) {};
+	sphere(V3 cen, float r, shared_ptr<material> mat) : center(cen), radius(r), mat_ptr(mat) {};
+
 	bool hit(ray& r, float tmin, float tmax, hit_record &rec) const;
 	
 };
@@ -30,6 +32,7 @@ inline bool sphere::hit(ray& r, float tmin, float tmax, hit_record& rec) const
 			rec.t = t;
 			rec.p = r.point_at_parameter(t);
 			rec.n = (rec.p - center) / radius;
+			rec.mat_ptr = mat_ptr;
 			return true;
 		}
 
@@ -39,6 +42,7 @@ inline bool sphere::hit(ray& r, float tmin, float tmax, hit_record& rec) const
 			rec.t = t;
 			rec.p = r.point_at_parameter(t);
 			rec.n = (rec.p - center) / radius;
+			rec.mat_ptr = mat_ptr;
 			return true;
 		}
 	}

@@ -51,8 +51,7 @@ public:
 	~Scene();
 
 	// Ray tracing
-	V3 RayTracingColor(ray r, hitable_list &obj_list);
-	V3 random_in_unit_shpere();
+	V3 RayTracingColor(ray r, hitable_list &obj_list, int depth);
 	void RenderRaytracing();
 
 private:
