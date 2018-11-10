@@ -13,6 +13,9 @@
 #include "GlobalVariables.h"
 #include "ray.h"
 #include <future>
+#include "hitable.h"
+#include "sphere.h"
+#include "hitable_list.h"
 
 Scene* scene;
 int TM::tmIDCounter = 0;
@@ -531,6 +534,7 @@ void Scene::PrintTime(const string dbgInfo)
 
 void Scene::InitDemo()
 {
+	// ray tracing bg color
 	auto color = [](const ray &r)
 	{
 		V3 unit_direction = r.direction().UnitVector();
@@ -538,19 +542,13 @@ void Scene::InitDemo()
 		return V3(1.0f) * (1.0f - t) + V3(0.5f, 0.7f, 1.0f) * t;
 	};
 
-	auto hit_sphere = [](V3 &center, float radius, ray &r)
-	{
-		V3 oc = r.origin() - center;
-		float a = r.direction() * r.direction();
-		float b = (oc)* r.direction() * 2.0f;
-		float c = oc * oc - radius * radius;
-		float discriminant = b * b - 4.0f * a * c;
-		return  discriminant > 0.0f;
-	};
-
 	// scene objects
 	V3 sphereC(0.0f, 0.0f, -5.0f);
 	float spherer = 1.0f;
+	shared_ptr<hitable> s1 = make_shared<sphere>(sphereC, spherer);
+	shared_ptr<hitable> s2 = make_shared<sphere>(V3(-2.0f, 0.0f, -5.0f), spherer);
+	vector<shared_ptr<hitable>> list{s1, s2};
+	obj_list = hitable_list(list);
 
 	for(int v = 0; v < fb->h; ++v)
 	{
@@ -559,8 +557,12 @@ void Scene::InitDemo()
 			auto rd = ppc->GetRay(u,v);
 			ray r(ppc->C, rd);
 			V3 col(0.0f);
-			if (hit_sphere(sphereC, spherer, r))
-				col = V3(1.0f, 0.0f, 0.0f);
+			hit_record tmp_rec;
+			auto hit_anything = obj_list.hit(r, 0.0f, 100.0f, tmp_rec);
+			if (hit_anything)
+			{
+				col = (tmp_rec.n + 1.0f) * 0.5f;
+			}
 			else
 				col = color(r);
 
