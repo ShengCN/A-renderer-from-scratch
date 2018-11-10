@@ -9,7 +9,7 @@ public:
 
 	sphere() = default; 
 	sphere(V3 cen, float r) : center(cen), radius(r) {};
-	bool hit(ray &r, float tmin, float tmax, hit_record &rec) const;
+	bool hit(ray& r, float tmin, float tmax, hit_record &rec) const;
 	
 };
 

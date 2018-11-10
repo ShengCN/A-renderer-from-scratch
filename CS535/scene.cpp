@@ -535,11 +535,21 @@ void Scene::PrintTime(const string dbgInfo)
 void Scene::InitDemo()
 {
 	// ray tracing bg color
-	auto color = [](const ray &r)
+	auto color = [](ray &r, hitable_list &obj_list)
 	{
 		V3 unit_direction = r.direction().UnitVector();
 		float t = std::clamp(unit_direction.y() + 1.0f, 0.0f,1.0f);
-		return V3(1.0f) * (1.0f - t) + V3(0.5f, 0.7f, 1.0f) * t;
+		V3 col = V3(1.0f) * (1.0f - t) + V3(0.5f, 0.7f, 1.0f) * t;
+
+		// ray intersect
+		hit_record tmp_rec;
+		auto hit_anything = obj_list.hit(r, 0.0f, 100.0f, tmp_rec);
+		if (hit_anything)
+		{
+			col = (tmp_rec.n + 1.0f) * 0.5f;
+		}
+
+		return col;
 	};
 
 	// scene objects
@@ -556,15 +566,7 @@ void Scene::InitDemo()
 		{
 			auto rd = ppc->GetRay(u,v);
 			ray r(ppc->C, rd);
-			V3 col(0.0f);
-			hit_record tmp_rec;
-			auto hit_anything = obj_list.hit(r, 0.0f, 100.0f, tmp_rec);
-			if (hit_anything)
-			{
-				col = (tmp_rec.n + 1.0f) * 0.5f;
-			}
-			else
-				col = color(r);
+			V3 col = color(r, obj_list);
 
 			fb->SetGuarded(u, v, col.GetColor());
 		}	

@@ -11,10 +11,10 @@ public:
 	hitable_list() {};
 	hitable_list(std::vector<shared_ptr<hitable >> l) :list(l) {};
 
-	bool hit(ray &r, float t_min, float t_max, hit_record& rec) const override;
+	bool hit(ray& r, float t_min, float t_max, hit_record& rec) const override;
 };
 
-inline bool hitable_list::hit(ray &r, float t_min, float t_max, hit_record& rec) const
+inline bool hitable_list::hit(ray& r, float t_min, float t_max, hit_record& rec) const
 {
 	hit_record tmp_rec;
 	bool hit_anything = false;
