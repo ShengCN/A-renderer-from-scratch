@@ -78,6 +78,11 @@ V3 PPC::GetRay(int u, int v)
 	return c + a * (static_cast<float>(u) + 0.5f) + b * (static_cast<float>(v) + 0.5f);
 }
 
+V3 PPC::GetRay(float u, float v)
+{
+	return c + a * u + b * v;
+}
+
 V3 PPC::GetRayCenter(int u, int v)
 {
 	return C + GetRay(u, v);

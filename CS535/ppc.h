@@ -19,6 +19,7 @@ public:
 	float GetVerticalFOV();
 	// V3 GetPrincipalPoint();			// pixel coordinates of COP project onto image plane
 	V3 GetRay(int u, int v);			// Get Ray(vector) for pixel(u,v)
+	V3 GetRay(float u, float v);		// Get nonuniform sample vector
 	V3 GetRayCenter(int u, int v);		// Get Ray pixel center(point)
 	V3 Unproject(V3 pp);				// unproject pixel point
 	V3 UnprojectPixel(float uf, float vf, float currf);	// unproject pixel to image plane
