@@ -553,10 +553,8 @@ void Scene::InitDemo()
 	};
 
 	// scene objects
-	V3 sphereC(0.0f, 0.0f, -5.0f);
-	float spherer = 1.0f;
-	shared_ptr<hitable> s1 = make_shared<sphere>(sphereC, spherer);
-	shared_ptr<hitable> s2 = make_shared<sphere>(V3(-2.0f, 0.0f, -5.0f), spherer);
+	shared_ptr<hitable> s1 = make_shared<sphere>(V3(0.0f,0.0f,-5.0f) , 0.5f);
+	shared_ptr<hitable> s2 = make_shared<sphere>(V3(0.0f,-100.5f,-1.0f), 100.0f);
 	vector<shared_ptr<hitable>> list{s1, s2};
 	obj_list = hitable_list(list);
 
