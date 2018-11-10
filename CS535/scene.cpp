@@ -387,7 +387,7 @@ void Scene::RenderRaytracing()
 
 	BeginCountingTime();
 	// numble of samples
-	int ns = 10;
+	int ns = 32;
 
 	for (int v = 0; v < fb->h; ++v)
 	{
@@ -439,6 +439,7 @@ void Scene::RenderRaytracing()
 			}
 
 			col = col / float(ns);
+			col = V3(sqrt(col[0]), sqrt(col[1]), sqrt(col[2]));
 			fb->SetGuarded(u, v, col.GetColor());
 		}
 	}
