@@ -50,6 +50,11 @@ public:
 	V3 GetSceneCenter();
 	~Scene();
 
+	// Ray tracing
+	V3 RayTracingColor(ray r, hitable_list &obj_list);
+	V3 random_in_unit_shpere();
+	void RenderRaytracing();
+
 private:
 	bool isRenderAABB;
 

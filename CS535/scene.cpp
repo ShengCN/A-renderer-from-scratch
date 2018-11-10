@@ -34,7 +34,7 @@ Scene::Scene(): isRenderAABB(false)
 	int w = gv->isHighResolution ? gv->highResoW : gv->resoW;
 	int h = gv->isHighResolution ? gv->highResoH : gv->resoH;
 
-	int fovf = 70.0f;
+	int fovf = 120.0f;
 	fb = new FrameBuffer(u0, v0, w, h);
 	fb->label("SW Framebuffer");
 	fb->show();
@@ -344,6 +344,110 @@ Scene::~Scene()
 		delete fb3;
 }
 
+V3 Scene::RayTracingColor(ray r, hitable_list& obj_list)
+{
+	V3 col(0.0f);
+
+	// ray intersect
+	hit_record rec;
+	if (obj_list.hit(r, 0.0f, FLT_MAX, rec))
+	{
+		// col = (tmp_rec.n + 1.0f) * 0.5f;
+		V3 target = rec.p + rec.n + random_in_unit_shpere();
+		col = RayTracingColor(ray(rec.p, target - rec.p), obj_list) * 0.5f;
+	}
+	else
+	{
+		V3 unit_direction = r.direction().UnitVector();
+		float t = std::clamp(unit_direction.y() + 1.0f, 0.0f, 1.0f);
+		col = V3(1.0f) * (1.0f - t) + V3(0.5f, 0.7f, 1.0f) * t;
+	}
+
+	return col;
+}
+
+V3 Scene::random_in_unit_shpere()
+{
+	V3 p(0.0f);
+	do
+	{
+		auto dv = std::random_device();
+		std::mt19937 mt(dv());
+		std::uniform_real_distribution<double> dist(0.0f, 1.0f);
+		p = V3(dist(mt), dist(mt), dist(mt)) * 2.0f - V3(1.0f);
+	}
+	while (p.Length() >= 1.0f);
+
+	return p;
+}
+
+void Scene::RenderRaytracing()
+{
+	fb->ClearBGRZ(0xFFFFFFFF, 0.0f);
+
+	BeginCountingTime();
+	// numble of samples
+	int ns = 10;
+
+	for (int v = 0; v < fb->h; ++v)
+	{
+		fb->DrawRectangle(0, v, fb->w - 1, v, 0xFF0000FF);
+		Fl::check();
+		fb->redraw();
+		fb->DrawRectangle(0, v, fb->w - 1, v, 0xFFFFFFFF);
+
+		for (int u = 0; u < fb->w; ++u)
+		{
+			V3 col(0.0f);
+			int si;
+			if (GlobalVariables::Instance()->isOpenMP)
+			{
+#pragma omp parallel private(si)
+				{
+#pragma omp for schedule(dynamic) nowait
+					for (si = 0; si < ns; ++si)
+					{
+						auto dv = std::random_device();
+						std::mt19937 mt(dv());
+						std::uniform_real_distribution<double> dist(0.0, 1.0);
+
+						float su = float(u) + dist(mt), sv = float(v) + dist(mt);
+						auto rd = ppc->GetRay(su, sv);
+						// auto rd = ppc->GetRay(u, v);
+						ray r(ppc->C, rd);
+						V3 traceColor = RayTracingColor(r, obj_list);
+#pragma omp critical
+						col = col + traceColor;
+					}
+				}
+			}
+			else
+			{
+				for (si = 0; si < ns; ++si)
+				{
+					auto dv = std::random_device();
+					std::mt19937 mt(dv());
+					std::uniform_real_distribution<double> dist(0.0, 1.0);
+
+					float su = float(u) + dist(mt), sv = float(v) + dist(mt);
+					auto rd = ppc->GetRay(su, sv);
+					// auto rd = ppc->GetRay(u, v);
+					ray r(ppc->C, rd);
+					V3 traceColor = RayTracingColor(r, obj_list);
+					col = col + traceColor;
+				}
+			}
+
+			col = col / float(ns);
+			fb->SetGuarded(u, v, col.GetColor());
+		}
+	}
+	PrintTime("Raytracing Time: ");
+
+	fb->redraw();
+	fb->SaveAsTiff("images/multisampling.tiff");
+}
+
 bool Scene::DBGFramebuffer()
 {
 	V3 p1(0.0f, 0.f, -100.0f), p2(-50.0f, 50.0f, -100.0f);
@@ -537,64 +641,22 @@ void Scene::PrintTime(const string dbgInfo)
 
 void Scene::InitDemo()
 {
-	// ray tracing bg color
-	auto color = [](ray& r, hitable_list& obj_list)
-	{
-		V3 unit_direction = r.direction().UnitVector();
-		float t = std::clamp(unit_direction.y() + 1.0f, 0.0f, 1.0f);
-		V3 col = V3(1.0f) * (1.0f - t) + V3(0.5f, 0.7f, 1.0f) * t;
-
-		// ray intersect
-		hit_record tmp_rec;
-		auto hit_anything = obj_list.hit(r, 0.0f, 100.0f, tmp_rec);
-		if (hit_anything)
-		{
-			col = (tmp_rec.n + 1.0f) * 0.5f;
-		}
-
-		return col;
-	};
-
-	// numble of samples
-	int ns = 10;
+	// ppc
+	ppc->PositionAndOrient(V3(0.0f), V3(0.0f, 0.0f, -1.0f), V3(0.0f, 1.0f, 0.0f));
 
 	// scene objects
-	shared_ptr<hitable> s1 = make_shared<sphere>(V3(0.0f, 0.0f, -5.0f), 0.5f);
+	shared_ptr<hitable> s1 = make_shared<sphere>(V3(0.0f, 0.0f, -1.0f), 0.5f);
 	shared_ptr<hitable> s2 = make_shared<sphere>(V3(0.0f, -100.5f, -1.0f), 100.0f);
 	vector<shared_ptr<hitable>> list{s1, s2};
 	obj_list = hitable_list(list);
 
-	for (int v = 0; v < fb->h; ++v)
-	{
-		fb->DrawRectangle(0, v, fb->w - 1, v, 0xFF0000FF);
-		Fl::check();
-		fb->redraw();
-		fb->DrawRectangle(0, v, fb->w - 1, v, 0xFFFFFFFF);
-
-		for (int u = 0; u < fb->w; ++u)
-		{
-			V3 col(0.0f);
-
-			for (int si = 0; si < ns; ++si)
-			{
-				auto dv = std::random_device();
-				std::mt19937 mt(dv());
-				std::uniform_real_distribution<double> dist(0.0, 1.0);
-
-				float su = float(u) + dist(mt), sv = float(v) + dist(mt);
-				auto rd = ppc->GetRay(su, sv);
-				// auto rd = ppc->GetRay(u, v);
-				ray r(ppc->C, rd);
-				col = col + color(r, obj_list);
-			}
-			col = col / float(ns);
-			fb->SetGuarded(u, v, col.GetColor());
-		}
-	}
-
-	fb->SaveAsTiff("images/multisampling.tiff");
+	
+	RenderRaytracing();
 }
 
 void Scene::Demonstration()
 {
+	auto gv = GlobalVariables::Instance();
+	gv->isOpenMP = false;
+	RenderRaytracing();
 }
