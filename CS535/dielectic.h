@@ -7,7 +7,9 @@ class dielectric : public material
 public:
 	float ref_idx;
 
-	dielectric(float ri): ref_idx(ri) {}
+	dielectric(float ri): ref_idx(ri)
+	{
+	}
 
 
 	bool scatter(ray r_in, hit_record& rec, V3& attenuation, ray& scattered) const override
@@ -19,9 +21,9 @@ public:
 		V3 refracted(0.0f);
 		float reflect_prob = 0.0f, cosin = 0.0f;
 
-		if((r_in.direction() * rec.n) > 0.0f)
+		if ((r_in.direction() * rec.n) > 0.0f)
 		{
-			outward_normal = V3(0.0f) -rec.n;
+			outward_normal = V3(0.0f) - rec.n;
 			ni_over_nt = ref_idx;
 			cosin = ref_idx * (r_in.direction() * rec.n) / r_in.direction().Length();
 		}
@@ -32,16 +34,12 @@ public:
 			cosin = -(r_in.direction() * rec.n) / r_in.direction().Length();
 		}
 
-		if(refract(r_in.direction(), outward_normal, ni_over_nt, refracted))
-		{
-			reflect_prob = schlick(cosin, ref_idx);
-		}
-		else
-		{
-			reflect_prob = 1.0f;
-		}
+		reflect_prob = refract(r_in.direction(), outward_normal, ni_over_nt, refracted)
+			               ? schlick(cosin, ref_idx)
+			               : reflect_prob = 1.0f;
 
-		scattered = Random(0.0f, 1.0f) < reflect_prob? ray(rec.p, reflected) : ray(rec.p, refracted);
+
+		scattered = Random(0.0f, 1.0f) < reflect_prob ? ray(rec.p, reflected) : ray(rec.p, refracted);
 
 		return true;
 	}

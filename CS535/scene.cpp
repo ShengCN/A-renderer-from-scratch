@@ -37,7 +37,7 @@ Scene::Scene(): isRenderAABB(false)
 	int w = gv->isHighResolution ? gv->highResoW : gv->resoW;
 	int h = gv->isHighResolution ? gv->highResoH : gv->resoH;
 
-	int fovf = 120.0f;
+	int fovf = 40.0f;
 	fb = new FrameBuffer(u0, v0, w, h);
 	fb->label("SW Framebuffer");
 	fb->show();
@@ -635,7 +635,7 @@ void Scene::PrintTime(const string dbgInfo)
 void Scene::InitDemo()
 {
 	// ppc
-	ppc->PositionAndOrient(V3(0.0f,0.0f,0.0f), V3(0.0f, 0.0f, -1.0f), V3(0.0f, 1.0f, 0.0f));
+	ppc->PositionAndOrient(V3(-2.0f,2.0f,1.0f), V3(0.0f, 0.0f, -1.0f), V3(0.0f, 1.0f, 0.0f));
 
 	// scene objects
 	shared_ptr<hitable> s1 = make_shared<sphere>(V3(0.0f, 0.0f, -1.0f), 0.5f, make_shared<lambertian>(V3(0.1f, 0.2f,0.5f)));
