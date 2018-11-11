@@ -644,8 +644,8 @@ void Scene::InitDemo()
 	// scene objects
 	shared_ptr<hitable> s1 = make_shared<sphere>(V3(0.0f, 0.0f, -1.0f), 0.5f, make_shared<lambertian>(V3(0.8f, 0.3f,0.3f)));
 	shared_ptr<hitable> s2 = make_shared<sphere>(V3(0.0f, -100.5f, -1.0f), 100.0f, make_shared<lambertian>(V3(0.8f,0.8f,0.0f)));
-	shared_ptr<hitable> s3 = make_shared<sphere>(V3(1.0f, 0.0f, -1.0f), 0.5f, make_shared<metal>(V3(0.8f, 0.6f, 0.2f)));
-	shared_ptr<hitable> s4 = make_shared<sphere>(V3(-1.0f, 0.0f, -1.0f), 0.5f, make_shared<metal>(V3(0.8f)));
+	shared_ptr<hitable> s3 = make_shared<sphere>(V3(1.0f, 0.0f, -1.0f), 0.5f, make_shared<metal>(V3(0.8f, 0.6f, 0.2f), 0.1f));
+	shared_ptr<hitable> s4 = make_shared<sphere>(V3(-1.0f, 0.0f, -1.0f), 0.5f, make_shared<metal>(V3(0.8f), 2.0f));
 
 	vector<shared_ptr<hitable>> list{s1, s2, s3, s4};
 	obj_list = hitable_list(list);
