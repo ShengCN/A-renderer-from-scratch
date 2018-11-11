@@ -52,9 +52,23 @@ V3 random_in_unit_shpere()
 	{
 		auto dv = std::random_device();
 		std::mt19937 mt(dv());
-		std::uniform_real_distribution<double> dist(0.0f, 1.0f);
+		std::uniform_real_distribution<float> dist(0.0f, 1.0f);
 		p = V3(dist(mt), dist(mt), dist(mt)) * 2.0f - V3(1.0f);
 	} while (p.Length() >= 1.0f);
 
 	return p;
+}
+
+bool refract(V3 v, V3 n, float ni_over_nt, V3& refracted)
+{
+	V3 uv = v.UnitVector();
+	n = n.UnitVector();
+	float dt = uv * n;
+	float discriminant = 1.0f - ni_over_nt * ni_over_nt * (1.0f - dt * dt);
+	if (discriminant > 0.0f)
+	{
+		refracted = (uv - n * dt) * ni_over_nt - n * sqrt(discriminant);
+		return true;
+	}
+	return false;
 }

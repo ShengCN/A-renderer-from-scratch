@@ -20,6 +20,7 @@
 #include "hitable_list.h"
 #include "lambertian.h"
 #include "metal.h"
+#include "dielectic.h"
 
 Scene* scene;
 int TM::tmIDCounter = 0;
@@ -387,10 +388,13 @@ void Scene::RenderRaytracing()
 
 	for (int v = 0; v < fb->h; ++v)
 	{
-		fb->DrawRectangle(0, v, fb->w, v + 1, 0xFF0000FF);
-		Fl::check();
-		fb->redraw();
-		fb->DrawRectangle(0, v, fb->w - 1, v, 0xFFFFFFFF);
+		if (GlobalVariables::Instance()->isDBGRaytracing)
+		{
+			fb->DrawRectangle(0, v, fb->w, v + 1, 0xFF0000FF);
+			Fl::check();
+			fb->redraw();
+			fb->DrawRectangle(0, v, fb->w - 1, v, 0xFFFFFFFF);
+		}
 
 		for (int u = 0; u < fb->w; ++u)
 		{
@@ -642,10 +646,10 @@ void Scene::InitDemo()
 	ppc->PositionAndOrient(V3(0.0f), V3(0.0f, 0.0f, -1.0f), V3(0.0f, 1.0f, 0.0f));
 
 	// scene objects
-	shared_ptr<hitable> s1 = make_shared<sphere>(V3(0.0f, 0.0f, -1.0f), 0.5f, make_shared<lambertian>(V3(0.8f, 0.3f,0.3f)));
+	shared_ptr<hitable> s1 = make_shared<sphere>(V3(0.0f, 0.0f, -1.0f), 0.5f, make_shared<lambertian>(V3(0.1f, 0.2f,0.5f)));
 	shared_ptr<hitable> s2 = make_shared<sphere>(V3(0.0f, -100.5f, -1.0f), 100.0f, make_shared<lambertian>(V3(0.8f,0.8f,0.0f)));
-	shared_ptr<hitable> s3 = make_shared<sphere>(V3(1.0f, 0.0f, -1.0f), 0.5f, make_shared<metal>(V3(0.8f, 0.6f, 0.2f), 0.1f));
-	shared_ptr<hitable> s4 = make_shared<sphere>(V3(-1.0f, 0.0f, -1.0f), 0.5f, make_shared<metal>(V3(0.8f), 2.0f));
+	shared_ptr<hitable> s3 = make_shared<sphere>(V3(1.0f, 0.0f, -1.0f), 0.5f, make_shared<metal>(V3(0.8f, 0.6f, 0.2f), 0.5f));
+	shared_ptr<hitable> s4 = make_shared<sphere>(V3(-1.0f, 0.0f, -1.0f), 0.5f, make_shared<dielectric>(1.5f));
 
 	vector<shared_ptr<hitable>> list{s1, s2, s3, s4};
 	obj_list = hitable_list(list);

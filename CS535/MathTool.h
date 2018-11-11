@@ -1,7 +1,7 @@
 #pragma once
 #include <algorithm>
+#include "V3.h"
 
-class V3;
 const float PI = 3.1415926f;
 
 bool FloatEqual(float a, float b);
@@ -23,3 +23,6 @@ bool Side2D(V3 p, V3 v1, V3 v2, V3 v3);
 bool IsInsideTriangle2D(V3 p, V3 v1, V3 v2, V3 v3);
 
 V3 random_in_unit_shpere();
+
+// source: rayctracing in a weekend
+bool refract(V3 v, V3 n, float ni_over_nt, V3 &refracted);

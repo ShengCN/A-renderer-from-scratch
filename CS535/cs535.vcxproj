@@ -101,6 +101,7 @@
     <ClInclude Include="aabb.h" />
     <ClInclude Include="BillBoard.h" />
     <ClInclude Include="cubemap.h" />
+    <ClInclude Include="dielectic.h" />
     <ClInclude Include="framebuffer.h" />
     <ClInclude Include="glext.h" />
     <ClInclude Include="GlobalVariables.h" />
