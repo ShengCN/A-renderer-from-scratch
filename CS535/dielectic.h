@@ -17,26 +17,32 @@ public:
 		float ni_over_nt = 0.0f;
 		attenuation = V3(1.0f);
 		V3 refracted(0.0f);
+		float reflect_prob = 0.0f, cosin = 0.0f;
+
 		if((r_in.direction() * rec.n) > 0.0f)
 		{
 			outward_normal = V3(0.0f) -rec.n;
 			ni_over_nt = ref_idx;
+			cosin = ref_idx * (r_in.direction() * rec.n) / r_in.direction().Length();
 		}
 		else
 		{
 			outward_normal = rec.n;
 			ni_over_nt = 1.0f / ref_idx;
+			cosin = -(r_in.direction() * rec.n) / r_in.direction().Length();
 		}
 
 		if(refract(r_in.direction(), outward_normal, ni_over_nt, refracted))
 		{
-			scattered = ray(rec.p, refracted);
+			reflect_prob = schlick(cosin, ref_idx);
 		}
 		else
 		{
-			scattered = ray(rec.p, reflected);
-			return false;
+			reflect_prob = 1.0f;
 		}
+
+		scattered = Random(0.0f, 1.0f) < reflect_prob? ray(rec.p, reflected) : ray(rec.p, refracted);
+
 		return true;
 	}
 };

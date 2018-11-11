@@ -1,6 +1,7 @@
 #pragma once
 #include <algorithm>
 #include "V3.h"
+#include <random>
 
 const float PI = 3.1415926f;
 
@@ -26,3 +27,14 @@ V3 random_in_unit_shpere();
 
 // source: rayctracing in a weekend
 bool refract(V3 v, V3 n, float ni_over_nt, V3 &refracted);
+
+float schlick(float cosin, float ref_idx);
+
+template <typename T>
+T Random(T low, T high)
+{
+	auto dv = std::random_device();
+	std::mt19937 mt(dv());
+	std::uniform_real_distribution<T> dist(low, high);
+	return dist(mt);
+}

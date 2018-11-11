@@ -50,10 +50,7 @@ V3 random_in_unit_shpere()
 	V3 p(0.0f);
 	do
 	{
-		auto dv = std::random_device();
-		std::mt19937 mt(dv());
-		std::uniform_real_distribution<float> dist(0.0f, 1.0f);
-		p = V3(dist(mt), dist(mt), dist(mt)) * 2.0f - V3(1.0f);
+		p = V3(Random(0.0f, 1.0f), Random(0.0f, 1.0f), Random(0.0f, 1.0f)) * 2.0f - V3(1.0f);
 	} while (p.Length() >= 1.0f);
 
 	return p;
@@ -71,4 +68,11 @@ bool refract(V3 v, V3 n, float ni_over_nt, V3& refracted)
 		return true;
 	}
 	return false;
+}
+
+float schlick(float cosin, float ref_idx)
+{
+	float r0 = (1.0f - ref_idx) / (1.0f + ref_idx);
+	r0 = r0 * r0;
+	return r0 + (1.0f - r0) * pow(1.0f - cosin, 5);
 }

@@ -407,11 +407,7 @@ void Scene::RenderRaytracing()
 #pragma omp for schedule(dynamic) nowait
 					for (si = 0; si < ns; ++si)
 					{
-						auto dv = std::random_device();
-						std::mt19937 mt(dv());
-						std::uniform_real_distribution<double> dist(0.0, 1.0);
-
-						float su = float(u) + dist(mt), sv = float(v) + dist(mt);
+						float su = float(u) + Random(0.0f,1.0f), sv = float(v) + Random(0.0f, 1.0f);
 						auto rd = ppc->GetRay(su, sv);
 						
 						ray r(ppc->C, rd);
@@ -425,11 +421,7 @@ void Scene::RenderRaytracing()
 			{
 				for (si = 0; si < ns; ++si)
 				{
-					auto dv = std::random_device();
-					std::mt19937 mt(dv());
-					std::uniform_real_distribution<double> dist(0.0, 1.0);
-
-					float su = float(u) + dist(mt), sv = float(v) + dist(mt);
+					float su = float(u) + Random(0.0f, 1.0f), sv = float(v) + Random(0.0f, 1.0f);
 					auto rd = ppc->GetRay(su, sv);
 					// auto rd = ppc->GetRay(u, v);
 					ray r(ppc->C, rd);
@@ -643,15 +635,16 @@ void Scene::PrintTime(const string dbgInfo)
 void Scene::InitDemo()
 {
 	// ppc
-	ppc->PositionAndOrient(V3(0.0f), V3(0.0f, 0.0f, -1.0f), V3(0.0f, 1.0f, 0.0f));
+	ppc->PositionAndOrient(V3(0.0f,0.0f,0.0f), V3(0.0f, 0.0f, -1.0f), V3(0.0f, 1.0f, 0.0f));
 
 	// scene objects
 	shared_ptr<hitable> s1 = make_shared<sphere>(V3(0.0f, 0.0f, -1.0f), 0.5f, make_shared<lambertian>(V3(0.1f, 0.2f,0.5f)));
 	shared_ptr<hitable> s2 = make_shared<sphere>(V3(0.0f, -100.5f, -1.0f), 100.0f, make_shared<lambertian>(V3(0.8f,0.8f,0.0f)));
 	shared_ptr<hitable> s3 = make_shared<sphere>(V3(1.0f, 0.0f, -1.0f), 0.5f, make_shared<metal>(V3(0.8f, 0.6f, 0.2f), 0.5f));
 	shared_ptr<hitable> s4 = make_shared<sphere>(V3(-1.0f, 0.0f, -1.0f), 0.5f, make_shared<dielectric>(1.5f));
+	shared_ptr<hitable> s5 = make_shared<sphere>(V3(-1.0f, 0.0f, -1.0f), -0.45f, make_shared<dielectric>(1.5f));
 
-	vector<shared_ptr<hitable>> list{s1, s2, s3, s4};
+	vector<shared_ptr<hitable>> list{s1, s2, s3, s4, s5};
 	obj_list = hitable_list(list);
 
 	RenderRaytracing();
@@ -660,6 +653,6 @@ void Scene::InitDemo()
 void Scene::Demonstration()
 {
 	auto gv = GlobalVariables::Instance();
-	gv->isOpenMP = false;
+	
 	RenderRaytracing();
 }
