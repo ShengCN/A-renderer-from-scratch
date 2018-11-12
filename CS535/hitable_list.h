@@ -9,7 +9,7 @@ public:
 	std::vector<shared_ptr<hitable>> list;
 
 	hitable_list() {};
-	hitable_list(std::vector<shared_ptr<hitable >> l) :list(l) {};
+	hitable_list(std::vector<shared_ptr<hitable >> &l) :list(l) {};
 
 	bool hit(ray& r, float t_min, float t_max, hit_record& rec) const override;
 };

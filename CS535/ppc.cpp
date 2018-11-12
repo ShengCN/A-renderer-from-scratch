@@ -93,7 +93,7 @@ V3 PPC::GetRay(float u, float v)
 
 ray PPC::GetRayWithAperture(float u, float v)
 {
-	V3 rd = random_in_unit_disk() * lens_radius * 0.5f;
+	V3 rd = random_in_unit_disk() * lens_radius;
 	V3 offset = a.UnitVector() * rd.x() + b.UnitVector() * rd.y();
 	return ray(C + offset, c + a * u + b * v - offset);
 }
@@ -175,11 +175,11 @@ void PPC::PositionAndOrient(V3 newC, V3 lap, V3 up)
 	C = newC;
 }
 
-void PPC::PositionAndOrient(V3 newC, V3 lap, V3 up, float aperture)
+void PPC::PositionAndOrient(V3 newC, V3 lap, V3 up, float aperture, float focal)
 {
 	V3 newa, newb, newc;
 	V3 newvd = (lap - newC).UnitVector();
-	float scaf = (lap - newC).Length() / GetFocal();
+	float scaf = focal / GetFocal();
 	float f = GetFocal() * scaf;
 	newa = (newvd ^ up).UnitVector() * a.Length() * scaf;
 	newb = (newvd ^ newa).UnitVector() * b.Length() * scaf;

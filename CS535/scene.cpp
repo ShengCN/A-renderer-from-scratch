@@ -437,6 +437,42 @@ void Scene::RenderRaytracing()
 	fb->SaveAsTiff("images/multisampling.tiff");
 }
 
+void Scene::RandomScene()
+{
+	int n = 500;
+	auto &scene_list = obj_list.list;
+	scene_list.reserve(n + 1);
+	scene_list.push_back(make_shared<sphere>(V3(0.0f, -1000.0f, 0.0f), 1000.0f, make_shared<lambertian>(V3(0.5f))));
+	int i = 1;
+	for(int a = -11; a < 11; ++a)
+	{
+		for(int b = -11; b < 11; ++b)
+		{
+			float choose_mat = Random(0.0f, 1.0f);
+			V3 center(float(a) + 0.9f * Random(0.0f, 1.0f), 0.2f,float(b) + 0.9f * Random(0.0f, 1.0f));
+			if((center-V3(4.0f,0.2f,0.0f)).Length() > 0.9f)
+			{
+				if(choose_mat < 0.8f)
+				{	// diffuse
+					scene_list.push_back(make_shared<sphere>(center, 0.2f, make_shared<lambertian>(V3(Random(0.0f, 1.0f) * Random(0.0f, 1.0f), Random(0.0f, 1.0f)*Random(0.0f, 1.0f), Random(0.0f, 1.0f) * Random(0.0f, 1.0f)))));
+				}
+				else if(choose_mat < 0.95f)
+				{	// metal
+					scene_list.push_back(make_shared<sphere>(center, 0.2f, make_shared<metal>(V3(0.5f * (1.0f + Random(0.0f, 1.0f)), 0.5f *(1.0f + Random(0.0f, 1.0f)), Random(0.0f, 0.5f)))));
+				}
+				else
+				{
+					scene_list.push_back(make_shared<sphere>(center, 0.2f, make_shared<dielectric>(1.5f)));
+				}
+			}
+		}
+	}
+
+	scene_list.push_back(make_shared<sphere>(V3(0.0f, 1.0f, 0.0f), 1.0f, make_shared<dielectric>(1.5f)));
+	scene_list.push_back(make_shared<sphere>(V3(-4.0f, 1.0f, 0.0f), 1.0f, make_shared<lambertian>(V3(0.4f,0.2f,0.1f))));
+	scene_list.push_back(make_shared<sphere>(V3(4.0f, 1.0f, 0.0f), 1.0f, make_shared<metal>(V3(0.7f,0.6f,0.5f),0.0f)));
+}
+
 bool Scene::DBGFramebuffer()
 {
 	V3 p1(0.0f, 0.f, -100.0f), p2(-50.0f, 50.0f, -100.0f);
@@ -631,18 +667,9 @@ void Scene::PrintTime(const string dbgInfo)
 void Scene::InitDemo()
 {
 	// ppc
-	ppc->PositionAndOrient(V3(-3.0f,3.0f,2.0f), V3(0.0f, 0.0f, -1.0f), V3(0.0f, 1.0f, 0.0f), 2.0f);
+	ppc->PositionAndOrient(V3(13, 2, 3), V3(0.0f, 0.0f, -1.0f), V3(0.0f, 1.0f, 0.0f), 0.1f, 10.0f);
 
-	// scene objects
-	shared_ptr<hitable> s1 = make_shared<sphere>(V3(0.0f, 0.0f, -1.0f), 0.5f, make_shared<lambertian>(V3(0.1f, 0.2f,0.5f)));
-	shared_ptr<hitable> s2 = make_shared<sphere>(V3(0.0f, -100.5f, -1.0f), 100.0f, make_shared<lambertian>(V3(0.8f,0.8f,0.0f)));
-	shared_ptr<hitable> s3 = make_shared<sphere>(V3(1.0f, 0.0f, -1.0f), 0.5f, make_shared<metal>(V3(0.8f, 0.6f, 0.2f), 0.5f));
-	shared_ptr<hitable> s4 = make_shared<sphere>(V3(-1.0f, 0.0f, -1.0f), 0.5f, make_shared<dielectric>(1.5f));
-	shared_ptr<hitable> s5 = make_shared<sphere>(V3(-1.0f, 0.0f, -1.0f), -0.45f, make_shared<dielectric>(1.5f));
-
-	vector<shared_ptr<hitable>> list{s1, s2, s3, s4, s5};
-	obj_list = hitable_list(list);
-
+	RandomScene();
 	RenderRaytracing();
 }
 
