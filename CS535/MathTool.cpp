@@ -56,6 +56,16 @@ V3 random_in_unit_shpere()
 	return p;
 }
 
+V3 random_in_unit_disk()
+{
+	V3 p(0.0f);
+	do
+	{
+		p = V3(Random(0.0f, 1.0f), Random(0.0f, 1.0f), 0.0f) * 2.0f - V3(1.0f, 1.0f, 0.0f);
+	} while (p.Length() >= 1.0f);
+	return p;
+}
+
 bool refract(V3 v, V3 n, float ni_over_nt, V3& refracted)
 {
 	V3 uv = v.UnitVector();

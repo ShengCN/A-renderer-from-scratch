@@ -24,6 +24,7 @@ bool Side2D(V3 p, V3 v1, V3 v2, V3 v3);
 bool IsInsideTriangle2D(V3 p, V3 v1, V3 v2, V3 v3);
 
 V3 random_in_unit_shpere();
+V3 random_in_unit_disk();
 
 // source: rayctracing in a weekend
 bool refract(V3 v, V3 n, float ni_over_nt, V3 &refracted);

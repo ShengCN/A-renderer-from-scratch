@@ -37,7 +37,7 @@ Scene::Scene(): isRenderAABB(false)
 	int w = gv->isHighResolution ? gv->highResoW : gv->resoW;
 	int h = gv->isHighResolution ? gv->highResoH : gv->resoH;
 
-	int fovf = 40.0f;
+	int fovf = 30.0f;
 	fb = new FrameBuffer(u0, v0, w, h);
 	fb->label("SW Framebuffer");
 	fb->show();
@@ -47,7 +47,7 @@ Scene::Scene(): isRenderAABB(false)
 	fb3->show();
 
 	ppc = new PPC(fb->w, fb->h, fovf);
-	ppc3 = new PPC(fb3->w, fb3->h, 30.0f);
+	ppc3 = new PPC(fb3->w, fb3->h, 55.0f);
 
 	gui->uiw->position(u0, v0 + fb->h + 60);
 
@@ -408,9 +408,7 @@ void Scene::RenderRaytracing()
 					for (si = 0; si < ns; ++si)
 					{
 						float su = float(u) + Random(0.0f,1.0f), sv = float(v) + Random(0.0f, 1.0f);
-						auto rd = ppc->GetRay(su, sv);
-						
-						ray r(ppc->C, rd);
+						ray r = ppc->GetRayWithAperture(su, sv);
 						V3 traceColor = RayTracingColor(r, obj_list,0);
 #pragma omp critical
 						col = col + traceColor;
@@ -422,9 +420,7 @@ void Scene::RenderRaytracing()
 				for (si = 0; si < ns; ++si)
 				{
 					float su = float(u) + Random(0.0f, 1.0f), sv = float(v) + Random(0.0f, 1.0f);
-					auto rd = ppc->GetRay(su, sv);
-					// auto rd = ppc->GetRay(u, v);
-					ray r(ppc->C, rd);
+					ray r = ppc->GetRayWithAperture(su, sv);
 					V3 traceColor = RayTracingColor(r, obj_list,0);
 					col = col + traceColor;
 				}
@@ -635,7 +631,7 @@ void Scene::PrintTime(const string dbgInfo)
 void Scene::InitDemo()
 {
 	// ppc
-	ppc->PositionAndOrient(V3(-2.0f,2.0f,1.0f), V3(0.0f, 0.0f, -1.0f), V3(0.0f, 1.0f, 0.0f));
+	ppc->PositionAndOrient(V3(-3.0f,3.0f,2.0f), V3(0.0f, 0.0f, -1.0f), V3(0.0f, 1.0f, 0.0f), 2.0f);
 
 	// scene objects
 	shared_ptr<hitable> s1 = make_shared<sphere>(V3(0.0f, 0.0f, -1.0f), 0.5f, make_shared<lambertian>(V3(0.1f, 0.2f,0.5f)));

@@ -1,13 +1,16 @@
 #pragma once
 #include "v3.h"
+#include "ray.h"
 
 class PPC
 {
 public:
 	V3 a, b, c, C;	
 	int w, h;
+	float lens_radius;
 
 	PPC(int _w, int _h, float hfov);
+	PPC(int _w, int _h, float hfov, float aperture);
 	void Translate(V3 v);
 	int Project(V3 P, V3 &ProjP);
 	bool IsInSideImagePlane(V3 pp);
@@ -20,6 +23,7 @@ public:
 	// V3 GetPrincipalPoint();			// pixel coordinates of COP project onto image plane
 	V3 GetRay(int u, int v);			// Get Ray(vector) for pixel(u,v)
 	V3 GetRay(float u, float v);		// Get nonuniform sample vector
+	ray GetRayWithAperture(float u, float v);  // field of depth
 	V3 GetRayCenter(int u, int v);		// Get Ray pixel center(point)
 	V3 Unproject(V3 pp);				// unproject pixel point
 	V3 UnprojectPixel(float uf, float vf, float currf);	// unproject pixel to image plane
@@ -33,6 +37,7 @@ public:
 	
 	// Position
 	void PositionAndOrient(V3 newC, V3 lap, V3 up);		// lap->look at point
+	void PositionAndOrient(V3 newC, V3 lap, V3 up, float aperture);
 	void Zoom(float theta);		// zoom in or out, change of focal length
 	// void ChangeResolution(int _w, int _h);
 
