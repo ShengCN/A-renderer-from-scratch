@@ -14,7 +14,7 @@ GlobalVariables* GlobalVariables::Instance()
 
 GlobalVariables::GlobalVariables()
 {
-	isHighResolution = true;
+	isHighResolution = false;
 	highResoW = 1020;
 	highResoH = 720;
 	resoW = 640;
