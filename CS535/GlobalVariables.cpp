@@ -42,4 +42,5 @@ GlobalVariables::GlobalVariables()
 	isCubemapMipmap = false;
 
 	isRecording = true;
+	isOpenMP = true;
 }

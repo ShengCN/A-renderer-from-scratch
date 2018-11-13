@@ -13,6 +13,14 @@ PPC::PPC(int _w, int _h, float hfov):w(_w), h(_h)
 	c = V3(-0.5f*w, 0.5f*h, -0.5f*w / tan(Deg2Rad(hfov/2.0f)));
 }
 
+PPC::PPC(int _w, int _h, float hfov, float aperture) :w(_w), h(_h), lens_radius(aperture/2.0f)
+{
+	C = V3(0.0f);
+	a = V3(1.0f, 0.0f, 0.0f);
+	b = V3(0.0f, -1.0f, 0.0f);
+	c = V3(-0.5f*w, 0.5f*h, -0.5f*w / tan(Deg2Rad(hfov / 2.0f)));
+}
+
 void PPC::Translate(V3 v)
 {
 	C = C + v;
@@ -77,6 +85,18 @@ float PPC::GetVerticalFOV()
 V3 PPC::GetRay(int u, int v)
 {
 	return c + a * (static_cast<float>(u) + 0.5f) + b * (static_cast<float>(v) + 0.5f);
+}
+
+V3 PPC::GetRay(float u, float v)
+{
+	return c + a * u + b * v;
+}
+
+ray PPC::GetRayWithAperture(float u, float v)
+{
+	V3 rd = random_in_unit_disk() * lens_radius;
+	V3 offset = a.UnitVector() * rd.x() + b.UnitVector() * rd.y();
+	return ray(C + offset, c + a * u + b * v - offset);
 }
 
 V3 PPC::GetRayCenter(int u, int v)
@@ -154,6 +174,23 @@ void PPC::PositionAndOrient(V3 newC, V3 lap, V3 up)
 	b = newb;
 	c = newc;
 	C = newC;
+}
+
+void PPC::PositionAndOrient(V3 newC, V3 lap, V3 up, float aperture, float focal)
+{
+	V3 newa, newb, newc;
+	V3 newvd = (lap - newC).UnitVector();
+	float scaf = focal / GetFocal();
+	float f = GetFocal() * scaf;
+	newa = (newvd ^ up).UnitVector() * a.Length() * scaf;
+	newb = (newvd ^ newa).UnitVector() * b.Length() * scaf;
+	newc = (newvd * f) - newa * static_cast<float>(w) / 2.0f  - newb * static_cast<float>(h) / 2.0f;
+
+	a = newa;
+	b = newb;
+	c = newc;
+	C = newC;
+	lens_radius = aperture /2.0f;
 }
 
 void PPC::Zoom(float scf)

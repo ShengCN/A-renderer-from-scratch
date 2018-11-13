@@ -9,6 +9,7 @@
 #include "BillBoard.h"
 #include "SBB.h"
 #include <chrono>
+#include "hitable_list.h"
 using std::vector;
 using std::unique_ptr;
 using Clock = std::chrono::high_resolution_clock;
@@ -27,6 +28,7 @@ public:
 	vector<shared_ptr<BillBoard>> sceneBillboard;
 	shared_ptr<CubeMap> cubemap;
 	vector<shared_ptr<SBB>> raytracingSBB;	// Sphere BB
+	hitable_list obj_list;
 
 	Scene();
 	void DBG();
@@ -48,6 +50,11 @@ public:
 
 	V3 GetSceneCenter();
 	~Scene();
+
+	// Ray tracing
+	V3 RayTracingColor(ray r, hitable_list &obj_list, int depth);
+	void RenderRaytracing();
+	void RandomScene();
 
 private:
 	bool isRenderAABB;

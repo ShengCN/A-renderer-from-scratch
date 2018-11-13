@@ -101,15 +101,23 @@
     <ClInclude Include="aabb.h" />
     <ClInclude Include="BillBoard.h" />
     <ClInclude Include="cubemap.h" />
+    <ClInclude Include="dielectic.h" />
     <ClInclude Include="framebuffer.h" />
     <ClInclude Include="glext.h" />
     <ClInclude Include="GlobalVariables.h" />
     <ClInclude Include="gui.h" />
+    <ClInclude Include="hitable.h" />
+    <ClInclude Include="hitable_list.h" />
+    <ClInclude Include="lambertian.h" />
     <ClInclude Include="m33.h" />
+    <ClInclude Include="material.h" />
     <ClInclude Include="MathTool.h" />
+    <ClInclude Include="metal.h" />
     <ClInclude Include="ppc.h" />
+    <ClInclude Include="ray.h" />
     <ClInclude Include="SBB.h" />
     <ClInclude Include="scene.h" />
+    <ClInclude Include="sphere.h" />
     <ClInclude Include="tm.h" />
     <ClInclude Include="v3.h" />
   </ItemGroup>
@@ -120,11 +128,15 @@
     <ClCompile Include="framebuffer.cpp" />
     <ClCompile Include="GlobalVariables.cpp" />
     <ClCompile Include="gui.cxx" />
+    <ClCompile Include="hitable.cpp" />
+    <ClCompile Include="hitable_list.cpp" />
     <ClCompile Include="m33.cpp" />
     <ClCompile Include="MathTool.cpp" />
     <ClCompile Include="ppc.cpp" />
+    <ClCompile Include="ray.cpp" />
     <ClCompile Include="SBB.cpp" />
     <ClCompile Include="scene.cpp" />
+    <ClCompile Include="sphere.cpp" />
     <ClCompile Include="tm.cpp" />
     <ClCompile Include="v3.cpp" />
   </ItemGroup>

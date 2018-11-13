@@ -25,7 +25,8 @@ public:
 	bool isLight;
 	bool isRayTracing;
 	bool isUseSBB;
-	
+	bool isOpenMP;
+
 	float dbgParameter;
 
 	// For HW5

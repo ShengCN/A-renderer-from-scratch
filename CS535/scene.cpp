@@ -6,11 +6,21 @@
 #include <fstream>
 #include <iostream>
 #include <string>
+#include <random>
+#include <omp.h>
 
 #include "MathTool.h"
 #include "AABB.h"
 #include "TM.h"
 #include "GlobalVariables.h"
+#include "ray.h"
+#include <future>
+#include "hitable.h"
+#include "sphere.h"
+#include "hitable_list.h"
+#include "lambertian.h"
+#include "metal.h"
+#include "dielectic.h"
 
 Scene* scene;
 int TM::tmIDCounter = 0;
@@ -42,7 +52,7 @@ Scene::Scene(): isRenderAABB(false)
 	// fb3->show();
 
 	ppc = new PPC(fb->w, fb->h, fovf);
-	ppc3 = new PPC(fb3->w, fb3->h, 30.0f);
+	ppc3 = new PPC(fb3->w, fb3->h, 55.0f);
 
 	gui->uiw->position(u0, v0 + fb->h + 60);
 
@@ -204,16 +214,16 @@ void Scene::RaytracingScene(PPC* currPPC, FrameBuffer* currFB)
 			V3 ray = currPPC->GetRay(u, v);
 
 			// Draw cube map
-			currFB->DrawPoint(u,v, cubemap->LookupColor(ray).GetColor());
+			currFB->DrawPoint(u, v, cubemap->LookupColor(ray).GetColor());
 
 			// use SBB to prune branches
 			// But find it is not efficient
 			if (GlobalVariables::Instance()->isUseSBB)
 			{
 				bool isMissing = true;
-				for(auto sbb:raytracingSBB)
+				for (auto sbb : raytracingSBB)
 				{
-					auto[isIntersect, t] = sbb->RaySBB(currPPC->C, ray);
+					auto [isIntersect, t] = sbb->RaySBB(currPPC->C, ray);
 					if (isIntersect)
 					{
 						isMissing = false;
@@ -229,13 +239,13 @@ void Scene::RaytracingScene(PPC* currPPC, FrameBuffer* currFB)
 
 			// For each meshes, find the closest intersection
 			float closestZ = 0.0f;
-			TM *shadingMesh = meshes[0];
-			PointProperty closestPP(0.0f,0.0f,0.0f,0.0f,0.0f);
-			for(auto m : meshes)
+			TM* shadingMesh = meshes[0];
+			PointProperty closestPP(0.0f, 0.0f, 0.0f, 0.0f, 0.0f);
+			for (auto m : meshes)
 			{
-				auto [pp, w] = m->RayMeshIntersect(currPPC->C,ray);
+				auto [pp, w] = m->RayMeshIntersect(currPPC->C, ray);
 
-				if(w > closestZ)
+				if (w > closestZ)
 				{
 					// Update point property
 					closestZ = w;
@@ -246,7 +256,7 @@ void Scene::RaytracingScene(PPC* currPPC, FrameBuffer* currFB)
 
 			for (auto r : refletors)
 			{
-				auto[pp, w] = r->RayMeshIntersect(currPPC->C, currPPC->GetRay(u, v));
+				auto [pp, w] = r->RayMeshIntersect(currPPC->C, currPPC->GetRay(u, v));
 
 				if (w > closestZ)
 				{
@@ -261,11 +271,11 @@ void Scene::RaytracingScene(PPC* currPPC, FrameBuffer* currFB)
 			if (FloatEqual(closestZ, 0.0f))
 				continue;
 
-			if(!currFB->DepthTest(u,v,closestZ))
+			if (!currFB->DepthTest(u, v, closestZ))
 				continue;
-	
-			auto [color, alpha]= shadingMesh->Shading(currPPC, currFB, u, v, closestZ, closestPP);
-			
+
+			auto [color, alpha] = shadingMesh->Shading(currPPC, currFB, u, v, closestZ, closestPP);
+
 			// alpha blending 
 			if (!FloatEqual(alpha, 1.0f))
 			{
@@ -273,7 +283,7 @@ void Scene::RaytracingScene(PPC* currPPC, FrameBuffer* currFB)
 				bgC.SetColor(currFB->Get(u, v));
 				color = color * alpha + bgC * (1.0f - alpha);
 			}
-	
+
 			currFB->DrawPoint(u, v, color.GetColor());
 		}
 	}
@@ -360,6 +370,132 @@ Scene::~Scene()
 		delete fb;
 	if (fb3 != nullptr)
 		delete fb3;
+}
+
+V3 Scene::RayTracingColor(ray r, hitable_list& obj_list, int depth)
+{
+	// ray intersect
+	hit_record rec;
+	if (obj_list.hit(r, 0.001f, FLT_MAX, rec))
+	{
+		ray scattered;
+		V3 attenuation;
+		if(depth < 50 && rec.mat_ptr->scatter(r, rec, attenuation, scattered))
+		{
+			V3 rayColor = RayTracingColor(scattered, obj_list, depth + 1);
+			V3 ret;
+			ret[0] = attenuation[0] * rayColor[0];
+			ret[1] = attenuation[1] * rayColor[1];
+			ret[2] = attenuation[2] * rayColor[2];
+			return ret;
+		}
+		else
+		{
+			return V3(0.0f);
+		}
+	}
+	else
+	{
+		// back ground
+		V3 unit_direction = r.direction().UnitVector();
+		float t = std::clamp(0.5f * (unit_direction.y() + 1.0f), 0.0f,1.0f);
+		return  V3(1.0f) * (1.0f - t) + V3(0.5f, 0.7f, 1.0f) * t;
+	}
+}
+
+void Scene::RenderRaytracing()
+{
+	fb->ClearBGRZ(0xFFFFFFFF, 0.0f);
+
+	BeginCountingTime();
+	// numble of samples
+	int ns = 32;
+
+	for (int v = 0; v < fb->h; ++v)
+	{
+		if (GlobalVariables::Instance()->isDBGRaytracing)
+		{
+			fb->DrawRectangle(0, v, fb->w, v + 1, 0xFF0000FF);
+			Fl::check();
+			fb->redraw();
+			fb->DrawRectangle(0, v, fb->w - 1, v, 0xFFFFFFFF);
+		}
+
+		for (int u = 0; u < fb->w; ++u)
+		{
+			V3 col(0.0f);
+			int si;
+			if (GlobalVariables::Instance()->isOpenMP)
+			{
+#pragma omp parallel private(si)
+				{
+#pragma omp for schedule(dynamic) nowait
+					for (si = 0; si < ns; ++si)
+					{
+						float su = float(u) + Random(0.0f,1.0f), sv = float(v) + Random(0.0f, 1.0f);
+						ray r = ppc->GetRayWithAperture(su, sv);
+						V3 traceColor = RayTracingColor(r, obj_list,0);
+#pragma omp critical
+						col = col + traceColor;
+					}
+				}
+			}
+			else
+			{
+				for (si = 0; si < ns; ++si)
+				{
+					float su = float(u) + Random(0.0f, 1.0f), sv = float(v) + Random(0.0f, 1.0f);
+					ray r = ppc->GetRayWithAperture(su, sv);
+					V3 traceColor = RayTracingColor(r, obj_list,0);
+					col = col + traceColor;
+				}
+			}
+
+			col = col / float(ns);
+			col = V3(sqrt(col[0]), sqrt(col[1]), sqrt(col[2]));
+			fb->SetGuarded(u, v, col.GetColor());
+		}
+	}
+	PrintTime("Raytracing Time: ");
+
+	fb->redraw();
+	fb->SaveAsTiff("images/multisampling.tiff");
+}
+
+void Scene::RandomScene()
+{
+	int n = 500;
+	auto &scene_list = obj_list.list;
+	scene_list.reserve(n + 1);
+	scene_list.push_back(make_shared<sphere>(V3(0.0f, -1000.0f, 0.0f), 1000.0f, make_shared<lambertian>(V3(0.5f))));
+	int i = 1;
+	for(int a = -11; a < 11; ++a)
+	{
+		for(int b = -11; b < 11; ++b)
+		{
+			float choose_mat = Random(0.0f, 1.0f);
+			V3 center(float(a) + 0.9f * Random(0.0f, 1.0f), 0.2f,float(b) + 0.9f * Random(0.0f, 1.0f));
+			if((center-V3(4.0f,0.2f,0.0f)).Length() > 0.9f)
+			{
+				if(choose_mat < 0.8f)
+				{	// diffuse
+					scene_list.push_back(make_shared<sphere>(center, 0.2f, make_shared<lambertian>(V3(Random(0.0f, 1.0f) * Random(0.0f, 1.0f), Random(0.0f, 1.0f)*Random(0.0f, 1.0f), Random(0.0f, 1.0f) * Random(0.0f, 1.0f)))));
+				}
+				else if(choose_mat < 0.95f)
+				{	// metal
+					scene_list.push_back(make_shared<sphere>(center, 0.2f, make_shared<metal>(V3(0.5f * (1.0f + Random(0.0f, 1.0f)), 0.5f *(1.0f + Random(0.0f, 1.0f)), Random(0.0f, 0.5f)))));
+				}
+				else
+				{
+					scene_list.push_back(make_shared<sphere>(center, 0.2f, make_shared<dielectric>(1.5f)));
+				}
+			}
+		}
+	}
+
+	scene_list.push_back(make_shared<sphere>(V3(0.0f, 1.0f, 0.0f), 1.0f, make_shared<dielectric>(1.5f)));
+	scene_list.push_back(make_shared<sphere>(V3(-4.0f, 1.0f, 0.0f), 1.0f, make_shared<lambertian>(V3(0.4f,0.2f,0.1f))));
+	scene_list.push_back(make_shared<sphere>(V3(4.0f, 1.0f, 0.0f), 1.0f, make_shared<metal>(V3(0.7f,0.6f,0.5f),0.0f)));
 }
 
 bool Scene::DBGFramebuffer()
@@ -549,7 +685,8 @@ void Scene::InitializeLights()
 void Scene::PrintTime(const string dbgInfo)
 {
 	endTime = Clock::now();
-	cerr << dbgInfo << std::chrono::duration_cast<chrono::nanoseconds>(endTime - beginTime).count() * 1e-9 << "s"<< endl;
+	cerr << dbgInfo << std::chrono::duration_cast<chrono::nanoseconds>(endTime - beginTime).count() * 1e-9 << "s" <<
+		endl;
 }
 
 void Scene::InitDemo()
