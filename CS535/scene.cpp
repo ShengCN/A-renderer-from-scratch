@@ -18,9 +18,7 @@
 #include "hitable.h"
 #include "sphere.h"
 #include "hitable_list.h"
-#include "lambertian.h"
-#include "metal.h"
-#include "dielectic.h"
+#include "material.h"
 
 Scene* scene;
 int TM::tmIDCounter = 0;
