@@ -105,7 +105,7 @@ void Scene::Render(PPC* currPPC, FrameBuffer* currFB)
 			{
 				BeginCountingTime();
 				t->RenderFill(currPPC, currFB);
-				PrintTime(string("Mesh ") + to_string(t->id) + string(" spends: "));
+				PrintTime("SW render "+ to_string(t->id) + string(" spends: "));
 				if (isRenderAABB)
 					t->RenderAABB(currPPC, currFB);
 			}
@@ -180,7 +180,9 @@ void Scene::RenderHW()
 
 	for(auto t:meshes)
 	{
+		BeginCountingTime();
 		t->RenderHW();
+		PrintTime("HW render "+ to_string(t->id) + " spends: ");
 	}
 }
 
