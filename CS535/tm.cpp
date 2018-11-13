@@ -530,6 +530,20 @@ void TM::RenderBB(PPC* ppc, FrameBuffer* fb, FrameBuffer* bbTexture)
 	}
 }
 
+void TM::RenderHW()
+{
+	glEnableClientState(GL_VERTEX_ARRAY);
+	glEnableClientState(GL_COLOR_ARRAY);
+
+	glVertexPointer(3, GL_FLOAT, 0, &verts[0]);
+	glColorPointer(3, GL_FLOAT, 0, &colors[0]);
+
+	glDrawElements(GL_TRIANGLES, 3 * trisN, GL_UNSIGNED_INT, &tris[0]);
+
+	glDisableClientState(GL_COLOR_ARRAY);
+	glDisableClientState(GL_VERTEX_ARRAY);
+}
+
 void TM::RotateAboutArbitraryAxis(V3 O, V3 a, float angled)
 {
 	for (int vi = 0; vi < vertsN; ++vi)

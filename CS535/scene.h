@@ -17,7 +17,7 @@ class Scene
 {
 public:
 	GUI* gui;
-	FrameBuffer* fb, *fb3, *fbp;
+	FrameBuffer* fb, *fb3, *fbp, *hwfb;
 	std::vector<shared_ptr<FrameBuffer>> textures;
 	std::vector<shared_ptr<PPC>> lightPPCs;
 	std::vector<shared_ptr<FrameBuffer>> shadowMaps;
@@ -36,6 +36,7 @@ public:
 	void RenderWireFrame();
 	void RenderZbuffer(PPC *currPPC, FrameBuffer *currFB);
 	void UpdateSM();
+	void RenderHW();
 
 	void RaytracingScene(PPC *ppc, FrameBuffer *fb);
 

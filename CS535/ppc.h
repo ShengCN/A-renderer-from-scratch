@@ -44,5 +44,8 @@ public:
 	void MoveForward(float delta);
 	void MoveLeft(float delta);
 	void MoveDown(float delta);
+
+	void SetIntrinsicsHW();
+	void SetExtrinsicsHW();
 };
 

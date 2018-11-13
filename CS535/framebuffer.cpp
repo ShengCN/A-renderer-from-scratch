@@ -22,6 +22,7 @@ FrameBuffer::FrameBuffer(int u0, int v0, int _w, int _h)
 {
 	w = _w;
 	h = _h;
+	ishw = false;
 	pix = new unsigned int[w * h];
 	zb = new float[w * h];
 }
@@ -29,7 +30,14 @@ FrameBuffer::FrameBuffer(int u0, int v0, int _w, int _h)
 
 void FrameBuffer::draw()
 {
-	glDrawPixels(w, h, GL_RGBA, GL_UNSIGNED_BYTE, pix);
+	if(ishw)
+	{
+		GlobalVariables::Instance()->curScene->RenderHW();
+	}
+	else
+	{
+		glDrawPixels(w, h, GL_RGBA, GL_UNSIGNED_BYTE, pix);
+	}
 }
 
 int FrameBuffer::handle(int event)

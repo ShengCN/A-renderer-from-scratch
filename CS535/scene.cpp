@@ -32,9 +32,14 @@ Scene::Scene(): isRenderAABB(false)
 	fb->label("SW Framebuffer");
 	fb->show();
 
+	hwfb = new FrameBuffer(u0 + fb->w + 30, v0, w, h);
+	hwfb->label("HW Framebuffer");
+	hwfb->ishw = true;
+	hwfb->show();
+
 	fb3 = new FrameBuffer(u0 + fb->w + 30, v0, w, h);
 	fb3->label("Third Person View");
-	fb3->show();
+	// fb3->show();
 
 	ppc = new PPC(fb->w, fb->h, fovf);
 	ppc3 = new PPC(fb3->w, fb3->h, 30.0f);
@@ -42,6 +47,7 @@ Scene::Scene(): isRenderAABB(false)
 	gui->uiw->position(u0, v0 + fb->h + 60);
 
 	InitDemo();
+	Render();
 }
 
 void Scene::Render()
@@ -92,7 +98,9 @@ void Scene::Render(PPC* currPPC, FrameBuffer* currFB)
 
 		if (!GlobalVariables::Instance()->isRayTracing)
 		{
-			currFB->DrawCubeMap(currPPC, cubemap.get());
+			if(cubemap)
+				currFB->DrawCubeMap(currPPC, cubemap.get());
+			
 			for (auto t : meshes)
 			{
 				BeginCountingTime();
@@ -158,6 +166,21 @@ void Scene::UpdateSM()
 	for (size_t li = 0; li < lightPPCs.size(); ++li)
 	{
 		RenderZbuffer(lightPPCs[li].get(), shadowMaps[li].get());
+	}
+}
+
+void Scene::RenderHW()
+{
+	glEnable(GL_DEPTH_TEST);
+
+	glClearColor(0.0f, 0.0f, 0.5f, 1.0f);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	ppc->SetIntrinsicsHW();
+	ppc->SetExtrinsicsHW();
+
+	for(auto t:meshes)
+	{
+		t->RenderHW();
 	}
 }
 
@@ -529,189 +552,22 @@ void Scene::PrintTime(const string dbgInfo)
 
 void Scene::InitDemo()
 {
-//	{
-//		// Try ray tracing
-//		TM *mesh = new TM();
-//		mesh->LoadModelBin("geometry/teapot1K.bin");
-//		mesh->PositionAndSize(0.0f, 50.0f);
-//		meshes.push_back(mesh);
-//	
-//		// Position PPCs
-//		V3 tmC = ppc->C + ppc->GetVD() * 50.0f;
-//		ppc->C = meshes[0]->GetCenter() - tmC;
-//		ppc->PositionAndOrient(ppc->C, meshes[0]->GetCenter(), V3(0.0f, 1.0f, 0.0f));
-//	
-//		ppc3->C = ppc3->C + V3(330.0f, 150.0f, 300.0f);
-//		ppc3->PositionAndOrient(ppc3->C, meshes[0]->GetCenter(), V3(0.0f, 1.0f, 0.0f));
-//
-//		Render();
-//		return;
-//	}
+	TM* tm = new TM();
+	tm->LoadModelBin("geometry/teapot1K.bin");
+	V3 tmC = ppc->C + ppc->GetVD() * 100.0f;
+	float tmSize = 100.0f;
+	tm->PositionAndSize(tmC, tmSize);
 
-	{
-		cubemap = make_shared<CubeMap>();
-		
-		// prepare cubemap
-		string folder = "images/purduecubemaps/";
-		vector<string> fnames{
-			folder + "top.tiff",
-			folder + "front.tiff",
-			folder + "ground.tiff",
-			folder + "back.tiff",
-			folder + "right.tiff",
-			folder + "left.tiff"
-		};
-		float fovf = 90.0f;
-		vector<shared_ptr<PPC>> cubemapPPCs;
-		cubemapPPCs.push_back(make_shared<PPC>(480, 480, fovf));
-		cubemapPPCs.push_back(make_shared<PPC>(480, 480, fovf));
-		cubemapPPCs.push_back(make_shared<PPC>(480, 480, fovf));
-		cubemapPPCs.push_back(make_shared<PPC>(480, 480, fovf));
-		cubemapPPCs.push_back(make_shared<PPC>(480, 480, fovf));
-		cubemapPPCs.push_back(make_shared<PPC>(480, 480, fovf));
-		cubemapPPCs[0]->PositionAndOrient(V3(0.0f), V3(0.0f, 1.0f, 0.0f), V3(0.0f, 0.0f, 1.0f));
-		cubemapPPCs[1]->PositionAndOrient(V3(0.0f), V3(0.0f, 0.0f, -1.0f), V3(0.0f, 1.0f, 0.0f));
-		cubemapPPCs[2]->PositionAndOrient(V3(0.0f), V3(0.0f, -1.0f, 0.0f), V3(0.0f, 0.0f, -1.0f));
-		cubemapPPCs[3]->PositionAndOrient(V3(0.0f), V3(0.0f, 0.0f, 1.0f), V3(0.0f, 1.0f, 0.0f));
-		cubemapPPCs[4]->PositionAndOrient(V3(0.0f), V3(-1.0f, 0.0f, 0.0f), V3(0.0f, 1.0f, 0.0f));
-		cubemapPPCs[5]->PositionAndOrient(V3(0.0f), V3(1.0f, 0.0f, 0.0f), V3(0.0f, 1.0f, 0.0f));
-		cubemap->LoadCubeMap(fnames, cubemapPPCs);
-
-		// Init objects
-		TM* ground = new TM();
-		auto teapot = make_shared<TM>();
-		auto teapot1 = make_shared<TM>();
-		auto teapot2 = make_shared<TM>();
-		shared_ptr<BillBoard> billboard = make_shared<BillBoard>();
-		teapot->LoadModelBin("geometry/teapot1K.bin");
-		teapot->isEnvMapping = true;
-		teapot->isShowObjColor = false;
-		teapot->isRefraction = false;
-		teapot1->LoadModelBin("geometry/teapot1K.bin");
-		teapot1->isEnvMapping = true;
-		teapot1->isShowObjColor = true;
-		teapot1->SetAllPointsColor(V3(0.0f, 0.0f, 0.7f));
-
-		teapot2->LoadModelBin("geometry/teapot1K.bin");
-		teapot2->isEnvMapping = true;
-		teapot2->isShowObjColor = false;
-
-		ground->isEnvMapping = false;
-		ground->isShowObjColor = true;
-
-		ground->SetQuad(V3(0.0f), V3(0.0f, 1.0f, 0.0f), V3(0.0f, 0.0f, -1.0f), 1.0f, 1.0f, 1.0f);
-		billboard->SetBillboard(V3(0.0f), V3(0.0f, 1.0f, 0.0f), V3(0.0f, 0.0f, -1.0f), 1.0f, 1.0f, 1.0f);
-
-		float obsz = 13.0f;
-		teapot->PositionAndSize(V3(0.0f), obsz);
-		teapot1->PositionAndSize(V3(obsz * 0.75f, 0.0f, 0.0f), obsz * 0.8f);
-		teapot2->PositionAndSize(V3(-obsz * 0.75f, 0.0f, 0.0f), obsz* 0.8f);
-
-		// Textures
-		string checkerBoxTexName = GlobalVariables::Instance()->checkerBoxTexName;
-		fb->LoadTexture(checkerBoxTexName);
-
-		ground->PositionAndSize(teapot->GetCenter() + V3(0.0f, -obsz * 0.2f, 0.0f), obsz * 2.0f);
-		ground->SetText(checkerBoxTexName);
-		billboard->mesh->PositionAndSize(teapot->GetCenter() + V3(0.0f, -obsz * 0.2f, 0.0f), obsz * 2.0f);
-		billboard->mesh->SetText(checkerBoxTexName);
-
-		meshes.push_back(ground);
-		refletors.push_back(teapot);
-		refletors.push_back(teapot1);
-		refletors.push_back(teapot2);
-		sceneBillboard.push_back(billboard);
-
-		// Currently, use naive AABB info for SBB, not tight!
-		auto groundAABBCenter  = ground->GetCenter();
-		auto teapotAABBCenter  = teapot->GetCenter();
-		auto teapot1AABBCenter = teapot1->GetCenter();
-		auto teapot2AABBCenter = teapot2->GetCenter();
-
-		// Naive compute Sphere BB
-		raytracingSBB.push_back(make_shared<SBB>(groundAABBCenter, ground->ComputeSBBR(groundAABBCenter)));
-		raytracingSBB.push_back(make_shared<SBB>(teapotAABBCenter, ground->ComputeSBBR(teapotAABBCenter)));
-		raytracingSBB.push_back(make_shared<SBB>(teapot1AABBCenter, ground->ComputeSBBR(teapot1AABBCenter)));
-		raytracingSBB.push_back(make_shared<SBB>(teapot2AABBCenter, ground->ComputeSBBR(teapot2AABBCenter)));
-
-		auto targetCenter = refletors[GlobalVariables::Instance()->tmAnimationID]->GetCenter();
-		V3 tmC = ppc->C + ppc->GetVD() * 30.0f;
-		ppc->C = targetCenter - tmC + V3(0.0f, obsz * 0.3f, 0.0f);
-		ppc->PositionAndOrient(ppc->C, targetCenter, V3(0.0f, 1.0f, 0.0f));
-
-		ppc3->C = ppc3->C + V3(330.0f, 150.0f, 300.0f);
-		ppc3->PositionAndOrient(ppc3->C, targetCenter, V3(0.0f, 1.0f, 0.0f));
-
-
-		InitializeLights();
-		// Prepare BB
-		UpdateBBs();
-
-		Render();
-	}
+	meshes.push_back(tm);
 }
 
 void Scene::Demonstration()
 {
-	// Morphing 
-	auto teapotC = refletors[GlobalVariables::Instance()->tmAnimationID]->GetCenter();
-	int stepN = 360;
-
-	// refletors[GlobalVariables::Instance()->tmAnimationID]->SphereMorph(teapotC, 5.0f, 1.0f);
-	// refletors[2]->Translate(disAB * 0.3f);
-	// GlobalVariables::Instance()->isCubemapMipmap = true;
-
-	for (int stepi = 0; stepi < stepN; ++stepi)
+	for (int i = 0; i < 100; ++i)
 	{
-		float fract = static_cast<float>(stepi) / static_cast<float>(stepN - 1);
-		// refletors[GlobalVariables::Instance()->tmAnimationID]->SphereMorph(teapotC, 13.0f, 0.01f);
-		// refletors[GlobalVariables::Instance()->tmAnimationID]->WaterAnimation(stepi * 0.5f);
-
-		auto dis02 = (teapotC - refletors[2]->GetCenter()) / static_cast<float>(stepN);
-		auto dis01 = (teapotC - refletors[1]->GetCenter()) / static_cast<float>(stepN);
-
-		refletors[1]->Translate(dis01  * 0.3f);
-		refletors[2]->Translate(dis02  * 0.3f);
-		
-		refletors[1]->RotateAboutArbitraryAxis(teapotC, V3(0.0f, 1.0f, 0.0f), 5.0f);
-		refletors[2]->RotateAboutArbitraryAxis(teapotC, V3(0.0f, 1.0f, 0.0f), 5.0f);
-
-		// refletors[GlobalVariables::Instance()->tmAnimationID]->Translate(V3(2.0f, 0.0f, 0.0f));
-
-		if(stepi < 45)
-			ppc->RevolveV(refletors[0]->GetCenter(), -1.0f);
-
-		if(stepi > 80 && stepi  < 180)
-		{
-			refletors[0]->isRefraction = true;
-			refletors[0]->SphereMorph(teapotC, 3.0f, (stepi-80)/100.0f * 10.0f);
-		}
-
-		if(stepi >=180 && stepi <= 300)
-		{
-			// refletors[0]->WaterAnimation(stepi * 5.0f);
-			ppc->RevolveV(refletors[0]->GetCenter(), 1.0f);
-		}
-
-		if(stepi >300)
-		{
-			float ratio = 1.15f * (1.0f - (stepi - 300) / 60) + 0.95f * (stepi - 300) / 60;
-			GlobalVariables::Instance()->refractRatio = ratio;
-		}
-
-		// refletors[2]->RotateAboutArbitraryAxis(refletors[0]->GetCenter(), V3(0.0f, 1.0f, 0.0f), 3.0f);
-
-		UpdateBBs();
-		Render();
+		ppc->C = ppc->C + ppc->a.UnitVector() * 0.1f;
+		Render(ppc, fb);
+		hwfb->redraw();
 		Fl::check();
-
-		if (GlobalVariables::Instance()->isRecording)
-		{
-			char buffer[50];
-			sprintf_s(buffer, "images/Recording/MovingCamera-%03d.tiff", stepi);
-			fb->SaveAsTiff(buffer);
-		}
 	}
-	cerr << "Finished! \n";
-
 }

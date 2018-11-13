@@ -2,6 +2,7 @@
 #include "PPC.h"
 #include "MathTool.h"
 #include "m33.h"
+#include "framebuffer.h"
 
 
 PPC::PPC(int _w, int _h, float hfov):w(_w), h(_h)
@@ -224,5 +225,28 @@ void PPC::MoveLeft(float delta)
 void PPC::MoveDown(float delta)
 {
 	C = C + b * delta;
+}
+
+void PPC::SetIntrinsicsHW()
+{
+	glViewport(0, 0, w, h);
+	float zNear = 1.0f;
+	float zFar = 1000.0f;
+	float scf = zNear / GetFocal();
+	float left = -a.Length() * static_cast<float>(w) / 2.0f * scf;
+	float right = -left;
+	float top = b.Length() * static_cast<float>(h) / 2.0f * scf;
+	float bottom = -top;
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	glFrustum(left, right, bottom, top, zNear, zFar);
+	glMatrixMode(GL_MODELVIEW);
+}
+
+void PPC::SetExtrinsicsHW()
+{
+	V3 L = C + GetVD() * 100.0f;
+	glLoadIdentity();
+	gluLookAt(C[0], C[1], C[2], L[0], L[1], L[2], -b[0], -b[1], -b[2]);
 }
 

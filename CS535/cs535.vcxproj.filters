@@ -14,7 +14,7 @@
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
     <Filter Include="Source Files\CG">
-      <UniqueIdentifier>{b0f72420-9eaa-463f-a69e-4c887276cd28}</UniqueIdentifier>
+      <UniqueIdentifier>{f5f4bb24-9e03-451c-a4bf-f8d62c94cd8f}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -110,6 +110,9 @@
   <ItemGroup>
     <None Include="CG\shaderOne.cg">
       <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaderOne.cg">
+      <Filter>Source Files\CG</Filter>
     </None>
   </ItemGroup>
 </Project>
