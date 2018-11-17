@@ -26,6 +26,7 @@ public:
 	bool isRayTracing;
 	bool isUseSBB;
 	bool isOpenMP;
+	bool isPrintFPS;
 
 	float dbgParameter;
 

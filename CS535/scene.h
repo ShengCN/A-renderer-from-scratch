@@ -10,6 +10,7 @@
 #include "SBB.h"
 #include <chrono>
 #include "hitable_list.h"
+#include "CGInterface.h"
 using std::vector;
 using std::unique_ptr;
 using Clock = std::chrono::high_resolution_clock;
@@ -17,8 +18,12 @@ using Clock = std::chrono::high_resolution_clock;
 class Scene
 {
 public:
+
+	CGInterface *cgi;
+	ShaderOneInterface *soi;
+
 	GUI* gui;
-	FrameBuffer* fb, *fb3, *fbp, *hwfb;
+	FrameBuffer* fb, *fb3, *fbp, *hwfb, *gpufb;
 	std::vector<shared_ptr<FrameBuffer>> textures;
 	std::vector<shared_ptr<PPC>> lightPPCs;
 	std::vector<shared_ptr<FrameBuffer>> shadowMaps;
@@ -29,6 +34,7 @@ public:
 	shared_ptr<CubeMap> cubemap;
 	vector<shared_ptr<SBB>> raytracingSBB;	// Sphere BB
 	hitable_list obj_list;
+	float ka;
 
 	Scene();
 	void DBG();
@@ -39,6 +45,7 @@ public:
 	void RenderZbuffer(PPC *currPPC, FrameBuffer *currFB);
 	void UpdateSM();
 	void RenderHW();
+	void RenderGPU();
 
 	void RaytracingScene(PPC *ppc, FrameBuffer *fb);
 
@@ -70,6 +77,7 @@ private:
 
 	void BeginCountingTime() { beginTime = Clock::now(); };
 	void PrintTime(const string dbgInfo);
+	void PrintTime(const string fbname, FrameBuffer *curfb);
 	chrono::time_point<chrono::steady_clock> beginTime;
 	chrono::time_point<chrono::steady_clock> endTime;
 };

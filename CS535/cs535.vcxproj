@@ -100,6 +100,7 @@
   <ItemGroup>
     <ClInclude Include="aabb.h" />
     <ClInclude Include="BillBoard.h" />
+    <ClInclude Include="CGInterface.h" />
     <ClInclude Include="cubemap.h" />
     <ClInclude Include="framebuffer.h" />
     <ClInclude Include="glext.h" />
@@ -121,6 +122,7 @@
   <ItemGroup>
     <ClCompile Include="aabb.cpp" />
     <ClCompile Include="BillBoard.cpp" />
+    <ClCompile Include="CGInterface.cpp" />
     <ClCompile Include="cubemap.cpp" />
     <ClCompile Include="framebuffer.cpp" />
     <ClCompile Include="GlobalVariables.cpp" />
@@ -137,7 +139,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="CG\shaderOne.cg" />
-    <None Include="shaderOne.cg" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

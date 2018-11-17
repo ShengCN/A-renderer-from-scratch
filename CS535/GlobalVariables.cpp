@@ -22,6 +22,7 @@ GlobalVariables::GlobalVariables()
 	isRayTracing = false;
 	isDBGRaytracing = true;
 	isUseSBB = true;
+	isPrintFPS = false;
 
 	tmAnimationID = 0;
 	dbgParameter = 10.0f;
@@ -41,6 +42,6 @@ GlobalVariables::GlobalVariables()
 
 	isCubemapMipmap = false;
 
-	isRecording = true;
+	isRecording = false;
 	isOpenMP = true;
 }

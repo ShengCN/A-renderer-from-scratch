@@ -25,6 +25,9 @@ int TM::tmIDCounter = 0;
 
 Scene::Scene(): isRenderAABB(false)
 {
+	cgi = nullptr;
+	soi = nullptr;
+
 	gui = new GUI();
 	gui->show();
 	auto gv = GlobalVariables::Instance();
@@ -44,6 +47,11 @@ Scene::Scene(): isRenderAABB(false)
 	hwfb->label("HW Framebuffer");
 	hwfb->ishw = true;
 	hwfb->show();
+
+	gpufb = new FrameBuffer(u0, v0, w, h);
+	gpufb->label("GPU Framebuffer");
+	gpufb->isgpu = true;
+	gpufb->show();
 
 	fb3 = new FrameBuffer(u0 + fb->w + 30, v0, w, h);
 	fb3->label("Third Person View");
@@ -188,10 +196,42 @@ void Scene::RenderHW()
 
 	for(auto t:meshes)
 	{
-		BeginCountingTime();
 		t->RenderHW();
-		PrintTime("HW render "+ to_string(t->id) + " spends: ");
 	}
+}
+
+void Scene::RenderGPU()
+{
+	if(cgi == nullptr)
+	{
+		cgi = new CGInterface();
+		cgi->PerSessionInit();
+		soi = new ShaderOneInterface();
+		soi->PerSessionInit(cgi);
+	}
+
+	// Clear the framebuffer
+	glEnable(GL_DEPTH_TEST);
+	glClearColor(0.0f, 0.0f, 0.5f, 1.0f);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	ppc->SetIntrinsicsHW();
+	ppc->SetExtrinsicsHW();
+
+	// per frame initialization
+	cgi->EnableProfiles();
+	soi->PerFrameInit();
+	soi->BindPrograms();
+
+	// Render geometry
+	BeginCountingTime();
+	for(auto t:meshes)
+	{
+		t->RenderHW();
+	}
+	PrintTime("GPU render ",gpufb);
+	soi->PerFrameDisable();
+	cgi->DisableProfiles();
 }
 
 void Scene::RaytracingScene(PPC* currPPC, FrameBuffer* currFB)
@@ -682,9 +722,22 @@ void Scene::InitializeLights()
 
 void Scene::PrintTime(const string dbgInfo)
 {
+	if(GlobalVariables::Instance()->isPrintFPS)
+	{
+		endTime = Clock::now();
+		cerr << dbgInfo << std::chrono::duration_cast<chrono::nanoseconds>(endTime - beginTime).count() * 1e-9 << "s" <<
+			endl;
+	}
+}
+
+void Scene::PrintTime(const string fbname, FrameBuffer* curfb)
+{
 	endTime = Clock::now();
-	cerr << dbgInfo << std::chrono::duration_cast<chrono::nanoseconds>(endTime - beginTime).count() * 1e-9 << "s" <<
-		endl;
+	float duration_ms = std::chrono::duration_cast<chrono::nanoseconds>(endTime - beginTime).count() * 1e-9;
+	float FPS = 1.0f / (duration_ms*1e3);
+	string label;
+	label = fbname + " FPS: " + to_string(FPS);
+	curfb->label(label.c_str());
 }
 
 void Scene::InitDemo()
@@ -696,10 +749,30 @@ void Scene::InitDemo()
 	tm->PositionAndSize(tmC, tmSize);
 
 	meshes.push_back(tm);
+
+	ka = 0.0f;
 }
 
 void Scene::Demonstration()
 {
+	{
+		PPC ppc0 = *ppc, ppc1 = *ppc;
+		ppc1.C = ppc1.C + V3(30.0f, 60.0f, 0.0f);
+		ppc1.PositionAndOrient(ppc1.C, meshes[0]->GetCenter(), V3(0.0f, 1.0f, 0.0f));
+		fb->hide();
+		int framesN = 1000;
+		for(int i = 0; i < framesN; ++i)
+		{
+			ka = static_cast<float>(i) / static_cast<float>(framesN);
+			ppc->SetInterpolated(&ppc0, &ppc1, static_cast<float>(i)/framesN);
+			hwfb->redraw();
+			gpufb->redraw();
+			Fl::check();
+		}
+		*ppc = ppc0;
+		return;
+	}
+
 	for (int i = 0; i < 100; ++i)
 	{
 		ppc->C = ppc->C + ppc->a.UnitVector() * 0.1f;

@@ -26,7 +26,7 @@ public:
 	unsigned int *pix;	// pixel 
 	float *zb;			// z buffer
 	int w, h;
-	bool ishw;
+	bool ishw, isgpu;
 
 	static unordered_map<std::string, vector<shared_ptr<TextureInfo>>> textures; 
 
