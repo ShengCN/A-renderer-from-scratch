@@ -34,7 +34,7 @@ public:
 	shared_ptr<CubeMap> cubemap;
 	vector<shared_ptr<SBB>> raytracingSBB;	// Sphere BB
 	hitable_list obj_list;
-	float ka;
+	float ka, mf;
 
 	Scene();
 	void DBG();
@@ -47,7 +47,7 @@ public:
 	void RenderHW();
 	void RenderGPU();
 
-	void RaytracingScene(PPC *ppc, FrameBuffer *fb);
+	void ReloadCGfile();
 
 	// HW5, Implement part of the paper
 	// https://www.cs.purdue.edu/cgvlab/papers/popescu/popescuGemEG06.pdf
@@ -62,6 +62,7 @@ public:
 	V3 RayTracingColor(ray r, hitable_list &obj_list, int depth);
 	void RenderRaytracing();
 	void RandomScene();
+	void RaytracingScene(PPC *ppc, FrameBuffer *fb);
 
 private:
 	bool isRenderAABB;

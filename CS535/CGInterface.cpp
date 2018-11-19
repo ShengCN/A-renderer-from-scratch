@@ -93,6 +93,10 @@ bool ShaderOneInterface::PerSessionInit(CGInterface* cgi)
 	fragmentKa = cgGetNamedParameter(fragmentProgram, "ka");
 	fragmentC0 = cgGetNamedParameter(fragmentProgram, "C0");
 	fragmentC1 = cgGetNamedParameter(fragmentProgram, "C1");
+	vertexMorphRadius = cgGetNamedParameter(vertexProgram, "MR");
+	vertexMorphCenter = cgGetNamedParameter(vertexProgram, "MC");
+	vertexMorphFraction = cgGetNamedParameter(vertexProgram, "Mf");
+
 	return true;
 }
 
@@ -111,6 +115,12 @@ void ShaderOneInterface::PerFrameInit()
 	// cerr << aabb.corners[0] << endl << aabb.corners[1] << endl;
 	cgSetParameter3fv(fragmentC0, (float*)&aabb.corners[0]);
 	cgSetParameter3fv(fragmentC1, (float*)&aabb.corners[1]);
+
+	V3 C = (aabb.corners[0] + aabb.corners[1]) * 0.5f;
+	cgSetParameter3fv(vertexMorphCenter, (float*)&C);
+	float mr = aabb.GetDiagnoalLength() / 3.0f;
+	cgSetParameter1f(vertexMorphRadius, mr);
+	cgSetParameter1f(vertexMorphFraction, GlobalVariables::Instance()->curScene->mf);
 }
 
 void ShaderOneInterface::PerFrameDisable()

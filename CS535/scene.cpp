@@ -41,7 +41,7 @@ Scene::Scene(): isRenderAABB(false)
 	int fovf = 70.0f;
 	fb = new FrameBuffer(u0, v0, w, h);
 	fb->label("SW Framebuffer");
-	fb->show();
+	// fb->show();
 
 	hwfb = new FrameBuffer(u0 + fb->w + 30, v0, w, h);
 	hwfb->label("HW Framebuffer");
@@ -232,6 +232,17 @@ void Scene::RenderGPU()
 	PrintTime("GPU render ",gpufb);
 	soi->PerFrameDisable();
 	cgi->DisableProfiles();
+}
+
+void Scene::ReloadCGfile()
+{
+	if (cgi == nullptr) delete cgi;
+	if (soi == nullptr) delete soi;
+
+	cgi = new CGInterface();
+	cgi->PerSessionInit();
+	soi = new ShaderOneInterface();
+	soi->PerSessionInit(cgi);
 }
 
 void Scene::RaytracingScene(PPC* currPPC, FrameBuffer* currFB)
@@ -750,20 +761,23 @@ void Scene::InitDemo()
 
 	meshes.push_back(tm);
 
-	ka = 0.0f;
+	ka = 0.5f;
+	mf = 0.0f;
 }
 
 void Scene::Demonstration()
 {
 	{
+		ReloadCGfile();
 		PPC ppc0 = *ppc, ppc1 = *ppc;
 		ppc1.C = ppc1.C + V3(30.0f, 60.0f, 0.0f);
 		ppc1.PositionAndOrient(ppc1.C, meshes[0]->GetCenter(), V3(0.0f, 1.0f, 0.0f));
-		fb->hide();
+		ppc1 = *ppc;
 		int framesN = 1000;
 		for(int i = 0; i < framesN; ++i)
 		{
 			ka = static_cast<float>(i) / static_cast<float>(framesN);
+			mf = static_cast<float>(i) / static_cast<float>(framesN);
 			ppc->SetInterpolated(&ppc0, &ppc1, static_cast<float>(i)/framesN);
 			hwfb->redraw();
 			gpufb->redraw();

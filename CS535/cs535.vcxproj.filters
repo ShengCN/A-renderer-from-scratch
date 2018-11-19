@@ -136,7 +136,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="CG\shaderOne.cg">
-      <Filter>Resource Files</Filter>
+      <Filter>Source Files\CG</Filter>
     </None>
   </ItemGroup>
 </Project>
