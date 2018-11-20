@@ -17,6 +17,7 @@
 #define PERSPECTIVE_CORRECT_INTERPOLATION
 
 unordered_map<std::string, vector<shared_ptr<TextureInfo>>> FrameBuffer::textures;
+
 FrameBuffer::FrameBuffer(int u0, int v0, int _w, int _h)
 	: Fl_Gl_Window(u0, v0, _w, _h, nullptr)
 {
@@ -30,13 +31,15 @@ FrameBuffer::FrameBuffer(int u0, int v0, int _w, int _h)
 
 void FrameBuffer::draw()
 {
-	if(ishw)
+	if (ishw)
 	{
 		GlobalVariables::Instance()->curScene->RenderHW();
 	}
-	else if(isgpu)
+	else if (isgpu)
 	{
-		GlobalVariables::Instance()->curScene->RenderGPU();
+		GlobalVariables::Instance()->isWireFrame
+			? GlobalVariables::Instance()->curScene->RenderGPUWireframe()
+			: GlobalVariables::Instance()->curScene->RenderGPU();
 	}
 	else
 	{
@@ -49,10 +52,10 @@ int FrameBuffer::handle(int event)
 	switch (event)
 	{
 	case FL_KEYBOARD:
-	{
-		KeyboardHandle();
-		return 0;
-	}
+		{
+			KeyboardHandle();
+			return 0;
+		}
 	default:
 		break;
 	}
@@ -63,7 +66,7 @@ void FrameBuffer::KeyboardHandle()
 {
 	auto gv = GlobalVariables::Instance();
 	int key = Fl::event_key();
-	cerr << "Pressed "<< (char)key << endl;
+	cerr << "Pressed " << (char)key << endl;
 	switch (key)
 	{
 	case ',':
@@ -73,57 +76,57 @@ void FrameBuffer::KeyboardHandle()
 		}
 	case 'w':
 		{
-		gv->curScene->ppc->MoveForward(1.0f);
-		gv->curScene->Render();
+			gv->curScene->ppc->MoveForward(1.0f);
+			gv->curScene->Render();
 			break;
 		}
 	case 'a':
 		{
-		gv->curScene->ppc->MoveLeft(-1.0f);
-		gv->curScene->Render();
+			gv->curScene->ppc->MoveLeft(-1.0f);
+			gv->curScene->Render();
 			break;
 		}
 	case 's':
 		{
-		gv->curScene->ppc->MoveForward(-1.0f);
-		gv->curScene->Render();
+			gv->curScene->ppc->MoveForward(-1.0f);
+			gv->curScene->Render();
 			break;
 		}
 	case 'd':
 		{
-		gv->curScene->ppc->MoveLeft(1.0f);
-		gv->curScene->Render();
+			gv->curScene->ppc->MoveLeft(1.0f);
+			gv->curScene->Render();
 			break;
 		}
 	case 'z':
-	{
-		gv->curScene->ppc->MoveDown(-1.0f);
-		gv->curScene->Render();
-		break;
-	}
+		{
+			gv->curScene->ppc->MoveDown(-1.0f);
+			gv->curScene->Render();
+			break;
+		}
 	case 'x':
-	{
-		gv->curScene->ppc->MoveDown(1.0f);
-		gv->curScene->Render();
-		break;
-	}
+		{
+			gv->curScene->ppc->MoveDown(1.0f);
+			gv->curScene->Render();
+			break;
+		}
 	case 'j':
 		{
 			// RevolveH 
-		gv->curScene->ppc->RevolveH(gv->curScene->GetSceneCenter(), 1.0f);
-		gv->curScene->Render();
+			gv->curScene->ppc->RevolveH(gv->curScene->GetSceneCenter(), 1.0f);
+			gv->curScene->Render();
 			break;
 		}
 	case 'k':
 		{
 			// RevolveV
-		gv->curScene->ppc->RevolveV(gv->curScene->GetSceneCenter(), 1.0f);
-		gv->curScene->Render();
-		break;
+			gv->curScene->ppc->RevolveV(gv->curScene->GetSceneCenter(), 1.0f);
+			gv->curScene->Render();
+			break;
 		}
 	default:
 		cerr << "INFO: do not understand keypress" << endl;
-		break;;
+		break;
 	}
 
 	cerr << gv->curScene->ppc->C;
@@ -132,11 +135,11 @@ void FrameBuffer::KeyboardHandle()
 
 void FrameBuffer::SetBGR(unsigned int bgr)
 {
-//	memset(pix, bgr, sizeof(unsigned int) * w * h);
+	//	memset(pix, bgr, sizeof(unsigned int) * w * h);
 
-	for(int v = 0; v < h - 1; ++v)
+	for (int v = 0; v < h - 1; ++v)
 	{
-		for(int u = 0; u < w -1; ++u)
+		for (int u = 0; u < w - 1; ++u)
 		{
 			pix[(h - 1 - v) * w + u] = bgr;
 		}
@@ -233,7 +236,7 @@ void FrameBuffer::SaveTextureAsTiff(string fname, const string textureName, int 
 		return;
 	}
 
-	TIFFSetField(out, TIFFTAG_IMAGEWIDTH,  tex->w);
+	TIFFSetField(out, TIFFTAG_IMAGEWIDTH, tex->w);
 	TIFFSetField(out, TIFFTAG_IMAGELENGTH, tex->h);
 	TIFFSetField(out, TIFFTAG_SAMPLESPERPIXEL, 4);
 	TIFFSetField(out, TIFFTAG_BITSPERSAMPLE, 8);
@@ -302,7 +305,7 @@ void FrameBuffer::ClearBGRZ(unsigned bgr, float z0)
 
 void FrameBuffer::ClearZ(float z0)
 {
-	 memset(zb, z0, sizeof(float) * w * h);
+	memset(zb, z0, sizeof(float) * w * h);
 }
 
 bool FrameBuffer::DepthTest(int u, int v, float curz)
@@ -370,7 +373,7 @@ bool FrameBuffer::LoadTexture(const std::string texFile)
 	TIFFClose(in);
 
 	// Preprocess Lod textures
-	if(GlobalVariables::Instance()->lodTexture)
+	if (GlobalVariables::Instance()->lodTexture)
 		PrepareTextureLoD(texFile);
 
 	return true;
@@ -634,15 +637,15 @@ void FrameBuffer::DrawTexture(const std::string texFile, int LoD)
 	delete[] pix;
 	w = tex->w;
 	h = tex->h;
-	pix = new unsigned int[w*h];
+	pix = new unsigned int[w * h];
 	copy(tex->texture.begin(), tex->texture.end(), pix);
 }
 
-void FrameBuffer::DrawCubeMap(PPC* ppc, CubeMap *cubemap)
+void FrameBuffer::DrawCubeMap(PPC* ppc, CubeMap* cubemap)
 {
-	for(int v = 0; v < h; ++v)
+	for (int v = 0; v < h; ++v)
 	{
-		for(int u = 0; u < w; ++u)
+		for (int u = 0; u < w; ++u)
 		{
 			V3 eyeRay = ppc->GetRay(u, v);
 			V3 c = cubemap->LookupColor(eyeRay);
@@ -717,7 +720,7 @@ void FrameBuffer::VisualizeCurrView3D(PPC* ppc0, PPC* ppc1, FrameBuffer* fb1)
 	}
 }
 
-V3 FrameBuffer::LookupColor(std::string texFile, float s, float t, float &alpha, int pixelSz)
+V3 FrameBuffer::LookupColor(std::string texFile, float s, float t, float& alpha, int pixelSz)
 {
 	if (textures.find(texFile) == textures.end())
 	{
@@ -755,15 +758,17 @@ V3 FrameBuffer::LookupColor(std::string texFile, float s, float t, float &alpha,
 	return c0 * (1.0f - fract) + c1 * fract;
 }
 
-V3 FrameBuffer::BilinearLookupColor(float s, float t, float  &alpha)
+V3 FrameBuffer::BilinearLookupColor(float s, float t, float& alpha)
 {
 	int texW = w, texH = h;
 	float textS = s * static_cast<float>(texW - 1);
 	float textT = t * static_cast<float>(texH - 1);
 
 	// corner case
-	int u0 = Clamp(static_cast<int>(textS - 0.5f), 0, texW -1), v0 = Clamp(static_cast<int>(textT - 0.5f),0, texH -1);
-	int u1 = Clamp(static_cast<int>(textS + 0.5f), 0, texW - 1), v1 = Clamp(static_cast<int>(textT + 0.5f), 0, texH - 1);
+	int u0 = Clamp(static_cast<int>(textS - 0.5f), 0, texW - 1), v0 =
+		    Clamp(static_cast<int>(textT - 0.5f), 0, texH - 1);
+	int u1 = Clamp(static_cast<int>(textS + 0.5f), 0, texW - 1), v1 =
+		    Clamp(static_cast<int>(textT + 0.5f), 0, texH - 1);
 
 	unsigned int ori0 = pix[(texH - 1 - v0) * texW + u0];
 	unsigned int ori1 = pix[(texH - 1 - v0) * texW + u1];
@@ -806,8 +811,10 @@ V3 FrameBuffer::BilinearLookupColor(shared_ptr<TextureInfo> tex, float s, float 
 	float textT = t * static_cast<float>(texH - 1);
 
 	// corner case
-	int u0 = Clamp(static_cast<int>(textS - 0.5f), 0, texW - 1), v0 = Clamp(static_cast<int>(textT - 0.5f), 0, texH - 1);
-	int u1 = Clamp(static_cast<int>(textS + 0.5f), 0, texW - 1), v1 = Clamp(static_cast<int>(textT + 0.5f), 0, texH - 1);
+	int u0 = Clamp(static_cast<int>(textS - 0.5f), 0, texW - 1), v0 =
+		    Clamp(static_cast<int>(textT - 0.5f), 0, texH - 1);
+	int u1 = Clamp(static_cast<int>(textS + 0.5f), 0, texW - 1), v1 =
+		    Clamp(static_cast<int>(textT + 0.5f), 0, texH - 1);
 
 	unsigned int ori0 = tex->texture[(texH - 1 - v0) * texW + u0];
 	unsigned int ori1 = tex->texture[(texH - 1 - v0) * texW + u1];
@@ -834,8 +841,10 @@ V3 FrameBuffer::BilinearLookupColor(shared_ptr<TextureInfo> tex, float s, float 
 	float textT = t * static_cast<float>(texH - 1);
 
 	// corner case
-	int u0 = Clamp(static_cast<int>(textS - 0.5f), 0, texW - 1), v0 = Clamp(static_cast<int>(textT - 0.5f), 0, texH - 1);
-	int u1 = Clamp(static_cast<int>(textS + 0.5f), 0, texW - 1), v1 = Clamp(static_cast<int>(textT + 0.5f), 0, texH - 1);
+	int u0 = Clamp(static_cast<int>(textS - 0.5f), 0, texW - 1), v0 =
+		    Clamp(static_cast<int>(textT - 0.5f), 0, texH - 1);
+	int u1 = Clamp(static_cast<int>(textS + 0.5f), 0, texW - 1), v1 =
+		    Clamp(static_cast<int>(textT + 0.5f), 0, texH - 1);
 
 	unsigned int ori0 = tex->texture[(texH - 1 - v0) * texW + u0];
 	unsigned int ori1 = tex->texture[(texH - 1 - v0) * texW + u1];
@@ -894,7 +903,7 @@ void FrameBuffer::PrepareTextureLoD(const string texFile)
 	textures[texFile].clear();
 	textures[texFile].resize(loDMax + 1);
 	textures[texFile][curLoD] = curTex;
-	
+
 	while (curTex->w >= 2)
 	{
 		int nextW = curTex->w / 2, newLoD = curLoD - 1;
@@ -934,8 +943,8 @@ void FrameBuffer::PrepareTextureLoD(const string texFile)
 		textures[texFile][newLoD] = newTex;
 		curTex = newTex;
 		curLoD = newLoD;
-		
-		if(GlobalVariables::Instance()->isSaveLodTextures)
+
+		if (GlobalVariables::Instance()->isSaveLodTextures)
 		{
 			// See the Lod Preprocess result
 			const string texSaveName = texFile + to_string(newLoD) + ".tiff";

@@ -234,6 +234,40 @@ void Scene::RenderGPU()
 	cgi->DisableProfiles();
 }
 
+void Scene::RenderGPUWireframe()
+{
+	if (cgi == nullptr)
+	{
+		cgi = new CGInterface();
+		cgi->PerSessionInit();
+		soi = new ShaderOneInterface();
+		soi->PerSessionInit(cgi);
+	}
+
+	// Clear the framebuffer
+	glEnable(GL_DEPTH_TEST);
+	glClearColor(0.0f, 0.0f, 0.5f, 1.0f);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	ppc->SetIntrinsicsHW();
+	ppc->SetExtrinsicsHW();
+
+	// per frame initialization
+	cgi->EnableProfiles();
+	soi->PerFrameInit();
+	soi->BindPrograms();
+
+	// Render geometry
+	BeginCountingTime();
+	for (auto t : meshes)
+	{
+		t->RenderHWWireframe();
+	}
+	PrintTime("GPU render ", gpufb);
+	soi->PerFrameDisable();
+	cgi->DisableProfiles();
+}
+
 void Scene::ReloadCGfile()
 {
 	if (cgi == nullptr) delete cgi;
@@ -768,16 +802,15 @@ void Scene::InitDemo()
 void Scene::Demonstration()
 {
 	{
-		ReloadCGfile();
 		PPC ppc0 = *ppc, ppc1 = *ppc;
 		ppc1.C = ppc1.C + V3(30.0f, 60.0f, 0.0f);
 		ppc1.PositionAndOrient(ppc1.C, meshes[0]->GetCenter(), V3(0.0f, 1.0f, 0.0f));
 		ppc1 = *ppc;
-		int framesN = 1000;
+		int framesN = 100;
 		for(int i = 0; i < framesN; ++i)
 		{
-			ka = static_cast<float>(i) / static_cast<float>(framesN);
-			mf = static_cast<float>(i) / static_cast<float>(framesN);
+			ka = static_cast<float>(i) / static_cast<float>(framesN -1);
+			mf = static_cast<float>(i) / static_cast<float>(framesN - 1);
 			ppc->SetInterpolated(&ppc0, &ppc1, static_cast<float>(i)/framesN);
 			hwfb->redraw();
 			gpufb->redraw();

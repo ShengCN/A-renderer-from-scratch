@@ -27,6 +27,7 @@ public:
 	bool isUseSBB;
 	bool isOpenMP;
 	bool isPrintFPS;
+	bool isWireFrame;
 
 	float dbgParameter;
 

@@ -46,6 +46,7 @@ public:
 	void UpdateSM();
 	void RenderHW();
 	void RenderGPU();
+	void RenderGPUWireframe();
 
 	void ReloadCGfile();
 

@@ -38,6 +38,7 @@ GlobalVariables::GlobalVariables()
 	isLight = true;
 	isShadow = false;
 	isRefraction = false;
+	isWireFrame = true;
 	refractRatio = 1.15f;
 
 	isCubemapMipmap = false;
