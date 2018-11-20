@@ -34,7 +34,8 @@ class ShaderOneInterface
 	CGparameter geometryModelViewProj; // geometry shader
 	CGparameter fragmentKa; // ambient coefficient for fragment shader
 	CGparameter fragmentLightPos, fragmentPPCC;
-	CGparameter vertexMorphRadius, vertexMorphCenter, vertexMorphFraction;
+	CGparameter vertexMorphFraction;
+
 public:
 	ShaderOneInterface()
 	{

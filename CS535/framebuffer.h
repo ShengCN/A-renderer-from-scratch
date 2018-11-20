@@ -29,6 +29,7 @@ public:
 	bool ishw, isgpu;
 
 	static unordered_map<std::string, vector<shared_ptr<TextureInfo>>> textures; 
+	static unordered_map<std::string, GLuint> gpuTexID;
 
 	FrameBuffer(int u0, int v0, int _w, int _h);
 	void draw();
@@ -48,6 +49,7 @@ public:
 	float GetZ(int u, int v);
 	unsigned int Get(int u, int v);
 	bool LoadTexture(const std::string texFile);
+	bool LoadTextureGPU(const std::string texFile);
 
 	// Draw something
 	void DrawSegment(V3 p0, V3 c0, V3 p1, V3 c1);

@@ -98,6 +98,9 @@ bool ShaderOneInterface::PerSessionInit(CGInterface* cgi)
 	fragmentPPCC = cgGetNamedParameter(fragmentProgram, "ppc_C");
 	fragmentLightPos = cgGetNamedParameter(fragmentProgram, "light_position");
 
+	// texture
+	GlobalVariables::Instance()->curScene->gpufb->LoadTextureGPU(GlobalVariables::Instance()->projectedTextureName);
+
 	return true;
 }
 

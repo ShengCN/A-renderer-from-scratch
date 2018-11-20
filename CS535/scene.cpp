@@ -227,6 +227,9 @@ void Scene::RenderGPU()
 	BeginCountingTime();
 	for(auto t:meshes)
 	{
+		auto texFile = GlobalVariables::Instance()->projectedTextureName;
+		glBindTexture(GL_TEXTURE_2D, gpufb->gpuTexID[texFile]);
+		
 		t->RenderHW();
 	}
 	PrintTime("GPU render ",gpufb);
@@ -788,17 +791,15 @@ void Scene::PrintTime(const string fbname, FrameBuffer* curfb)
 void Scene::InitDemo()
 {
 	TM* tm = new TM();
-	tm->LoadModelBin("geometry/teapot1K.bin");
+	tm->SetBillboard(V3(0.0f), V3(0.0f, 0.0f, 1.0f), V3(0.0f, 1.0f, 0.0f), 5.0f);
 	V3 tmC = ppc->C + ppc->GetVD() * 100.0f;
 	float tmSize = 100.0f;
 	tm->PositionAndSize(tmC, tmSize);
-
 	meshes.push_back(tm);
 
+	// Light
 	ka = 0.5f;
 	mf = 0.0f;
-
-	// Light Initialize
 	int w = 640, h = 480;
 	V3 LightC = meshes[0]->GetCenter() + V3(0.0f, 50.0f, 50.0f);
 	shared_ptr<PPC> l0ppc = make_shared<PPC>(w, h, 55.0f);
@@ -809,7 +810,7 @@ void Scene::InitDemo()
 void Scene::Demonstration()
 {
 	{
-		ReloadCGfile();
+		// ReloadCGfile();
 		PPC ppc0 = *ppc, ppc1 = *ppc;
 		ppc1.C = ppc1.C + V3(30.0f, 60.0f, 0.0f);
 		ppc1.PositionAndOrient(ppc1.C, meshes[0]->GetCenter(), V3(0.0f, 1.0f, 0.0f));

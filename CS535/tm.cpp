@@ -535,16 +535,19 @@ void TM::RenderHW()
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glEnableClientState(GL_COLOR_ARRAY);
 	glEnableClientState(GL_NORMAL_ARRAY);
+	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 
 	glVertexPointer(3, GL_FLOAT, 0, &verts[0]);
 	glColorPointer(3, GL_FLOAT, 0, &colors[0]);
 	glNormalPointer(GL_FLOAT, 0, &normals[0]);
+	glTexCoordPointer(2, GL_FLOAT, 0, &vertST[0]);
 
 	glDrawElements(GL_TRIANGLES, 3 * trisN, GL_UNSIGNED_INT, &tris[0]);
 
 	glDisableClientState(GL_COLOR_ARRAY);
 	glDisableClientState(GL_VERTEX_ARRAY);
 	glDisableClientState(GL_NORMAL_ARRAY);
+	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 }
 
 void TM::RenderHWWireframe()

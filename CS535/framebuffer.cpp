@@ -17,6 +17,8 @@
 #define PERSPECTIVE_CORRECT_INTERPOLATION
 
 unordered_map<std::string, vector<shared_ptr<TextureInfo>>> FrameBuffer::textures;
+unordered_map<std::string, GLuint> FrameBuffer::gpuTexID;
+
 
 FrameBuffer::FrameBuffer(int u0, int v0, int _w, int _h)
 	: Fl_Gl_Window(u0, v0, _w, _h, nullptr)
@@ -375,6 +377,60 @@ bool FrameBuffer::LoadTexture(const std::string texFile)
 	// Preprocess Lod textures
 	if (GlobalVariables::Instance()->lodTexture)
 		PrepareTextureLoD(texFile);
+
+	return true;
+}
+
+bool FrameBuffer::LoadTextureGPU(const std::string texFile)
+{
+	const char* fname = texFile.c_str();
+	TIFF* in = TIFFOpen(fname, "r");
+	if (in == nullptr)
+	{
+		cerr << fname << " could not be opened" << endl;
+		return false;
+	}
+
+	int width, height;
+	TIFFGetField(in, TIFFTAG_IMAGEWIDTH, &width);
+	TIFFGetField(in, TIFFTAG_IMAGELENGTH, &height);
+	vector<unsigned int> texMemory(width * height);
+
+	if (TIFFReadRGBAImage(in, width, height, &texMemory[0], 0) == 0)
+	{
+		cerr << "failed to load " << fname << endl;
+		return false;
+	}
+
+	// commit changes
+	if (textures.find(texFile) != textures.end())
+	{
+		textures.erase(texFile);
+	}
+	shared_ptr<TextureInfo> newTex = make_shared<TextureInfo>();
+	newTex->texture = texMemory;
+	newTex->w = width;
+	newTex->h = height;
+	textures[texFile].push_back(newTex);
+	TIFFClose(in);
+
+	GLuint texID = 0;
+	glEnable(GL_TEXTURE_2D);
+	glGenTextures(1, &texID);
+	glBindTexture(GL_TEXTURE_2D, texID);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, newTex.get());
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glBindTexture(GL_TEXTURE_2D, 0);
+	gpuTexID[texFile] = texID;
+
+	// Check errors
+	GLenum error = glGetError();
+	if(error != GL_NO_ERROR)
+	{
+		cerr << "Error loading texture from " << texFile << "\n";
+		return false;
+	}
 
 	return true;
 }
