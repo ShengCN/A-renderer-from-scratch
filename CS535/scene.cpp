@@ -778,8 +778,8 @@ void Scene::PrintTime(const string dbgInfo)
 void Scene::PrintTime(const string fbname, FrameBuffer* curfb)
 {
 	endTime = Clock::now();
-	float duration_ms = std::chrono::duration_cast<chrono::nanoseconds>(endTime - beginTime).count() * 1e-9;
-	float FPS = 1.0f / (duration_ms*1e3);
+	float duration_ms = std::chrono::duration_cast<chrono::nanoseconds>(endTime - beginTime).count();
+	float FPS = 1.0f / (duration_ms*1e-6);
 	string label;
 	label = fbname + " FPS: " + to_string(FPS);
 	curfb->label(label.c_str());
@@ -797,19 +797,27 @@ void Scene::InitDemo()
 
 	ka = 0.5f;
 	mf = 0.0f;
+
+	// Light Initialize
+	int w = 640, h = 480;
+	V3 LightC = meshes[0]->GetCenter() + V3(0.0f, 50.0f, 50.0f);
+	shared_ptr<PPC> l0ppc = make_shared<PPC>(w, h, 55.0f);
+	l0ppc->PositionAndOrient(LightC, meshes[0]->GetCenter(), V3(0.0f, 1.0f, 0.0f));
+	lightPPCs.push_back(l0ppc);
 }
 
 void Scene::Demonstration()
 {
 	{
+		ReloadCGfile();
 		PPC ppc0 = *ppc, ppc1 = *ppc;
 		ppc1.C = ppc1.C + V3(30.0f, 60.0f, 0.0f);
 		ppc1.PositionAndOrient(ppc1.C, meshes[0]->GetCenter(), V3(0.0f, 1.0f, 0.0f));
 		ppc1 = *ppc;
-		int framesN = 100;
+		int framesN = 360;
 		for(int i = 0; i < framesN; ++i)
 		{
-			ka = static_cast<float>(i) / static_cast<float>(framesN -1);
+			lightPPCs[0]->RevolveH(meshes[0]->GetCenter(), 1.0f);
 			mf = static_cast<float>(i) / static_cast<float>(framesN - 1);
 			ppc->SetInterpolated(&ppc0, &ppc1, static_cast<float>(i)/framesN);
 			hwfb->redraw();

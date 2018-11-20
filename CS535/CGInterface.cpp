@@ -87,15 +87,16 @@ bool ShaderOneInterface::PerSessionInit(CGInterface* cgi)
 	cgGLLoadProgram(vertexProgram);
 	cgGLLoadProgram(fragmentProgram);
 
-	// build some parameters by name such that we can set them later...
+	// Vertex shader
 	vertexModelViewProj = cgGetNamedParameter(vertexProgram, "modelViewProj");
-	geometryModelViewProj = cgGetNamedParameter(geometryProgram, "modelViewProj");
-	fragmentKa = cgGetNamedParameter(fragmentProgram, "ka");
-	fragmentC0 = cgGetNamedParameter(fragmentProgram, "C0");
-	fragmentC1 = cgGetNamedParameter(fragmentProgram, "C1");
-	vertexMorphRadius = cgGetNamedParameter(vertexProgram, "MR");
-	vertexMorphCenter = cgGetNamedParameter(vertexProgram, "MC");
 	vertexMorphFraction = cgGetNamedParameter(vertexProgram, "Mf");
+
+	// Geometry shader
+	geometryModelViewProj = cgGetNamedParameter(geometryProgram, "modelViewProj");
+
+	// Fragment shader
+	fragmentPPCC = cgGetNamedParameter(fragmentProgram, "ppc_C");
+	fragmentLightPos = cgGetNamedParameter(fragmentProgram, "light_position");
 
 	return true;
 }
@@ -110,17 +111,13 @@ void ShaderOneInterface::PerFrameInit()
 		geometryModelViewProj,
 		CG_GL_MODELVIEW_PROJECTION_MATRIX, CG_GL_MATRIX_IDENTITY);
 
-	cgSetParameter1f(fragmentKa, GlobalVariables::Instance()->curScene->ka);
-	AABB aabb = GlobalVariables::Instance()->curScene->meshes[0]->ComputeAABB();
-	// cerr << aabb.corners[0] << endl << aabb.corners[1] << endl;
-	cgSetParameter3fv(fragmentC0, (float*)&aabb.corners[0]);
-	cgSetParameter3fv(fragmentC1, (float*)&aabb.corners[1]);
-
-	V3 C = (aabb.corners[0] + aabb.corners[1]) * 0.5f;
-	cgSetParameter3fv(vertexMorphCenter, (float*)&C);
-	float mr = aabb.GetDiagnoalLength() / 3.0f;
-	cgSetParameter1f(vertexMorphRadius, mr);
+	// Vertex Shader
 	cgSetParameter1f(vertexMorphFraction, GlobalVariables::Instance()->curScene->mf);
+
+	// Fragment Shader
+	auto curScene = GlobalVariables::Instance()->curScene;
+	cgSetParameter3fv(fragmentLightPos, (float*)&(curScene->lightPPCs[0]->C));
+	cgSetParameter3fv(fragmentPPCC, (float*)&(curScene->ppc->C));
 }
 
 void ShaderOneInterface::PerFrameDisable()
