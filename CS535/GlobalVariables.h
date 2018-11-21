@@ -31,6 +31,8 @@ public:
 
 	float dbgParameter;
 
+	vector<string> cubemapFiles;
+
 	// For HW5
 	bool isRefraction;
 	float refractRatio;

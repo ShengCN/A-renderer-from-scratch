@@ -50,6 +50,7 @@ public:
 	unsigned int Get(int u, int v);
 	bool LoadTexture(const std::string texFile);
 	bool LoadTextureGPU(const std::string texFile);
+	bool LoadCubemapGPU(vector<string> cubemaps);
 
 	// Draw something
 	void DrawSegment(V3 p0, V3 c0, V3 p1, V3 c1);

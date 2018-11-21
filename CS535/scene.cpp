@@ -204,11 +204,13 @@ void Scene::RenderGPU()
 {
 	if(cgi == nullptr && soi == nullptr)
 	{
+		auto gv = GlobalVariables::Instance();
 		cgi = new CGInterface();
 		cgi->PerSessionInit();
 		soi = new ShaderOneInterface();
 		soi->PerSessionInit(cgi);
-		GlobalVariables::Instance()->curScene->gpufb->LoadTextureGPU(GlobalVariables::Instance()->projectedTextureName);
+		gv->curScene->gpufb->LoadTextureGPU(GlobalVariables::Instance()->projectedTextureName);
+		gv->curScene->gpufb->LoadCubemapGPU(GlobalVariables::Instance()->cubemapFiles);
 	}
 
 	// Clear the framebuffer
@@ -791,7 +793,8 @@ void Scene::PrintTime(const string fbname, FrameBuffer* curfb)
 void Scene::InitDemo()
 {
 	TM* tm = new TM();
-	tm->SetBillboard(V3(0.0f), V3(0.0f, 0.0f, 1.0f), V3(0.0f, 1.0f, 0.0f), 5.0f);
+	// tm->SetBillboard(V3(0.0f), V3(0.0f, 0.0f, 1.0f), V3(0.0f, 1.0f, 0.0f), 5.0f);
+	tm->LoadModelBin("geometry/happy4.bin");
 	V3 tmC = ppc->C + ppc->GetVD() * 100.0f;
 	float tmSize = 100.0f;
 	tm->PositionAndSize(tmC, tmSize);
@@ -813,7 +816,7 @@ void Scene::Demonstration()
 		PPC ppc0 = *ppc, ppc1 = *ppc;
 		ppc1.C = ppc1.C + V3(30.0f, 60.0f, 0.0f);
 		ppc1.PositionAndOrient(ppc1.C, meshes[0]->GetCenter(), V3(0.0f, 1.0f, 0.0f));
-		ppc1 = *ppc;
+		// ppc1 = *ppc;
 		int framesN = 360;
 		for(int i = 0; i < framesN; ++i)
 		{
@@ -826,13 +829,5 @@ void Scene::Demonstration()
 		}
 		*ppc = ppc0;
 		return;
-	}
-
-	for (int i = 0; i < 100; ++i)
-	{
-		ppc->C = ppc->C + ppc->a.UnitVector() * 0.1f;
-		Render(ppc, fb);
-		hwfb->redraw();
-		Fl::check();
 	}
 }

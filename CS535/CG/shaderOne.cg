@@ -3,7 +3,7 @@ struct VertexDataInput {
 	float4 vertex: POSITION;
 	float3 normal: NORMAL;
 	float3 color: COLOR;
-  float2 texCoord : TEXCOORD;
+  float2 texCoord : TEXCOORD0;
 };
 
 struct VertexDataOutput {
@@ -48,7 +48,9 @@ TRIANGLE void GeometryMain(AttribArray<VertexDataOutput> tverts,
 PixelDataOutput FragmentMain(VertexDataOutput pdi, 
   uniform float3 light_position,
   uniform float3 ppc_C,
-  uniform sampler2D tex) {
+  uniform sampler2D tex,
+  uniform int isST // does the tm has st
+  ) {
 
   PixelDataOutput ret;
   
@@ -58,11 +60,14 @@ PixelDataOutput FragmentMain(VertexDataOutput pdi,
   float ka = 0.1f;
   float kd = max(0.0f, dot(normalize(lightdir), normalize(pdi.normal)));
   float ks = pow(max(0.0f, dot(reflect(normalize(-lightdir),normalize(pdi.normal)) , normalize(viewdir))), 200);
-  float3 phongColor = tex2D(tex, pdi.vtexCoord) * (ka + (1.0f - ka) * kd) + float3(1.0f) * ks;
+  
+  // point color
+  float3 pc = isST == 0? tex2D(tex, pdi.vtexCoord): pdi.color;
+  float3 phongColor = pc * (ka + (1.0f - ka) * kd) + float3(1.0f) * ks;
   // float3 phongColor = pdi.color * (ka + (1.0f - ka) * kd) + float3(1.0f) * ks;
   // ret.color = length(pdi.vtexCoord);
-  // ret.color = phongColor;
-  ret.color = tex2D(tex, pdi.vtexCoord);
+  ret.color = phongColor;
+  // ret.color = tex2D(tex, pdi.vtexCoord);
   return ret;
 
 	// BILLBOARD REFLECTIONS

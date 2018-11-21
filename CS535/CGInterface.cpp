@@ -97,8 +97,7 @@ bool ShaderOneInterface::PerSessionInit(CGInterface* cgi)
 	// Fragment shader
 	fragmentPPCC = cgGetNamedParameter(fragmentProgram, "ppc_C");
 	fragmentLightPos = cgGetNamedParameter(fragmentProgram, "light_position");
-
-	// // texture
+	fragmentIsST = cgGetNamedParameter(fragmentProgram, "isST");
 	
 	return true;
 }

@@ -40,6 +40,17 @@ GlobalVariables::GlobalVariables()
 	isRefraction = false;
 	isWireFrame = false;
 	refractRatio = 1.15f;
+	
+	string cubemapFolder = "images/cubemaps/";
+
+	cubemapFiles = {
+		cubemapFolder + "right.tiff",
+		cubemapFolder + "left.tiff",
+		cubemapFolder + "top.tiff",
+		cubemapFolder + "ground.tiff",
+		cubemapFolder + "front.tiff",
+		cubemapFolder + "back.tiff"
+	};
 
 	isCubemapMipmap = false;
 
