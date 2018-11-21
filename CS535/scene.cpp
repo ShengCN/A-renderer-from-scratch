@@ -202,12 +202,13 @@ void Scene::RenderHW()
 
 void Scene::RenderGPU()
 {
-	if(cgi == nullptr)
+	if(cgi == nullptr && soi == nullptr)
 	{
 		cgi = new CGInterface();
 		cgi->PerSessionInit();
 		soi = new ShaderOneInterface();
 		soi->PerSessionInit(cgi);
+		GlobalVariables::Instance()->curScene->gpufb->LoadTextureGPU(GlobalVariables::Instance()->projectedTextureName);
 	}
 
 	// Clear the framebuffer
@@ -227,9 +228,8 @@ void Scene::RenderGPU()
 	BeginCountingTime();
 	for(auto t:meshes)
 	{
-		auto texFile = GlobalVariables::Instance()->projectedTextureName;
-		glBindTexture(GL_TEXTURE_2D, gpufb->gpuTexID[texFile]);
-		
+		// auto texFile = GlobalVariables::Instance()->projectedTextureName;
+		// glBindTexture(GL_TEXTURE_2D, gpufb->gpuTexID[texFile]);
 		t->RenderHW();
 	}
 	PrintTime("GPU render ",gpufb);
@@ -810,7 +810,7 @@ void Scene::InitDemo()
 void Scene::Demonstration()
 {
 	{
-		// ReloadCGfile();
+		ReloadCGfile();
 		PPC ppc0 = *ppc, ppc1 = *ppc;
 		ppc1.C = ppc1.C + V3(30.0f, 60.0f, 0.0f);
 		ppc1.PositionAndOrient(ppc1.C, meshes[0]->GetCenter(), V3(0.0f, 1.0f, 0.0f));

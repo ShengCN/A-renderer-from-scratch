@@ -3,7 +3,7 @@ struct VertexDataInput {
 	float4 vertex: POSITION;
 	float3 normal: NORMAL;
 	float3 color: COLOR;
-  float2 texCoord : TEXCOORD0;
+  float2 texCoord : TEXCOORD;
 };
 
 struct VertexDataOutput {
@@ -59,6 +59,8 @@ PixelDataOutput FragmentMain(VertexDataOutput pdi,
   float kd = max(0.0f, dot(normalize(lightdir), normalize(pdi.normal)));
   float ks = pow(max(0.0f, dot(reflect(normalize(-lightdir),normalize(pdi.normal)) , normalize(viewdir))), 200);
   float3 phongColor = tex2D(tex, pdi.vtexCoord) * (ka + (1.0f - ka) * kd) + float3(1.0f) * ks;
+  // float3 phongColor = pdi.color * (ka + (1.0f - ka) * kd) + float3(1.0f) * ks;
+  // ret.color = length(pdi.vtexCoord);
   ret.color = phongColor;
 
   return ret;

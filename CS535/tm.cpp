@@ -543,9 +543,9 @@ void TM::RenderHW()
 	glTexCoordPointer(2, GL_FLOAT, 0, &vertST[0]);
 
 	glDrawElements(GL_TRIANGLES, 3 * trisN, GL_UNSIGNED_INT, &tris[0]);
-
-	glDisableClientState(GL_COLOR_ARRAY);
+	
 	glDisableClientState(GL_VERTEX_ARRAY);
+	glDisableClientState(GL_COLOR_ARRAY);
 	glDisableClientState(GL_NORMAL_ARRAY);
 	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 }
