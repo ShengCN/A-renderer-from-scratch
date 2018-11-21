@@ -61,8 +61,8 @@ PixelDataOutput FragmentMain(VertexDataOutput pdi,
   float3 phongColor = tex2D(tex, pdi.vtexCoord) * (ka + (1.0f - ka) * kd) + float3(1.0f) * ks;
   // float3 phongColor = pdi.color * (ka + (1.0f - ka) * kd) + float3(1.0f) * ks;
   // ret.color = length(pdi.vtexCoord);
-  ret.color = phongColor;
-
+  // ret.color = phongColor;
+  ret.color = tex2D(tex, pdi.vtexCoord);
   return ret;
 
 	// BILLBOARD REFLECTIONS

@@ -122,10 +122,10 @@ void TM::SetBillboard(V3 O, V3 n, V3 up, float sz, float s, float t)
 	V3 p2 = O - up * sz + right * sz;
 	V3 p3 = O + up * sz + right * sz;
 	V3 c0(0.0f), c1(0.0f), c2(0.0f), c3(0.0f);
-	PointProperty pp0(p0, c0, n, 0.0f, 0.0f);
-	PointProperty pp1(p1, c1, n, 0.0f, t);
-	PointProperty pp2(p2, c2, n, s, t);
-	PointProperty pp3(p3, c3, n, s, 0.0f);
+	PointProperty pp0(p0, c0, n, 0.0f, t);
+	PointProperty pp1(p1, c1, n, 0.0f, 0.0f);
+	PointProperty pp2(p2, c2, n, s, 0.0f);
+	PointProperty pp3(p3, c3, n, s, t);
 	isEnvMapping = false;
 	SetQuad(pp0, pp1, pp2, pp3);
 }
