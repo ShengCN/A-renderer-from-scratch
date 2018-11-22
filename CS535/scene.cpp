@@ -19,6 +19,7 @@
 #include "sphere.h"
 #include "hitable_list.h"
 #include "material.h"
+#include <GL/glext.h>
 
 Scene* scene;
 int TM::tmIDCounter = 0;
@@ -181,11 +182,22 @@ void Scene::RenderGPU()
 {
 	// Clear the framebuffer
 	glEnable(GL_DEPTH_TEST);
-	glClearColor(0.0f, 0.0f, 0.5f, 1.0f);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	// Cube map
+	auto cubemapFile = GlobalVariables::Instance()->cubemapFiles;
+	if (FrameBuffer::gpuTexID.find(cubemapFile[0]) == FrameBuffer::gpuTexID.end())
+	{
+		gpufb->LoadCubemapGPU(cubemapFile);
+	}
 
 	ppc->SetIntrinsicsHW();
 	ppc->SetExtrinsicsHW();
+	
+	glBindTexture(GL_TEXTURE_CUBE_MAP, FrameBuffer::gpuTexID.at(cubemapFile[0]));
 
 	// Render geometry
 	BeginCountingTime();
@@ -200,7 +212,7 @@ void Scene::RenderGPUWireframe()
 {
 	// Clear the framebuffer
 	glEnable(GL_DEPTH_TEST);
-	glClearColor(0.0f, 0.0f, 0.5f, 1.0f);
+	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	ppc->SetIntrinsicsHW();
@@ -714,8 +726,8 @@ void Scene::PrintTime(const string dbgInfo)
 void Scene::PrintTime(const string fbname, FrameBuffer* curfb)
 {
 	endTime = Clock::now();
-	float duration_ms = std::chrono::duration_cast<chrono::nanoseconds>(endTime - beginTime).count();
-	float FPS = 1.0f / (duration_ms*1e-6);
+	float duration = std::chrono::duration_cast<chrono::nanoseconds>(endTime - beginTime).count();
+	float FPS = 1.0f / (duration * 1e-9);
 	string label;
 	label = fbname + " FPS: " + to_string(FPS);
 	curfb->label(label.c_str());
@@ -736,7 +748,7 @@ void Scene::InitDemo()
 	V3 tmC = ppc->C + ppc->GetVD() * 100.0f;
 	float tmSize = 100.0f;
 	teapot->PositionAndSize(tmC, tmSize);
-	bb->PositionAndSize(tmC, tmSize);
+	bb->PositionAndSize(tmC + V3(0.0f,0.0f,-1.0f) * tmSize, tmSize);
 
 	meshes.push_back(teapot);
 	meshes.push_back(bb);
@@ -763,7 +775,8 @@ void Scene::Demonstration()
 		{
 			lightPPCs[0]->RevolveH(meshes[0]->GetCenter(), 1.0f);
 			mf = static_cast<float>(i) / static_cast<float>(framesN - 1);
-			ppc->SetInterpolated(&ppc0, &ppc1, static_cast<float>(i)/framesN);
+			// ppc->SetInterpolated(&ppc0, &ppc1, static_cast<float>(i)/framesN);
+			ppc->RevolveH(meshes[0]->GetCenter(), 1.0f);
 			gpufb->redraw();
 			Fl::check();
 		}

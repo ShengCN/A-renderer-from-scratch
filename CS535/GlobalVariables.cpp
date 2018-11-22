@@ -46,8 +46,8 @@ GlobalVariables::GlobalVariables()
 	cubemapFiles = {
 		cubemapFolder + "right.tiff",
 		cubemapFolder + "left.tiff",
-		cubemapFolder + "top.tiff",
 		cubemapFolder + "ground.tiff",
+		cubemapFolder + "top.tiff",
 		cubemapFolder + "front.tiff",
 		cubemapFolder + "back.tiff"
 	};
