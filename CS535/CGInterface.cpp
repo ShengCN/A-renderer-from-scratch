@@ -107,11 +107,13 @@ bool ShaderOneInterface::PerSessionInit(CGInterface* cgi, const std::string shad
 	fragmentPPCC = cgGetNamedParameter(fragmentProgram, "ppc_C");
 	fragmentLightPos = cgGetNamedParameter(fragmentProgram, "light_position");
 	fragmentIsST = cgGetNamedParameter(fragmentProgram, "hasST");
+	fragmentTex0 = cgGetNamedParameter(fragmentProgram, "tex");
+	fragmentCubemapTex = cgGetNamedParameter(fragmentProgram, "env");
 
 	return true;
 }
 
-void ShaderOneInterface::PerFrameInit(int hasST)
+void ShaderOneInterface::PerFrameInit(int hasST, const std::string tex0File)
 {
 	//set parameters
 	cgGLSetStateMatrixParameter(vertexModelViewProj,
@@ -129,6 +131,15 @@ void ShaderOneInterface::PerFrameInit(int hasST)
 	cgSetParameter3fv(fragmentLightPos, (float*)&(curScene->lightPPCs[0]->C));
 	cgSetParameter3fv(fragmentPPCC, (float*)&(curScene->ppc->C));
 	cgSetParameter1i(fragmentIsST, hasST);
+
+	if(hasST)
+	{
+		cgGLSetTextureParameter(fragmentTex0, FrameBuffer::gpuTexID.at(tex0File));
+		cgGLEnableTextureParameter(fragmentTex0);
+	}
+
+	cgGLSetTextureParameter(fragmentCubemapTex, FrameBuffer::gpuTexID.at(GlobalVariables::Instance()->cubemapFiles[0]));
+	cgGLEnableTextureParameter(fragmentCubemapTex);
 }
 
 void ShaderOneInterface::PerFrameDisable()

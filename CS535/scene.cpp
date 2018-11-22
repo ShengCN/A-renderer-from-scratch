@@ -197,8 +197,6 @@ void Scene::RenderGPU()
 	ppc->SetIntrinsicsHW();
 	ppc->SetExtrinsicsHW();
 	
-	glBindTexture(GL_TEXTURE_CUBE_MAP, FrameBuffer::gpuTexID.at(cubemapFile[0]));
-
 	// Render geometry
 	BeginCountingTime();
 	for(auto t:meshes)
@@ -739,6 +737,7 @@ void Scene::InitDemo()
 	TM* bb = new TM();
 	teapot->LoadModelBin("geometry/teapot1K.bin");
 	teapot->SetShaderOne("CG/shaderOne.cg");
+	teapot->hasST = 0;
 
 	bb->SetBillboard(V3(0.0f), V3(0.0f, 0.0f, 1.0f), V3(0.0f, 1.0f, 0.0f), 5.0f);
 	bb->SetShaderOne("CG/shaderOne.cg");
