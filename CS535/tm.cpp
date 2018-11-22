@@ -568,7 +568,7 @@ void TM::RenderHW(FrameBuffer *curfb)
 	}
 
 	// cubemap
-	glBindTexture(GL_TEXTURE_CUBE_MAP, FrameBuffer::gpuTexID.at(GlobalVariables::Instance()->cubemapFiles[0]));
+	// glBindTexture(GL_TEXTURE_CUBE_MAP, FrameBuffer::gpuTexID.at(GlobalVariables::Instance()->cubemapFiles[0]));
 
 	glDrawElements(GL_TRIANGLES, 3 * trisN, GL_UNSIGNED_INT, &tris[0]);
 	

@@ -49,8 +49,9 @@ PixelDataOutput FragmentMain(VertexDataOutput pdi,
   uniform float3 light_position,
   uniform float3 ppc_C,
   uniform int hasST,
-  uniform sampler2D tex0,
-  uniform samplerCUBE env) {
+  uniform sampler2D tex0)
+  //uniform samplerCUBE env) 
+  {
 
   PixelDataOutput ret;
   
@@ -73,7 +74,8 @@ PixelDataOutput FragmentMain(VertexDataOutput pdi,
   else {
   	// try cubemap
 	float3 reflectDir = reflect(normalize(viewdir), normalize(pdi.normal));
-	pc = texCUBE(env, reflectDir).rgb;
+	// pc = texCUBE(env, reflectDir).rgb;
+	pc = pdi.color;
 	alpha = 1.0;
 	
    }

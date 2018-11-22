@@ -183,7 +183,7 @@ void Scene::RenderGPU()
 	// Cubemap
 	if(FrameBuffer::textures.find(GlobalVariables::Instance()->cubemapFiles[0]) == FrameBuffer::textures.end())
 	{
-		gpufb->LoadCubemapGPU(GlobalVariables::Instance()->cubemapFiles);
+		// gpufb->LoadCubemapGPU(GlobalVariables::Instance()->cubemapFiles);
 	}
 
 	// Clear the framebuffer
