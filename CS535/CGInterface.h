@@ -2,6 +2,7 @@
 
 #include <Cg/cgGL.h>
 #include <Cg/cg.h>
+#include <string>
 
 // two classes defining the interface between the CPU and GPU
 
@@ -41,8 +42,8 @@ public:
 	ShaderOneInterface()
 	{
 	};
-	bool PerSessionInit(CGInterface* cgi); // per session initialization
+	bool PerSessionInit(CGInterface* cgi, const std::string shaderOneFile); // per session initialization
 	void BindPrograms(); // enable geometryProgram, vertexProgram, fragmentProgram
-	void PerFrameInit(); // set uniform parameter values, etc.
+	void PerFrameInit(int hasST); // set uniform parameter values, etc.
 	void PerFrameDisable(); // disable programs
 };

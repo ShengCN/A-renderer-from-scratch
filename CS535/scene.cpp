@@ -25,9 +25,6 @@ int TM::tmIDCounter = 0;
 
 Scene::Scene(): isRenderAABB(false)
 {
-	cgi = nullptr;
-	soi = nullptr;
-
 	gui = new GUI();
 	gui->show();
 	auto gv = GlobalVariables::Instance();
@@ -42,11 +39,6 @@ Scene::Scene(): isRenderAABB(false)
 	fb = new FrameBuffer(u0, v0, w, h);
 	fb->label("SW Framebuffer");
 	// fb->show();
-
-	hwfb = new FrameBuffer(u0 + fb->w + 30, v0, w, h);
-	hwfb->label("HW Framebuffer");
-	hwfb->ishw = true;
-	hwfb->show();
 
 	gpufb = new FrameBuffer(u0, v0, w, h);
 	gpufb->label("GPU Framebuffer");
@@ -185,34 +177,8 @@ void Scene::UpdateSM()
 	}
 }
 
-void Scene::RenderHW()
-{
-	glEnable(GL_DEPTH_TEST);
-
-	glClearColor(0.0f, 0.0f, 0.5f, 1.0f);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	ppc->SetIntrinsicsHW();
-	ppc->SetExtrinsicsHW();
-
-	for(auto t:meshes)
-	{
-		t->RenderHW();
-	}
-}
-
 void Scene::RenderGPU()
 {
-	if(cgi == nullptr && soi == nullptr)
-	{
-		auto gv = GlobalVariables::Instance();
-		cgi = new CGInterface();
-		cgi->PerSessionInit();
-		soi = new ShaderOneInterface();
-		soi->PerSessionInit(cgi);
-		gv->curScene->gpufb->LoadTextureGPU(GlobalVariables::Instance()->projectedTextureName);
-		gv->curScene->gpufb->LoadCubemapGPU(GlobalVariables::Instance()->cubemapFiles);
-	}
-
 	// Clear the framebuffer
 	glEnable(GL_DEPTH_TEST);
 	glClearColor(0.0f, 0.0f, 0.5f, 1.0f);
@@ -220,35 +186,18 @@ void Scene::RenderGPU()
 
 	ppc->SetIntrinsicsHW();
 	ppc->SetExtrinsicsHW();
-
-	// per frame initialization
-	cgi->EnableProfiles();
-	soi->PerFrameInit();
-	soi->BindPrograms();
 
 	// Render geometry
 	BeginCountingTime();
 	for(auto t:meshes)
 	{
-		auto texFile = GlobalVariables::Instance()->projectedTextureName;
-		glBindTexture(GL_TEXTURE_2D, gpufb->gpuTexID[texFile]);
-		t->RenderHW();
+		t->RenderHW(gpufb);
 	}
-	PrintTime("GPU render ",gpufb);
-	soi->PerFrameDisable();
-	cgi->DisableProfiles();
+	PrintTime("GPU render ", gpufb);
 }
 
 void Scene::RenderGPUWireframe()
 {
-	if (cgi == nullptr)
-	{
-		cgi = new CGInterface();
-		cgi->PerSessionInit();
-		soi = new ShaderOneInterface();
-		soi->PerSessionInit(cgi);
-	}
-
 	// Clear the framebuffer
 	glEnable(GL_DEPTH_TEST);
 	glClearColor(0.0f, 0.0f, 0.5f, 1.0f);
@@ -256,11 +205,6 @@ void Scene::RenderGPUWireframe()
 
 	ppc->SetIntrinsicsHW();
 	ppc->SetExtrinsicsHW();
-
-	// per frame initialization
-	cgi->EnableProfiles();
-	soi->PerFrameInit();
-	soi->BindPrograms();
 
 	// Render geometry
 	BeginCountingTime();
@@ -269,19 +213,6 @@ void Scene::RenderGPUWireframe()
 		t->RenderHWWireframe();
 	}
 	PrintTime("GPU render ", gpufb);
-	soi->PerFrameDisable();
-	cgi->DisableProfiles();
-}
-
-void Scene::ReloadCGfile()
-{
-	if (cgi == nullptr) delete cgi;
-	if (soi == nullptr) delete soi;
-
-	cgi = new CGInterface();
-	cgi->PerSessionInit();
-	soi = new ShaderOneInterface();
-	soi->PerSessionInit(cgi);
 }
 
 void Scene::RaytracingScene(PPC* currPPC, FrameBuffer* currFB)
@@ -792,13 +723,23 @@ void Scene::PrintTime(const string fbname, FrameBuffer* curfb)
 
 void Scene::InitDemo()
 {
-	TM* tm = new TM();
-	// tm->SetBillboard(V3(0.0f), V3(0.0f, 0.0f, 1.0f), V3(0.0f, 1.0f, 0.0f), 5.0f);
-	tm->LoadModelBin("geometry/happy4.bin");
+	TM* teapot = new TM();
+	TM* bb = new TM();
+	teapot->LoadModelBin("geometry/teapot1K.bin");
+	teapot->SetShaderOne("CG/shaderOne.cg");
+
+	bb->SetBillboard(V3(0.0f), V3(0.0f, 0.0f, 1.0f), V3(0.0f, 1.0f, 0.0f), 5.0f);
+	bb->SetShaderOne("CG/shaderOne.cg");
+	bb->hasST = 1;
+	bb->tex = "images/jojo.tiff";
+
 	V3 tmC = ppc->C + ppc->GetVD() * 100.0f;
 	float tmSize = 100.0f;
-	tm->PositionAndSize(tmC, tmSize);
-	meshes.push_back(tm);
+	teapot->PositionAndSize(tmC, tmSize);
+	bb->PositionAndSize(tmC, tmSize);
+
+	meshes.push_back(teapot);
+	meshes.push_back(bb);
 
 	// Light
 	ka = 0.5f;
@@ -816,14 +757,13 @@ void Scene::Demonstration()
 		PPC ppc0 = *ppc, ppc1 = *ppc;
 		ppc1.C = ppc1.C + V3(30.0f, 60.0f, 0.0f);
 		ppc1.PositionAndOrient(ppc1.C, meshes[0]->GetCenter(), V3(0.0f, 1.0f, 0.0f));
-		// ppc1 = *ppc;
+		ppc1 = *ppc;
 		int framesN = 360;
 		for(int i = 0; i < framesN; ++i)
 		{
 			lightPPCs[0]->RevolveH(meshes[0]->GetCenter(), 1.0f);
 			mf = static_cast<float>(i) / static_cast<float>(framesN - 1);
 			ppc->SetInterpolated(&ppc0, &ppc1, static_cast<float>(i)/framesN);
-			hwfb->redraw();
 			gpufb->redraw();
 			Fl::check();
 		}

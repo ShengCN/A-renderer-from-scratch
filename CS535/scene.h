@@ -18,12 +18,8 @@ using Clock = std::chrono::high_resolution_clock;
 class Scene
 {
 public:
-
-	CGInterface *cgi;
-	ShaderOneInterface *soi;
-
 	GUI* gui;
-	FrameBuffer* fb, *fb3, *fbp, *hwfb, *gpufb;
+	FrameBuffer* fb, *fb3, *fbp, *gpufb;
 	std::vector<shared_ptr<FrameBuffer>> textures;
 	std::vector<shared_ptr<PPC>> lightPPCs;
 	std::vector<shared_ptr<FrameBuffer>> shadowMaps;
@@ -44,11 +40,8 @@ public:
 	void RenderWireFrame();
 	void RenderZbuffer(PPC *currPPC, FrameBuffer *currFB);
 	void UpdateSM();
-	void RenderHW();
 	void RenderGPU();
 	void RenderGPUWireframe();
-
-	void ReloadCGfile();
 
 	// HW5, Implement part of the paper
 	// https://www.cs.purdue.edu/cgvlab/papers/popescu/popescuGemEG06.pdf

@@ -26,7 +26,7 @@ FrameBuffer::FrameBuffer(int u0, int v0, int _w, int _h)
 {
 	w = _w;
 	h = _h;
-	ishw = isgpu = false;
+	isgpu = false;
 	pix = new unsigned int[w * h];
 	zb = new float[w * h];
 }
@@ -34,11 +34,7 @@ FrameBuffer::FrameBuffer(int u0, int v0, int _w, int _h)
 
 void FrameBuffer::draw()
 {
-	if (ishw)
-	{
-		GlobalVariables::Instance()->curScene->RenderHW();
-	}
-	else if (isgpu)
+	if (isgpu)
 	{
 		GlobalVariables::Instance()->isWireFrame
 			? GlobalVariables::Instance()->curScene->RenderGPUWireframe()

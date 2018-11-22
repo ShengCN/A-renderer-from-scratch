@@ -4,6 +4,7 @@
 #include "AABB.h"
 #include <vector>
 #include "cubemap.h"
+#include "CGInterface.h"
 
 using std::vector;
 class BillBoard;
@@ -25,6 +26,12 @@ public:
 	int vertsN, trisN;
 	int id;
 	vector<shared_ptr<BillBoard>> reflectorBB;	// all the possible reflections
+	int hasST;
+
+	// Shadder files
+	shared_ptr<CGInterface> cgi;
+	shared_ptr<ShaderOneInterface> soi;
+	string shaderOneFile;
 
 	std::string tex;
 	int pixelSz;		// approximate projected aabb size
@@ -32,7 +39,7 @@ public:
 	bool isShowObjColor;
 	bool isRefraction;
 
-	TM() :vertsN(0), trisN(0), pixelSz(0), isEnvMapping(false), isShowObjColor(true),id(tmIDCounter++), isRefraction(false) {};
+	TM() :vertsN(0), trisN(0), pixelSz(0), isEnvMapping(false), isShowObjColor(true),id(tmIDCounter++), isRefraction(false), hasST(0) {};
 	void SetRectangle(V3 O, float rw, float rh);
 	void SetTriangle(PointProperty p0, PointProperty p1, PointProperty p2);
 	void SetQuad(PointProperty p0, PointProperty p1, PointProperty p2, PointProperty p3);
@@ -41,6 +48,7 @@ public:
 	void SetText(std::string tf);
 	void Allocate();
 	void SetAllPointsColor(V3 color);	// set color to verts
+	void SetShaderOne(const string shaderFile) { shaderOneFile = shaderFile; };
 
 	// Rasterization
 	void RenderPoints(PPC *ppc, FrameBuffer *fb);
@@ -49,8 +57,10 @@ public:
 	void RenderFillZ(PPC *ppc, FrameBuffer *fb); // only draw z buffer
 	void RenderAABB(PPC *ppc, FrameBuffer *fb);
 	void RenderBB(PPC *ppc, FrameBuffer *fb, FrameBuffer *bbTexture);
-	void RenderHW();
+	void RenderHW(FrameBuffer *curfb);
 	void RenderHWWireframe();
+
+	// Transformation
 	void RotateAboutArbitraryAxis(V3 O, V3 a, float angled);
 	void Translate(V3 tv);
 	void Scale(float scf);		// normalize size to some scf

@@ -530,8 +530,25 @@ void TM::RenderBB(PPC* ppc, FrameBuffer* fb, FrameBuffer* bbTexture)
 	}
 }
 
-void TM::RenderHW()
+void TM::RenderHW(FrameBuffer *curfb)
 {
+	if (cgi == nullptr && soi == nullptr)
+	{
+		auto gv = GlobalVariables::Instance();
+		cgi = make_shared<CGInterface>();
+		cgi->PerSessionInit();
+		soi = make_shared<ShaderOneInterface>();
+		soi->PerSessionInit(cgi.get(), shaderOneFile);
+
+		if (!tex.empty())
+			gv->curScene->gpufb->LoadTextureGPU(tex);
+	}
+
+	// per frame initialization
+	cgi->EnableProfiles();
+	soi->PerFrameInit(hasST);
+	soi->BindPrograms();
+
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glEnableClientState(GL_COLOR_ARRAY);
 	glEnableClientState(GL_NORMAL_ARRAY);
@@ -540,10 +557,11 @@ void TM::RenderHW()
 	glColorPointer(3, GL_FLOAT, 0, &colors[0]);
 	glNormalPointer(GL_FLOAT, 0, &normals[0]);
 
-	if (!vertST.empty())
+	if (hasST > 0)
 	{
 		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 		glTexCoordPointer(2, GL_FLOAT, 0, &vertST[0]);
+		glBindTexture(GL_TEXTURE_2D, FrameBuffer::gpuTexID.at(tex));
 	}
 
 	glDrawElements(GL_TRIANGLES, 3 * trisN, GL_UNSIGNED_INT, &tris[0]);
@@ -552,10 +570,26 @@ void TM::RenderHW()
 	glDisableClientState(GL_COLOR_ARRAY);
 	glDisableClientState(GL_NORMAL_ARRAY);
 	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+
+	soi->PerFrameDisable();
+	cgi->DisableProfiles();
 }
 
 void TM::RenderHWWireframe()
 {
+	if (cgi == nullptr)
+	{
+		cgi = make_shared<CGInterface>();
+		cgi->PerSessionInit();
+		soi = make_shared<ShaderOneInterface>();
+		soi->PerSessionInit(cgi.get(), shaderOneFile);
+	}
+
+	// per frame initialization
+	cgi->EnableProfiles();
+	soi->PerFrameInit(hasST);
+	soi->BindPrograms();
+
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glEnableClientState(GL_COLOR_ARRAY);
 	glEnableClientState(GL_NORMAL_ARRAY);
@@ -571,6 +605,9 @@ void TM::RenderHWWireframe()
 	glDisableClientState(GL_COLOR_ARRAY);
 	glDisableClientState(GL_VERTEX_ARRAY);
 	glDisableClientState(GL_NORMAL_ARRAY);
+
+	soi->PerFrameDisable();
+	cgi->DisableProfiles();
 }
 
 void TM::RotateAboutArbitraryAxis(V3 O, V3 a, float angled)

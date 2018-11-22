@@ -8,6 +8,7 @@
 #include "GlobalVariables.h"
 
 using namespace std;
+#define GEOM_SHADER
 
 CGInterface::CGInterface()
 {
@@ -26,14 +27,16 @@ void CGInterface::PerSessionInit()
 	  cerr << "ERROR: geometry profile is not available" << endl;
     exit(0);
   }
+
+  cgGLSetOptimalOptions(latestGeometryProfile);
+  CGerror Error = cgGetError();
+  if (Error)
+  {
+	  cerr << "CG ERROR: " << cgGetErrorString(Error) << endl;
+  }
 #endif
 
-	cgGLSetOptimalOptions(latestGeometryProfile);
-	CGerror Error = cgGetError();
-	if (Error)
-	{
-		cerr << "CG ERROR: " << cgGetErrorString(Error) << endl;
-	}
+
 
 	cout << "Info: Latest GP Profile Supported: " << cgGetProfileString(latestGeometryProfile) << endl;
 
@@ -47,11 +50,17 @@ void CGInterface::PerSessionInit()
 	cgContext = cgCreateContext();
 }
 
-bool ShaderOneInterface::PerSessionInit(CGInterface* cgi)
+bool ShaderOneInterface::PerSessionInit(CGInterface* cgi, const std::string shaderOneFile)
 {
+	if (shaderOneFile.empty())
+	{
+		cerr << "Shader one file has not set up! \n";
+		return false;
+	}
+
 #ifdef GEOM_SHADER
   geometryProgram = cgCreateProgramFromFile(cgi->cgContext, CG_SOURCE, 
-    "CG/shaderOne.cg", cgi->geometryCGprofile, "GeometryMain", NULL);
+	  shaderOneFile.c_str(), cgi->geometryCGprofile, "GeometryMain", NULL);
   if (geometryProgram == NULL)  {
     CGerror Error = cgGetError();
     cerr << "Shader One Geometry Program COMPILE ERROR: " << cgGetErrorString(Error) << endl;
@@ -61,7 +70,7 @@ bool ShaderOneInterface::PerSessionInit(CGInterface* cgi)
 #endif
 
 	vertexProgram = cgCreateProgramFromFile(cgi->cgContext, CG_SOURCE,
-	                                        "CG/shaderOne.cg", cgi->vertexCGprofile, "VertexMain", nullptr);
+	                                        shaderOneFile.c_str(), cgi->vertexCGprofile, "VertexMain", nullptr);
 	if (vertexProgram == nullptr)
 	{
 		CGerror Error = cgGetError();
@@ -71,7 +80,7 @@ bool ShaderOneInterface::PerSessionInit(CGInterface* cgi)
 	}
 
 	fragmentProgram = cgCreateProgramFromFile(cgi->cgContext, CG_SOURCE,
-	                                          "CG/shaderOne.cg", cgi->pixelCGprofile, "FragmentMain", nullptr);
+	                                          shaderOneFile.c_str(), cgi->pixelCGprofile, "FragmentMain", nullptr);
 	if (fragmentProgram == nullptr)
 	{
 		CGerror Error = cgGetError();
@@ -97,12 +106,12 @@ bool ShaderOneInterface::PerSessionInit(CGInterface* cgi)
 	// Fragment shader
 	fragmentPPCC = cgGetNamedParameter(fragmentProgram, "ppc_C");
 	fragmentLightPos = cgGetNamedParameter(fragmentProgram, "light_position");
-	fragmentIsST = cgGetNamedParameter(fragmentProgram, "isST");
-	
+	fragmentIsST = cgGetNamedParameter(fragmentProgram, "hasST");
+
 	return true;
 }
 
-void ShaderOneInterface::PerFrameInit()
+void ShaderOneInterface::PerFrameInit(int hasST)
 {
 	//set parameters
 	cgGLSetStateMatrixParameter(vertexModelViewProj,
@@ -119,6 +128,7 @@ void ShaderOneInterface::PerFrameInit()
 	auto curScene = GlobalVariables::Instance()->curScene;
 	cgSetParameter3fv(fragmentLightPos, (float*)&(curScene->lightPPCs[0]->C));
 	cgSetParameter3fv(fragmentPPCC, (float*)&(curScene->ppc->C));
+	cgSetParameter1i(fragmentIsST, hasST);
 }
 
 void ShaderOneInterface::PerFrameDisable()
