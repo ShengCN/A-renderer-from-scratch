@@ -38,12 +38,15 @@ class ShaderOneInterface
 	CGparameter fragmentKa; // ambient coefficient for fragment shader
 	CGparameter fragmentLightPos, fragmentPPCC;
 	CGparameter fragmentIsST;
+	CGparameter fragmentTexture0;
+	CGparameter fragmentEnvTexture;
+
 public:
 	ShaderOneInterface()
 	{
 	};
 	bool PerSessionInit(CGInterface* cgi, const std::string shaderOneFile); // per session initialization
 	void BindPrograms(); // enable geometryProgram, vertexProgram, fragmentProgram
-	void PerFrameInit(int hasST); // set uniform parameter values, etc.
+	void PerFrameInit(int hasST, const std::string tex0Name); // set uniform parameter values, etc.
 	void PerFrameDisable(); // disable programs
 };

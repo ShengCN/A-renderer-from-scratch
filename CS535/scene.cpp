@@ -179,9 +179,16 @@ void Scene::UpdateSM()
 
 void Scene::RenderGPU()
 {
+	// Global OpenGL settings
+	// Cubemap
+	if(FrameBuffer::textures.find(GlobalVariables::Instance()->cubemapFiles[0]) == FrameBuffer::textures.end())
+	{
+		gpufb->LoadCubemapGPU(GlobalVariables::Instance()->cubemapFiles);
+	}
+
 	// Clear the framebuffer
 	glEnable(GL_DEPTH_TEST);
-	glClearColor(0.0f, 0.0f, 0.5f, 1.0f);
+	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	ppc->SetIntrinsicsHW();
@@ -191,6 +198,8 @@ void Scene::RenderGPU()
 	BeginCountingTime();
 	for(auto t:meshes)
 	{
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		t->RenderHW(gpufb);
 	}
 	PrintTime("GPU render ", gpufb);
@@ -727,6 +736,7 @@ void Scene::InitDemo()
 	TM* bb = new TM();
 	teapot->LoadModelBin("geometry/teapot1K.bin");
 	teapot->SetShaderOne("CG/shaderOne.cg");
+	teapot->hasST = 0;
 
 	bb->SetBillboard(V3(0.0f), V3(0.0f, 0.0f, 1.0f), V3(0.0f, 1.0f, 0.0f), 5.0f);
 	bb->SetShaderOne("CG/shaderOne.cg");
@@ -736,7 +746,7 @@ void Scene::InitDemo()
 	V3 tmC = ppc->C + ppc->GetVD() * 100.0f;
 	float tmSize = 100.0f;
 	teapot->PositionAndSize(tmC, tmSize);
-	bb->PositionAndSize(tmC, tmSize);
+	bb->PositionAndSize(tmC + V3(0.0f,0.0f,-1.0f) * tmSize, tmSize);
 
 	meshes.push_back(teapot);
 	meshes.push_back(bb);
@@ -761,9 +771,11 @@ void Scene::Demonstration()
 		int framesN = 360;
 		for(int i = 0; i < framesN; ++i)
 		{
-			lightPPCs[0]->RevolveH(meshes[0]->GetCenter(), 1.0f);
+			// lightPPCs[0]->RevolveH(meshes[0]->GetCenter(), 1.0f);
 			mf = static_cast<float>(i) / static_cast<float>(framesN - 1);
-			ppc->SetInterpolated(&ppc0, &ppc1, static_cast<float>(i)/framesN);
+			// ppc->SetInterpolated(&ppc0, &ppc1, static_cast<float>(i)/framesN);
+			ppc->RevolveH(meshes[0]->GetCenter(), 1.0f);
+
 			gpufb->redraw();
 			Fl::check();
 		}

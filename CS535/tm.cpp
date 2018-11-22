@@ -8,6 +8,8 @@
 #include "GlobalVariables.h"
 #include "m33.h"
 
+#include <GL/glext.h>
+
 using namespace std;
 
 void TM::SetRectangle(V3 O, float rw, float rh)
@@ -546,7 +548,7 @@ void TM::RenderHW(FrameBuffer *curfb)
 
 	// per frame initialization
 	cgi->EnableProfiles();
-	soi->PerFrameInit(hasST);
+	soi->PerFrameInit(hasST, tex);
 	soi->BindPrograms();
 
 	glEnableClientState(GL_VERTEX_ARRAY);
@@ -557,12 +559,16 @@ void TM::RenderHW(FrameBuffer *curfb)
 	glColorPointer(3, GL_FLOAT, 0, &colors[0]);
 	glNormalPointer(GL_FLOAT, 0, &normals[0]);
 
+	// tm texture
 	if (hasST > 0)
 	{
 		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 		glTexCoordPointer(2, GL_FLOAT, 0, &vertST[0]);
-		glBindTexture(GL_TEXTURE_2D, FrameBuffer::gpuTexID.at(tex));
+		
 	}
+
+	// cubemap
+	glBindTexture(GL_TEXTURE_CUBE_MAP, FrameBuffer::gpuTexID.at(GlobalVariables::Instance()->cubemapFiles[0]));
 
 	glDrawElements(GL_TRIANGLES, 3 * trisN, GL_UNSIGNED_INT, &tris[0]);
 	
@@ -587,7 +593,7 @@ void TM::RenderHWWireframe()
 
 	// per frame initialization
 	cgi->EnableProfiles();
-	soi->PerFrameInit(hasST);
+	soi->PerFrameInit(hasST,tex);
 	soi->BindPrograms();
 
 	glEnableClientState(GL_VERTEX_ARRAY);

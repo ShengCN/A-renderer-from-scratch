@@ -14,7 +14,7 @@ GlobalVariables* GlobalVariables::Instance()
 
 GlobalVariables::GlobalVariables()
 {
-	isHighResolution = false;
+	isHighResolution = true;
 	highResoW = 1020;
 	highResoH = 720;
 	resoW = 640;
@@ -46,8 +46,8 @@ GlobalVariables::GlobalVariables()
 	cubemapFiles = {
 		cubemapFolder + "right.tiff",
 		cubemapFolder + "left.tiff",
-		cubemapFolder + "top.tiff",
 		cubemapFolder + "ground.tiff",
+		cubemapFolder + "top.tiff",
 		cubemapFolder + "front.tiff",
 		cubemapFolder + "back.tiff"
 	};

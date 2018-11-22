@@ -6,7 +6,6 @@
 
 #include <iostream>
 #include "GlobalVariables.h"
-
 using namespace std;
 #define GEOM_SHADER
 
@@ -23,20 +22,19 @@ void CGInterface::PerSessionInit()
 	CGprofile latestPixelProfile = cgGLGetLatestProfile(CG_GL_FRAGMENT);
 
 #ifdef GEOM_SHADER
-  if (latestGeometryProfile == CG_PROFILE_UNKNOWN) {
-	  cerr << "ERROR: geometry profile is not available" << endl;
-    exit(0);
-  }
+	if (latestGeometryProfile == CG_PROFILE_UNKNOWN)
+	{
+		cerr << "ERROR: geometry profile is not available" << endl;
+		exit(0);
+	}
 
-  cgGLSetOptimalOptions(latestGeometryProfile);
-  CGerror Error = cgGetError();
-  if (Error)
-  {
-	  cerr << "CG ERROR: " << cgGetErrorString(Error) << endl;
-  }
+	cgGLSetOptimalOptions(latestGeometryProfile);
+	CGerror Error = cgGetError();
+	if (Error)
+	{
+		cerr << "CG ERROR: " << cgGetErrorString(Error) << endl;
+	}
 #endif
-
-
 
 	cout << "Info: Latest GP Profile Supported: " << cgGetProfileString(latestGeometryProfile) << endl;
 
@@ -59,14 +57,15 @@ bool ShaderOneInterface::PerSessionInit(CGInterface* cgi, const std::string shad
 	}
 
 #ifdef GEOM_SHADER
-  geometryProgram = cgCreateProgramFromFile(cgi->cgContext, CG_SOURCE, 
-	  shaderOneFile.c_str(), cgi->geometryCGprofile, "GeometryMain", NULL);
-  if (geometryProgram == NULL)  {
-    CGerror Error = cgGetError();
-    cerr << "Shader One Geometry Program COMPILE ERROR: " << cgGetErrorString(Error) << endl;
-    cerr << cgGetLastListing(cgi->cgContext) << endl << endl;
-    return false;
-  }
+	geometryProgram = cgCreateProgramFromFile(cgi->cgContext, CG_SOURCE,
+	                                          shaderOneFile.c_str(), cgi->geometryCGprofile, "GeometryMain", nullptr);
+	if (geometryProgram == nullptr)
+	{
+		CGerror Error = cgGetError();
+		cerr << "Shader One Geometry Program COMPILE ERROR: " << cgGetErrorString(Error) << endl;
+		cerr << cgGetLastListing(cgi->cgContext) << endl << endl;
+		return false;
+	}
 #endif
 
 	vertexProgram = cgCreateProgramFromFile(cgi->cgContext, CG_SOURCE,
@@ -107,11 +106,13 @@ bool ShaderOneInterface::PerSessionInit(CGInterface* cgi, const std::string shad
 	fragmentPPCC = cgGetNamedParameter(fragmentProgram, "ppc_C");
 	fragmentLightPos = cgGetNamedParameter(fragmentProgram, "light_position");
 	fragmentIsST = cgGetNamedParameter(fragmentProgram, "hasST");
+	fragmentTexture0 = cgGetNamedParameter(fragmentProgram, "tex0");
+	fragmentEnvTexture = cgGetNamedParameter(fragmentProgram, "env");
 
 	return true;
 }
 
-void ShaderOneInterface::PerFrameInit(int hasST)
+void ShaderOneInterface::PerFrameInit(int hasST, const std::string tex0Name)
 {
 	//set parameters
 	cgGLSetStateMatrixParameter(vertexModelViewProj,
@@ -129,6 +130,13 @@ void ShaderOneInterface::PerFrameInit(int hasST)
 	cgSetParameter3fv(fragmentLightPos, (float*)&(curScene->lightPPCs[0]->C));
 	cgSetParameter3fv(fragmentPPCC, (float*)&(curScene->ppc->C));
 	cgSetParameter1i(fragmentIsST, hasST);
+
+	if(hasST)
+	{
+		glBindTexture(GL_TEXTURE_2D, FrameBuffer::gpuTexID.at(tex0Name));
+		cgGLEnableTextureParameter(fragmentTexture0);
+		cgGLSetTextureParameter(fragmentTexture0, FrameBuffer::gpuTexID.at(tex0Name));
+	}
 }
 
 void ShaderOneInterface::PerFrameDisable()
@@ -139,7 +147,7 @@ void ShaderOneInterface::PerFrameDisable()
 void ShaderOneInterface::BindPrograms()
 {
 #ifdef GEOM_SHADER
-  cgGLBindProgram(geometryProgram);
+	cgGLBindProgram(geometryProgram);
 #endif
 	cgGLBindProgram(vertexProgram);
 	cgGLBindProgram(fragmentProgram);
@@ -149,7 +157,7 @@ void CGInterface::DisableProfiles()
 {
 	cgGLDisableProfile(vertexCGprofile);
 #ifdef GEOM_SHADER
-  cgGLDisableProfile(geometryCGprofile);
+	cgGLDisableProfile(geometryCGprofile);
 #endif
 	cgGLDisableProfile(pixelCGprofile);
 }
@@ -158,7 +166,7 @@ void CGInterface::EnableProfiles()
 {
 	cgGLEnableProfile(vertexCGprofile);
 #ifdef GEOM_SHADER
-  cgGLEnableProfile(geometryCGprofile);
+	cgGLEnableProfile(geometryCGprofile);
 #endif
 	cgGLEnableProfile(pixelCGprofile);
 }
