@@ -131,6 +131,91 @@ void TM::SetBillboard(V3 O, V3 n, V3 up, float sz, float s, float t)
 	SetQuad(pp0, pp1, pp2, pp3);
 }
 
+void TM::SetUnitBox()
+{
+	vertsN = 8;
+	trisN = 12;
+	Allocate();
+
+	verts[0] = V3(1.0f, 1.0f, 1.0f);
+	verts[1] = V3(1.0f, -1.0f, 1.0f);
+	verts[2] = V3(1.0f, -1.0f, -1.0f);
+	verts[3] = V3(1.0f, 1.0f, -1.0f);
+	verts[4] = V3(-1.0f, 1.0f, 1.0f);
+	verts[5] = V3(-1.0f, 1.0f, -1.0f);
+	verts[6] = V3(-1.0f, -1.0f, -1.0f);
+	verts[7] = V3(-1.0f, -1.0f, 1.0f);
+
+	V3 color(0.0f);
+	colors[0] = color;
+	colors[1] = color;
+	colors[2] = color;
+	colors[3] = color;
+	colors[4] = color;
+	colors[5] = color;
+	colors[6] = color;
+	colors[7] = color;
+
+	V3 origin(0.0f);
+	normals[0] = verts[0] - origin;
+	normals[1] = verts[1] - origin;
+	normals[2] = verts[2] - origin;
+	normals[3] = verts[3] - origin;
+	normals[4] = verts[4] - origin;
+	normals[5] = verts[5] - origin;
+	normals[6] = verts[6] - origin;
+	normals[7] = verts[7] - origin;
+
+	int trisCounter = 0;
+	// right
+	tris[trisCounter++] = 0;
+	tris[trisCounter++] = 1;
+	tris[trisCounter++] = 2;
+	tris[trisCounter++] = 2;
+	tris[trisCounter++] = 3;
+	tris[trisCounter++] = 0;
+
+	// left
+	tris[trisCounter++] = 4;
+	tris[trisCounter++] = 5;
+	tris[trisCounter++] = 6;
+	tris[trisCounter++] = 6;
+	tris[trisCounter++] = 7;
+	tris[trisCounter++] = 4;
+
+	// ground
+	tris[trisCounter++] = 1;
+	tris[trisCounter++] = 7;
+	tris[trisCounter++] = 6;
+	tris[trisCounter++] = 6;
+	tris[trisCounter++] = 2;
+	tris[trisCounter++] = 1;
+
+	// top
+	tris[trisCounter++] = 3;
+	tris[trisCounter++] = 5;
+	tris[trisCounter++] = 0;
+	tris[trisCounter++] = 0;
+	tris[trisCounter++] = 5;
+	tris[trisCounter++] = 4;
+
+	// front
+	tris[trisCounter++] = 4;
+	tris[trisCounter++] = 7;
+	tris[trisCounter++] = 1;
+	tris[trisCounter++] = 1;
+	tris[trisCounter++] = 0;
+	tris[trisCounter++] = 4;
+
+	// back
+	tris[trisCounter++] = 5;
+	tris[trisCounter++] = 3;
+	tris[trisCounter++] = 2;
+	tris[trisCounter++] = 2;
+	tris[trisCounter++] = 6;
+	tris[trisCounter++] = 5;
+}
+
 void TM::SetText(string tf)
 {
 	tex = tf;
@@ -547,7 +632,7 @@ void TM::RenderHW(FrameBuffer *curfb)
 
 	// per frame initialization
 	cgi->EnableProfiles();
-	soi->PerFrameInit(hasST, tex);
+	soi->PerFrameInit(hasST, isCubemap, tex);
 	soi->BindPrograms();
 
 	glEnableClientState(GL_VERTEX_ARRAY);
@@ -589,7 +674,7 @@ void TM::RenderHWWireframe()
 
 	// per frame initialization
 	cgi->EnableProfiles();
-	soi->PerFrameInit(hasST, tex);
+	soi->PerFrameInit(hasST, isCubemap, tex);
 	soi->BindPrograms();
 
 	glEnableClientState(GL_VERTEX_ARRAY);

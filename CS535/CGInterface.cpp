@@ -6,6 +6,7 @@
 
 #include <iostream>
 #include "GlobalVariables.h"
+#include <GL/glext.h>
 
 using namespace std;
 #define GEOM_SHADER
@@ -109,19 +110,32 @@ bool ShaderOneInterface::PerSessionInit(CGInterface* cgi, const std::string shad
 	fragmentIsST = cgGetNamedParameter(fragmentProgram, "hasST");
 	fragmentTex0 = cgGetNamedParameter(fragmentProgram, "tex");
 	fragmentCubemapTex = cgGetNamedParameter(fragmentProgram, "env");
+	fragmentIsCubemap = cgGetNamedParameter(fragmentProgram, "isCubemap");
 
 	return true;
 }
 
-void ShaderOneInterface::PerFrameInit(int hasST, const std::string tex0File)
+void ShaderOneInterface::PerFrameInit(int hasST, int isCubemap, const std::string tex0File)
 {
 	//set parameters
-	cgGLSetStateMatrixParameter(vertexModelViewProj,
-	                            CG_GL_MODELVIEW_PROJECTION_MATRIX, CG_GL_MATRIX_IDENTITY);
+	if(isCubemap)
+	{
+		cgGLSetStateMatrixParameter(vertexModelViewProj,
+			CG_GL_MODELVIEW_PROJECTION_MATRIX, CG_GL_MATRIX_IDENTITY);
 
-	cgGLSetStateMatrixParameter(
-		geometryModelViewProj,
-		CG_GL_MODELVIEW_PROJECTION_MATRIX, CG_GL_MATRIX_IDENTITY);
+		cgGLSetStateMatrixParameter(
+			geometryModelViewProj,
+			CG_GL_MODELVIEW_PROJECTION_MATRIX, CG_GL_MATRIX_IDENTITY);
+	}
+	else
+	{
+		cgGLSetStateMatrixParameter(vertexModelViewProj,
+			CG_GL_MODELVIEW_PROJECTION_MATRIX, CG_GL_MATRIX_IDENTITY);
+
+		cgGLSetStateMatrixParameter(
+			geometryModelViewProj,
+			CG_GL_MODELVIEW_PROJECTION_MATRIX, CG_GL_MATRIX_IDENTITY);
+	}
 
 	// Vertex Shader
 	cgSetParameter1f(vertexMorphFraction, GlobalVariables::Instance()->curScene->mf);
@@ -131,6 +145,7 @@ void ShaderOneInterface::PerFrameInit(int hasST, const std::string tex0File)
 	cgSetParameter3fv(fragmentLightPos, (float*)&(curScene->lightPPCs[0]->C));
 	cgSetParameter3fv(fragmentPPCC, (float*)&(curScene->ppc->C));
 	cgSetParameter1i(fragmentIsST, hasST);
+	cgSetParameter1i(fragmentIsCubemap, isCubemap);
 
 	if(hasST)
 	{

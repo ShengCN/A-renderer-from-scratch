@@ -264,9 +264,13 @@ void PPC::MoveDown(float delta)
 	C = C + b * delta;
 }
 
-void PPC::SetIntrinsicsHW()
+void PPC::SetIntrinsicsHW(bool isPerspective)
 {
 	glViewport(0, 0, w, h);
+	
+	if (!isPerspective)
+		return;
+
 	float zNear = 1.0f;
 	float zFar = 1000.0f;
 	float scf = zNear / GetFocal();
@@ -274,6 +278,7 @@ void PPC::SetIntrinsicsHW()
 	float right = -left;
 	float top = b.Length() * static_cast<float>(h) / 2.0f * scf;
 	float bottom = -top;
+
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	glFrustum(left, right, bottom, top, zNear, zFar);

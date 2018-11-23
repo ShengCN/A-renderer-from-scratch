@@ -24,7 +24,7 @@ public:
 	std::vector<shared_ptr<PPC>> lightPPCs;
 	std::vector<shared_ptr<FrameBuffer>> shadowMaps;
 	PPC* ppc, *ppc3, *projectPPC;
-	vector<TM*> meshes;
+	vector<shared_ptr<TM>> meshes;
 	vector<shared_ptr<TM>> refletors;
 	vector<shared_ptr<BillBoard>> sceneBillboard;
 	shared_ptr<CubeMap> cubemap;
@@ -42,12 +42,13 @@ public:
 	void UpdateSM();
 	void RenderGPU();
 	void RenderGPUWireframe();
+	void ReloadCG();
 
 	// HW5, Implement part of the paper
 	// https://www.cs.purdue.edu/cgvlab/papers/popescu/popescuGemEG06.pdf
 	// Render all other tm except id mesh to id's billboards
 	void UpdateBBs();
-	void RenderBB(PPC *ppc, FrameBuffer *fb, TM *reflectors);
+	void RenderBB(PPC *ppc, FrameBuffer *fb, shared_ptr<TM> reflectors);
 
 	V3 GetSceneCenter();
 	~Scene();

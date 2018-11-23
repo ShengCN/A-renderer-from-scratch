@@ -49,6 +49,7 @@ PixelDataOutput FragmentMain(VertexDataOutput pdi,
   uniform float3 light_position,
   uniform float3 ppc_C,
   uniform int hasST,
+  uniform int isCubemap,
   uniform sampler2D tex,
   uniform samplerCUBE env) {
 
@@ -72,14 +73,21 @@ PixelDataOutput FragmentMain(VertexDataOutput pdi,
   else 
   {
 	float3 reflectDir = reflect(normalize(viewdir), normalize(pdi.normal));
+	// float3 refractDir = refract(normalize(viewdir), normalize(pdi.normal), 0.9);
 	float4 envColor = texCUBE(env, reflectDir);
 
 	  pc = envColor.rgb;
-	  alpha = 1.0;
+	  alpha = envColor.a;
   }
-  // float3 phongColor =  pc * (ka + (1.0f - ka) * kd) + float3(1.0f) * ks;
-	
-  ret.color = float4(pc,alpha);
+
+	if(isCubemap)
+	{
+		pc = float3(1.0,0.0,0.0);
+		alpha =1.0;
+	}
+  float3 phongColor =  pc * (ka + (1.0f - ka) * kd + ks);
+
+  ret.color = float4(clamp(phongColor,0.0,1.0),alpha);
   return ret;
 
 	// BILLBOARD REFLECTIONS

@@ -144,7 +144,7 @@ void Scene::RenderWireFrame()
 	fb->ClearBGRZ(0xFFFFFFFF, 0.0f);
 
 	// Draw all triangles
-	for_each(meshes.begin(), meshes.end(), [&](TM* t) { t->RenderWireFrame(ppc, fb); });
+	for_each(meshes.begin(), meshes.end(), [&](shared_ptr<TM> t) { t->RenderWireFrame(ppc, fb); });
 
 	// commit frame update
 	fb->redraw();
@@ -193,14 +193,20 @@ void Scene::RenderGPU()
 	{
 		gpufb->LoadCubemapGPU(cubemapFile);
 	}
-
-	ppc->SetIntrinsicsHW();
-	ppc->SetExtrinsicsHW();
 	
 	// Render geometry
 	BeginCountingTime();
 	for(auto t:meshes)
 	{
+		if (t->isCubemap)
+		{
+			ppc->SetIntrinsicsHW(false);
+		}
+		else
+		{
+			ppc->SetIntrinsicsHW();
+		}
+		ppc->SetExtrinsicsHW();
 		t->RenderHW(gpufb);
 	}
 	PrintTime("GPU render ", gpufb);
@@ -223,6 +229,15 @@ void Scene::RenderGPUWireframe()
 		t->RenderHWWireframe();
 	}
 	PrintTime("GPU render ", gpufb);
+}
+
+void Scene::ReloadCG()
+{
+	for(auto t:meshes)
+	{
+		t->cgi = nullptr;
+		t->soi = nullptr;
+	}
 }
 
 void Scene::RaytracingScene(PPC* currPPC, FrameBuffer* currFB)
@@ -268,7 +283,7 @@ void Scene::RaytracingScene(PPC* currPPC, FrameBuffer* currFB)
 
 			// For each meshes, find the closest intersection
 			float closestZ = 0.0f;
-			TM* shadingMesh = meshes[0];
+			auto shadingMesh = meshes[0];
 			PointProperty closestPP(0.0f, 0.0f, 0.0f, 0.0f, 0.0f);
 			for (auto m : meshes)
 			{
@@ -291,7 +306,7 @@ void Scene::RaytracingScene(PPC* currPPC, FrameBuffer* currFB)
 				{
 					// Update point property
 					closestZ = w;
-					shadingMesh = r.get();
+					shadingMesh = r;
 					closestPP = pp;
 				}
 			}
@@ -354,7 +369,7 @@ void Scene::UpdateBBs()
 			ppc->PositionAndOrient(rCenter, otherTmCenter, V3(0.0f, 1.0f, 0.0f));
 
 			// render it into the currFB
-			RenderBB(ppc.get(), bbFB.get(), otherTM.get());
+			RenderBB(ppc.get(), bbFB.get(), otherTM);
 
 			// Save the result 
 			bb->fbTexture = bbFB;
@@ -367,7 +382,7 @@ void Scene::UpdateBBs()
 }
 
 // Only render the target
-void Scene::RenderBB(PPC* currPPC, FrameBuffer* currFB, TM* reflector)
+void Scene::RenderBB(PPC* currPPC, FrameBuffer* currFB, shared_ptr<TM> reflector)
 {
 	if (currPPC && currFB && reflector)
 	{
@@ -394,7 +409,6 @@ Scene::~Scene()
 		delete ppc;
 	if (ppc3 != nullptr)
 		delete ppc3;
-	for_each(meshes.begin(), meshes.end(), [](TM* tm) { if (tm != nullptr) tm->~TM(); });
 	if (fb != nullptr)
 		delete fb;
 	if (fb3 != nullptr)
@@ -733,9 +747,10 @@ void Scene::PrintTime(const string fbname, FrameBuffer* curfb)
 
 void Scene::InitDemo()
 {
-	TM* teapot = new TM();
-	TM* bb = new TM();
-	teapot->LoadModelBin("geometry/teapot1K.bin");
+	shared_ptr<TM> teapot = make_shared<TM>();
+	shared_ptr<TM> bb = make_shared<TM>();
+	shared_ptr<TM> cubemap = make_shared<TM>();
+	teapot->LoadModelBin("geometry/teapot57K.bin");
 	teapot->SetShaderOne("CG/shaderOne.cg");
 	teapot->hasST = 0;
 
@@ -744,11 +759,18 @@ void Scene::InitDemo()
 	bb->hasST = 1;
 	bb->tex = "images/jojo.tiff";
 
+	cubemap->SetUnitBox();
+	cubemap->SetShaderOne("CG/shaderOne.cg");
+	cubemap->hasST = 0;
+	cubemap->isCubemap = 1;
+
 	V3 tmC = ppc->C + ppc->GetVD() * 100.0f;
 	float tmSize = 100.0f;
 	teapot->PositionAndSize(tmC, tmSize);
 	bb->PositionAndSize(tmC + V3(0.0f,0.0f,-1.0f) * tmSize, tmSize);
 
+	// Draw cubemap first! 
+	meshes.push_back(cubemap);
 	meshes.push_back(teapot);
 	meshes.push_back(bb);
 
@@ -765,6 +787,7 @@ void Scene::InitDemo()
 void Scene::Demonstration()
 {
 	{
+		// ReloadCG();
 		PPC ppc0 = *ppc, ppc1 = *ppc;
 		ppc1.C = ppc1.C + V3(30.0f, 60.0f, 0.0f);
 		ppc1.PositionAndOrient(ppc1.C, meshes[0]->GetCenter(), V3(0.0f, 1.0f, 0.0f));
@@ -777,6 +800,7 @@ void Scene::Demonstration()
 			// ppc->SetInterpolated(&ppc0, &ppc1, static_cast<float>(i)/framesN);
 			ppc->RevolveH(meshes[0]->GetCenter(), 1.0f);
 			gpufb->redraw();
+
 			Fl::check();
 		}
 		*ppc = ppc0;

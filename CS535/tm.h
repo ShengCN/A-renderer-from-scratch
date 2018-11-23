@@ -27,6 +27,7 @@ public:
 	int id;
 	vector<shared_ptr<BillBoard>> reflectorBB;	// all the possible reflections
 	int hasST;
+	int isCubemap;
 
 	// Shadder files
 	shared_ptr<CGInterface> cgi;
@@ -39,12 +40,13 @@ public:
 	bool isShowObjColor;
 	bool isRefraction;
 
-	TM() :vertsN(0), trisN(0), pixelSz(0), isEnvMapping(false), isShowObjColor(true),id(tmIDCounter++), isRefraction(false), hasST(0) {};
+	TM() :vertsN(0), trisN(0), pixelSz(0), isEnvMapping(false), isShowObjColor(true),id(tmIDCounter++), isRefraction(false), hasST(0), isCubemap(0) {};
 	void SetRectangle(V3 O, float rw, float rh);
 	void SetTriangle(PointProperty p0, PointProperty p1, PointProperty p2);
 	void SetQuad(PointProperty p0, PointProperty p1, PointProperty p2, PointProperty p3);
 	void SetQuad(V3 O, V3 n, V3 up, float sz, float s = 1.0f, float t = 1.0f);
 	void SetBillboard(V3 O, V3 n, V3 up, float sz, float s = 1.0f, float t = 1.0f);
+	void SetUnitBox();
 	void SetText(std::string tf);
 	void Allocate();
 	void SetAllPointsColor(V3 color);	// set color to verts
