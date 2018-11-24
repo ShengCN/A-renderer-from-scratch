@@ -1,6 +1,7 @@
 #pragma once
 #include <vector>
 #include <memory>
+
 #include "gui.h"
 #include "framebuffer.h"
 #include "ppc.h"

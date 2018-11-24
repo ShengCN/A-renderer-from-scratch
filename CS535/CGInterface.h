@@ -48,5 +48,6 @@ public:
 	bool PerSessionInit(CGInterface* cgi, const std::string shaderOneFile); // per session initialization
 	void BindPrograms(); // enable geometryProgram, vertexProgram, fragmentProgram
 	void PerFrameInit(int hasST, int isCubemap, const std::string tex0File); // set uniform parameter values, etc.
+
 	void PerFrameDisable(); // disable programs
 };

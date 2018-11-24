@@ -53,6 +53,7 @@ PixelDataOutput FragmentMain(VertexDataOutput pdi,
   uniform sampler2D tex,
   uniform samplerCUBE env) {
 
+
   PixelDataOutput ret;
   
   // Phong Lighting
@@ -90,6 +91,7 @@ PixelDataOutput FragmentMain(VertexDataOutput pdi,
 	}
 
   ret.color = float4(clamp(phongColor,0.0,1.0),alpha);
+
   return ret;
 
 	// BILLBOARD REFLECTIONS

@@ -181,6 +181,13 @@ void Scene::UpdateSM()
 
 void Scene::RenderGPU()
 {
+	// Global OpenGL settings
+	// Cubemap
+	if(FrameBuffer::textures.find(GlobalVariables::Instance()->cubemapFiles[0]) == FrameBuffer::textures.end())
+	{
+		// gpufb->LoadCubemapGPU(GlobalVariables::Instance()->cubemapFiles);
+	}
+
 	// Clear the framebuffer
 	glEnable(GL_DEPTH_TEST | GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -200,6 +207,7 @@ void Scene::RenderGPU()
 	{
 		ppc->SetIntrinsicsHW();
 		ppc->SetExtrinsicsHW();
+
 		t->RenderHW(gpufb);
 	}
 	PrintTime("GPU render ", gpufb);
