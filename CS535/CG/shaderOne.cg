@@ -84,6 +84,7 @@ PixelDataOutput FragmentMain(VertexDataOutput pdi,
 
 	if(isCubemap)
 	{
+		// phongColor = texCUBE(env, float3(pdi.vxyz.x,-pdi.vxyz.y,pdi.vxyz.z));
 		phongColor = texCUBE(env, -pdi.vxyz);
 		alpha =1.0;
 	}

@@ -26,6 +26,8 @@ public:
 	unsigned int *pix;	// pixel 
 	float *zb;			// z buffer
 	int w, h;
+
+	// GPU rendering parameters
 	bool isgpu;
 
 	static unordered_map<std::string, vector<shared_ptr<TextureInfo>>> textures; 
@@ -36,6 +38,7 @@ public:
 	void KeyboardHandle();
 	int handle(int guievent);
 	void SetBGR(unsigned int bgr);
+	
 	void SetGuarded(int u, int v, unsigned int color);
 	void LoadTiff(const char* fname);
 	void SaveAsTiff(const char* fname);
@@ -76,6 +79,10 @@ public:
 
 	// Texture downsampling
 	void PrepareTextureLoD(string texFile);
+
+	// GPU render 
+	void SetupGPU();
+	void SaveGPUAsTiff(const string saveFile);
 
 private:
 	void Set(int u, int v, int color);

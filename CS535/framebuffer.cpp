@@ -1068,3 +1068,14 @@ void FrameBuffer::PrepareTextureLoD(const string texFile)
 		}
 	}
 }
+
+void FrameBuffer::SetupGPU()
+{
+	isgpu = true;
+}
+
+void FrameBuffer::SaveGPUAsTiff(const string saveFile)
+{
+	glReadPixels(0, 0, w, h, GL_RGBA, GL_UNSIGNED_BYTE, pix);
+	SaveAsTiff(saveFile.c_str());
+}

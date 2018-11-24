@@ -43,7 +43,8 @@ Scene::Scene(): isRenderAABB(false)
 
 	gpufb = new FrameBuffer(u0, v0, w, h);
 	gpufb->label("GPU Framebuffer");
-	gpufb->isgpu = true;
+	// gpufb->isgpu = true;
+	gpufb->SetupGPU();
 	gpufb->show();
 
 	fb3 = new FrameBuffer(u0 + fb->w + 30, v0, w, h);
@@ -777,11 +778,15 @@ void Scene::InitDemo()
 
 	// PPC setting
 	ppc->PositionAndOrient(V3(0.0f, 0.0f, -5.0f), meshes[0]->GetCenter(), V3(0.0f, 1.0f, 0.0f));
-
 }
 
 void Scene::Demonstration()
 {
+	{
+		gpufb->SaveGPUAsTiff("images/testoutput.tiff");
+		return;
+	}
+
 	{
 		// ReloadCG();
 		PPC ppc0 = *ppc, ppc1 = *ppc;

@@ -91,6 +91,12 @@ V3 V3::RotateThisPointAboutArbitraryAxis(V3 O, V3 a, float angled)
 {
 	V3 p = *this;
 	V3 OP = p - O;
+	if (OP == V3(0.0f))
+	{
+		cerr << "Rotation is too close to rotation center! \n";
+		return p;
+	}
+
 	OP = OP.Rotate(a, angled);
 	return OP + O;
 }
