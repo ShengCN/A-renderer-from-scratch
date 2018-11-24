@@ -11,7 +11,7 @@ struct VertexDataOutput {
 	float3 normal: TEXCOORD0;
 	float3 vxyz: TEXCOORD1;
 	float3 color : COLOR;
-  float2 vtexCoord : TEXCOORD2;
+  	float2 vtexCoord : TEXCOORD2;
 };
 
 struct PixelDataOutput {
@@ -84,7 +84,7 @@ PixelDataOutput FragmentMain(VertexDataOutput pdi,
 
 	if(isCubemap)
 	{
-		phongColor = float3(1.0,0.0,0.0);
+		phongColor = texCUBE(env, -pdi.vxyz);
 		alpha =1.0;
 	}
 

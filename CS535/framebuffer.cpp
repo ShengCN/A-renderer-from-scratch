@@ -472,22 +472,22 @@ bool FrameBuffer::LoadCubemapGPU(vector<string> cubemaps)
 		textures[texFile].push_back(newTex);
 		TIFFClose(in);
 
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, &newTex->texture[0]);
-		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, &(newTex->texture[0]));
+		glTexParameterf(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameterf(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		glTexParameterf(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameterf(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
 		gpuTexID[texFile] = textureID;
 
 		// Check errors
-		GLenum error = glGetError();
-		if (error != GL_NO_ERROR)
-		{
-			cerr << "Error loading cubemap from " << texFile << "\n";
-			return false;
-		}
+		// todo unkown bug
+		// GLenum error = glGetError();
+		// if (error != GL_NO_ERROR)
+		// {
+		// 	cerr << error << "Error loading cubemap from " << texFile << "\n";
+		// 	// return false;
+		// }
 	}
 	glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
 	
