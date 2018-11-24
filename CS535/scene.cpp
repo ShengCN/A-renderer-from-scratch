@@ -181,8 +181,7 @@ void Scene::UpdateSM()
 void Scene::RenderGPU()
 {
 	// Clear the framebuffer
-	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_BLEND);
+	glEnable(GL_DEPTH_TEST | GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -193,19 +192,12 @@ void Scene::RenderGPU()
 	{
 		gpufb->LoadCubemapGPU(cubemapFile);
 	}
-	
+
 	// Render geometry
 	BeginCountingTime();
-	for(auto t:meshes)
+	for (auto t : meshes)
 	{
-		if (t->isCubemap)
-		{
-			ppc->SetIntrinsicsHW(false);
-		}
-		else
-		{
-			ppc->SetIntrinsicsHW();
-		}
+		ppc->SetIntrinsicsHW();
 		ppc->SetExtrinsicsHW();
 		t->RenderHW(gpufb);
 	}
@@ -768,11 +760,11 @@ void Scene::InitDemo()
 	float tmSize = 100.0f;
 	teapot->PositionAndSize(tmC, tmSize);
 	bb->PositionAndSize(tmC + V3(0.0f,0.0f,-1.0f) * tmSize, tmSize);
+	cubemap->PositionAndSize(V3(0.0f), tmSize * 10.0);
 
-	// Draw cubemap first! 
-	meshes.push_back(cubemap);
 	meshes.push_back(teapot);
 	meshes.push_back(bb);
+	meshes.push_back(cubemap);
 
 	// Light
 	ka = 0.5f;
@@ -782,6 +774,10 @@ void Scene::InitDemo()
 	shared_ptr<PPC> l0ppc = make_shared<PPC>(w, h, 55.0f);
 	l0ppc->PositionAndOrient(LightC, meshes[0]->GetCenter(), V3(0.0f, 1.0f, 0.0f));
 	lightPPCs.push_back(l0ppc);
+
+	// PPC setting
+	ppc->PositionAndOrient(V3(0.0f, 0.0f, -5.0f), meshes[0]->GetCenter(), V3(0.0f, 1.0f, 0.0f));
+
 }
 
 void Scene::Demonstration()
@@ -795,7 +791,7 @@ void Scene::Demonstration()
 		int framesN = 360;
 		for(int i = 0; i < framesN; ++i)
 		{
-			lightPPCs[0]->RevolveH(meshes[0]->GetCenter(), 1.0f);
+			// lightPPCs[0]->RevolveH(meshes[0]->GetCenter(), 1.0f);
 			mf = static_cast<float>(i) / static_cast<float>(framesN - 1);
 			// ppc->SetInterpolated(&ppc0, &ppc1, static_cast<float>(i)/framesN);
 			ppc->RevolveH(meshes[0]->GetCenter(), 1.0f);

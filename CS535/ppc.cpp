@@ -264,13 +264,10 @@ void PPC::MoveDown(float delta)
 	C = C + b * delta;
 }
 
-void PPC::SetIntrinsicsHW(bool isPerspective)
+void PPC::SetIntrinsicsHW()
 {
 	glViewport(0, 0, w, h);
 	
-	if (!isPerspective)
-		return;
-
 	float zNear = 1.0f;
 	float zFar = 1000.0f;
 	float scf = zNear / GetFocal();

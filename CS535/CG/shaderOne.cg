@@ -80,12 +80,13 @@ PixelDataOutput FragmentMain(VertexDataOutput pdi,
 	  alpha = envColor.a;
   }
 
+  float3 phongColor =  pc * (ka + (1.0f - ka) * kd + ks);
+
 	if(isCubemap)
 	{
-		pc = float3(1.0,0.0,0.0);
+		phongColor = float3(1.0,0.0,0.0);
 		alpha =1.0;
 	}
-  float3 phongColor =  pc * (ka + (1.0f - ka) * kd + ks);
 
   ret.color = float4(clamp(phongColor,0.0,1.0),alpha);
   return ret;

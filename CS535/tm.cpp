@@ -213,7 +213,7 @@ void TM::SetUnitBox()
 	tris[trisCounter++] = 2;
 	tris[trisCounter++] = 2;
 	tris[trisCounter++] = 6;
-	tris[trisCounter++] = 5;
+	tris[trisCounter] = 5;
 }
 
 void TM::SetText(string tf)

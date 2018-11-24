@@ -51,7 +51,7 @@ public:
 	void MoveLeft(float delta);
 	void MoveDown(float delta);
 
-	void SetIntrinsicsHW(bool isPerspective = true);
+	void SetIntrinsicsHW();
 	void SetExtrinsicsHW();
 };
 
