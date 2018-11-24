@@ -6,11 +6,7 @@
 
 #include <iostream>
 #include "GlobalVariables.h"
-<<<<<<< HEAD
 #include <GL/glext.h>
-
-=======
->>>>>>> origin/master
 using namespace std;
 #define GEOM_SHADER
 
