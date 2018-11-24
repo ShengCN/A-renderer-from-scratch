@@ -41,6 +41,9 @@ class ShaderOneInterface
 	CGparameter fragmentTex0;
 	CGparameter fragmentCubemapTex;
 	CGparameter fragmentIsCubemap;
+
+	// Render reflection using bb
+	CGparameter fragmentBB;
 public:
 	ShaderOneInterface()
 	{

@@ -1,1 +1,1 @@
-ffmpeg -i demonstration-03%d.tiff -s 1080x720 -r 20 -c:v huffyuv -pix_fmt rgb24 out.avi
+ffmpeg -i demonstration-%03d.tiff -s 1080x720 -r 20 -c:v huffyuv -pix_fmt rgb24 out.avi

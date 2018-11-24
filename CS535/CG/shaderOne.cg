@@ -48,6 +48,7 @@ TRIANGLE void GeometryMain(AttribArray<VertexDataOutput> tverts,
 PixelDataOutput FragmentMain(VertexDataOutput pdi, 
   uniform float3 light_position,
   uniform float3 ppc_C,
+  uniform float3x3 bbpos,	// billboard, corner1, corner2, normal
   uniform int hasST,
   uniform int isCubemap,
   uniform sampler2D tex,

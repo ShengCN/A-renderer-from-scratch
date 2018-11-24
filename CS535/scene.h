@@ -26,7 +26,7 @@ public:
 	std::vector<shared_ptr<FrameBuffer>> shadowMaps;
 	PPC* ppc, *ppc3, *projectPPC;
 	vector<shared_ptr<TM>> meshes;
-	vector<shared_ptr<TM>> refletors;
+	vector<shared_ptr<TM>> reflectors;
 	vector<shared_ptr<BillBoard>> sceneBillboard;
 	shared_ptr<CubeMap> cubemap;
 	vector<shared_ptr<SBB>> raytracingSBB;	// Sphere BB

@@ -89,7 +89,7 @@ void Scene::Render()
 		}
 
 		// Visualize bbs
-		for (auto r : refletors)
+		for (auto r : reflectors)
 		{
 			for (auto rb : r->reflectorBB)
 			{
@@ -120,7 +120,7 @@ void Scene::Render(PPC* currPPC, FrameBuffer* currFB)
 					t->RenderAABB(currPPC, currFB);
 			}
 
-			for (auto r : refletors)
+			for (auto r : reflectors)
 			{
 				BeginCountingTime();
 				r->RenderFill(currPPC, currFB);
@@ -299,7 +299,7 @@ void Scene::RaytracingScene(PPC* currPPC, FrameBuffer* currFB)
 				}
 			}
 
-			for (auto r : refletors)
+			for (auto r : reflectors)
 			{
 				auto [pp, w] = r->RayMeshIntersect(currPPC->C, currPPC->GetRay(u, v));
 
@@ -336,7 +336,7 @@ void Scene::RaytracingScene(PPC* currPPC, FrameBuffer* currFB)
 
 void Scene::UpdateBBs()
 {
-	for (auto r : refletors)
+	for (auto r : reflectors)
 	{
 		auto tmId = r->id;
 
@@ -346,10 +346,10 @@ void Scene::UpdateBBs()
 
 		// Update all bb
 		r->reflectorBB.clear();
-		r->reflectorBB.reserve(refletors.size() - 1);
+		r->reflectorBB.reserve(reflectors.size() - 1);
 
 		// for each other object
-		for (auto otherTM : refletors)
+		for (auto otherTM : reflectors)
 		{
 			if (otherTM->id == tmId)
 				continue;
@@ -772,8 +772,9 @@ void Scene::InitDemo()
 	cubemap->PositionAndSize(V3(0.0f), tmSize * 10.0);
 
 	meshes.push_back(teapot);
-	meshes.push_back(bb);
 	meshes.push_back(cubemap);
+	reflectors.push_back(bb);
+
 
 	// Light
 	ka = 0.5f;
@@ -791,11 +792,6 @@ void Scene::InitDemo()
 void Scene::Demonstration()
 {
 	{
-		gpufb->SaveGPUAsTiff("images/testoutput.tiff");
-		return;
-	}
-
-	{
 		// ReloadCG();
 		PPC ppc0 = *ppc, ppc1 = *ppc;
 		ppc1.C = ppc1.C + V3(30.0f, 60.0f, 0.0f);
@@ -809,8 +805,14 @@ void Scene::Demonstration()
 			// ppc->SetInterpolated(&ppc0, &ppc1, static_cast<float>(i)/framesN);
 			ppc->RevolveH(meshes[0]->GetCenter(), 1.0f);
 			gpufb->redraw();
-
 			Fl::check();
+
+			if(GlobalVariables::Instance()->isRecording)
+			{
+				char buffer[50];
+				sprintf_s(buffer,"images/Recording/BB-%03d.tiff", i);
+				gpufb->SaveGPUAsTiff(buffer);
+			}
 		}
 		*ppc = ppc0;
 		return;

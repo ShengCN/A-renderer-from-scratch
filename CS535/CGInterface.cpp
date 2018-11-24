@@ -110,7 +110,7 @@ bool ShaderOneInterface::PerSessionInit(CGInterface* cgi, const std::string shad
 	fragmentTex0 = cgGetNamedParameter(fragmentProgram, "tex");
 	fragmentCubemapTex = cgGetNamedParameter(fragmentProgram, "env");
 	fragmentIsCubemap = cgGetNamedParameter(fragmentProgram, "isCubemap");
-
+	fragmentBB = cgGetNamedParameter(fragmentProgram, "bbpos");
 
 	return true;
 }
