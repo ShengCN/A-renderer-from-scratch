@@ -44,11 +44,33 @@ TRIANGLE void GeometryMain(AttribArray<VertexDataOutput> tverts,
 
 }
 
+bool IntersectBB(float3x3 bb, inout float3 ro, inout float3 rd, inout float2 uv)
+{
+	// ray bb intersection
+	float3 p0 = bb[0];
+	float3 p1 = bb[1];
+	float3 p2 = bb[2];
+	float3 n = normalize(cross(p1-p0,p2-p0)); 
+	float t = -dot(ro - p0,n)/dot(rd,n);
+	float3 p = ro + t * rd - p0;
+	float3 x = p2 - p0;
+	float3 y = p1 - p0;
+	float u = dot(p,normalize(x)) / length(x);
+	float v = dot(p,normalize(y)) / length(y);
+	
+	// not intersect
+	if(u<0.0 || u >1.0 || v < 0.0 || v > 1.0)
+		return false;
+
+	uv[0] = u;
+	uv[1] = 1.0 - v;
+	return true;
+}
 
 PixelDataOutput FragmentMain(VertexDataOutput pdi, 
   uniform float3 light_position,
   uniform float3 ppc_C,
-  uniform float3x3 bbpos,	// billboard, corner1, corner2, normal
+  uniform float3x3 bbpos,	// billboard, left-top, left-bot, right-top
   uniform int hasST,
   uniform int isCubemap,
   uniform sampler2D tex,
@@ -75,11 +97,18 @@ PixelDataOutput FragmentMain(VertexDataOutput pdi,
   else 
   {
 	float3 reflectDir = reflect(normalize(viewdir), normalize(pdi.normal));
-	// float3 refractDir = refract(normalize(viewdir), normalize(pdi.normal), 0.9);
-	float4 envColor = texCUBE(env, reflectDir);
+	float3 refractDir = refract(normalize(viewdir), normalize(pdi.normal), 1.0);
+	float4 envColor = texCUBE(env, refractDir);
 
 	  pc = envColor.rgb;
 	  alpha = envColor.a;
+
+	  // intersect with bb
+	  float2 uv;
+	  if(IntersectBB(bbpos, pdi.vxyz, viewdir, uv))
+	  {
+		  pc = tex2D(tex, uv);
+	  }
   }
 
   float3 phongColor =  pc * (ka + (1.0f - ka) * kd + ks);

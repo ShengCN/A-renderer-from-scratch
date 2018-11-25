@@ -81,6 +81,7 @@ public:
 
 	// GPU render 
 	void SetupGPU();
+	void SaveGPU2CPU() { glReadPixels(0, 0, w, h, GL_RGBA, GL_UNSIGNED_BYTE, pix); };
 	void SaveGPUAsTiff(const string saveFile);
 
 private:

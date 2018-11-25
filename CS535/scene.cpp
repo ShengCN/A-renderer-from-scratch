@@ -210,11 +210,6 @@ void Scene::RenderGPU()
 	{
 		t->RenderHW(gpufb);
 	}
-
-	for (auto r : reflectors)
-	{
-		r->RenderHW(gpufb);
-	}
 	PrintTime("GPU render ", gpufb);
 }
 
@@ -781,7 +776,6 @@ void Scene::InitDemo()
 	meshes.push_back(cubemap);
 	reflectors.push_back(bb);
 
-
 	// Light
 	ka = 0.5f;
 	mf = 0.0f;
@@ -798,18 +792,18 @@ void Scene::InitDemo()
 void Scene::Demonstration()
 {
 	{
-		// ReloadCG();
+		ReloadCG();
 		PPC ppc0 = *ppc, ppc1 = *ppc;
 		ppc1.C = ppc1.C + V3(30.0f, 60.0f, 0.0f);
 		ppc1.PositionAndOrient(ppc1.C, meshes[0]->GetCenter(), V3(0.0f, 1.0f, 0.0f));
 		ppc1 = *ppc;
-		int framesN = 360;
+		int framesN = 1;
 		for(int i = 0; i < framesN; ++i)
 		{
 			// lightPPCs[0]->RevolveH(meshes[0]->GetCenter(), 1.0f);
 			mf = static_cast<float>(i) / static_cast<float>(framesN - 1);
 			// ppc->SetInterpolated(&ppc0, &ppc1, static_cast<float>(i)/framesN);
-			ppc->RevolveH(meshes[0]->GetCenter(), 1.0f);
+			// ppc->RevolveH(meshes[0]->GetCenter(), 1.0f);
 			gpufb->redraw();
 			Fl::check();
 

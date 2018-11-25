@@ -1076,6 +1076,6 @@ void FrameBuffer::SetupGPU()
 
 void FrameBuffer::SaveGPUAsTiff(const string saveFile)
 {
-	glReadPixels(0, 0, w, h, GL_RGBA, GL_UNSIGNED_BYTE, pix);
+	SaveGPU2CPU();
 	SaveAsTiff(saveFile.c_str());
 }

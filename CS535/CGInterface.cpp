@@ -143,17 +143,19 @@ void ShaderOneInterface::PerFrameInit(int hasST, int isCubemap, const std::strin
 
 	// Fragment Shader
 	auto curScene = GlobalVariables::Instance()->curScene;
-	cgSetParameter3fv(fragmentLightPos, (float*)&(curScene->lightPPCs[0]->C));
-	cgSetParameter3fv(fragmentPPCC, (float*)&(curScene->ppc->C));
+	cgSetParameter3fv(fragmentLightPos, reinterpret_cast<float*>(&curScene->lightPPCs[0]->C));
+	cgSetParameter3fv(fragmentPPCC, reinterpret_cast<float*>(&curScene->ppc->C));
 	cgSetParameter1i(fragmentIsST, hasST);
 	cgSetParameter1i(fragmentIsCubemap, isCubemap);
 	
-	// BB matrix
+	// BB matrix, dirty way to do it
+	auto bb = GlobalVariables::Instance()->curScene->reflectors[0];
+
 	M33 bbinfo;
-	bbinfo[0] = 
-	bbinfo[1] =
-	bbinfo[2] =
-	cgSetMatrixParameterfr(fragmentBB, );
+	bbinfo[0] = bb->verts[0];	// left top
+	bbinfo[1] = bb->verts[1];	// left bot
+	bbinfo[2] = bb->verts[3];	// right top
+	cgSetMatrixParameterfr(fragmentBB, reinterpret_cast<float*>(&bbinfo));
 
 	if(hasST)
 	{
