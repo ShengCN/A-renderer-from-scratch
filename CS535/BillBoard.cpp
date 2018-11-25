@@ -16,6 +16,11 @@ void BillBoard::SetBillboard(V3 O, V3 n, V3 up, float sz, float s, float t)
 	mesh->SetBillboard(O, n, up, sz, s, t);
 }
 
+void BillBoard::GPUsetBBtexture()
+{
+	texID = fbTexture->SaveCPU2GPUtexture();
+}
+
 bool BillBoard::Intersect(V3 p, V3 d, float &t)
 {
 	V3 b0 = mesh->verts[0];
@@ -43,6 +48,15 @@ bool BillBoard::InsideBillboard(V3 p)
 	V3 v = p - p0;
 	float xf = x * v, yf = y * v;
 	return !(xf < 0.0f || yf < 0.0f || xf / x.Length() > x.Length() || yf / y.Length() > y.Length());
+}
+
+M33 BillBoard::GetCorners()
+{
+	M33 corners;
+	corners[0] = mesh->verts[0];
+	corners[1] = mesh->verts[1];
+	corners[2] = mesh->verts[3];
+	return corners;
 }
 
 V3 BillBoard::GetColor(V3 p, float& alpha)

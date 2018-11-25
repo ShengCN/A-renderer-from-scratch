@@ -57,7 +57,7 @@ Scene::Scene(): isRenderAABB(false)
 	gui->uiw->position(u0, v0 + fb->h + 60);
 
 	InitDemo();
-	Render();
+	// RenderGPU();
 }
 
 void Scene::Render()
@@ -182,20 +182,11 @@ void Scene::UpdateSM()
 void Scene::RenderGPU()
 {
 	// Global OpenGL settings
-	// Cubemap
-	if(FrameBuffer::textures.find(GlobalVariables::Instance()->cubemapFiles[0]) == FrameBuffer::textures.end())
-	{
-		// gpufb->LoadCubemapGPU(GlobalVariables::Instance()->cubemapFiles);
-	}
-
 	// Clear the framebuffer
 	glEnable(GL_DEPTH_TEST | GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-	ppc->SetIntrinsicsHW();
-	ppc->SetExtrinsicsHW();
 
 	// Cube map
 	auto cubemapFile = GlobalVariables::Instance()->cubemapFiles;
@@ -206,10 +197,9 @@ void Scene::RenderGPU()
 
 	// Render geometry
 	BeginCountingTime();
-	for (auto t : meshes)
-	{
-		t->RenderHW(gpufb);
-	}
+	for (auto t : meshes){	t->RenderHW(ppc, gpufb); }
+	for (auto r : reflectors) { r->RenderHW(ppc, gpufb); }
+
 	PrintTime("GPU render ", gpufb);
 }
 
@@ -392,6 +382,62 @@ void Scene::RenderBB(PPC* currPPC, FrameBuffer* currFB, shared_ptr<TM> reflector
 		reflector->RenderFill(currPPC, currFB);
 		currFB->redraw();
 	}
+}
+
+void Scene::UpdateBBsGPU()
+{
+	for (auto r : reflectors)
+	{
+		auto tmId = r->id;
+
+		// Pre-compute some shared variables
+		auto rCenter = r->GetCenter();
+		auto rSize = r->ComputeAABB().GetDiagnoalLength();
+
+		// Update all bb
+		r->reflectorBB.clear();
+		r->reflectorBB.reserve(reflectors.size() - 1);
+
+		// for each other object
+		for (auto otherTM : reflectors)
+		{
+			if (otherTM->id == tmId)
+				continue;
+
+			// prepare bb, currPPC, currFB
+			auto otherTmCenter = otherTM->GetCenter();
+			shared_ptr<BillBoard> bb = make_shared<BillBoard>();
+			V3 n = (rCenter - otherTmCenter).UnitVector();
+
+			// Assump up is y axis
+			bb->SetBillboard(rCenter, n, V3(0.0f, 1.0f, 0.0f), rSize);
+
+			int w = GlobalVariables::Instance()->resoW;
+			int h = GlobalVariables::Instance()->resoH;
+			float fovf = 55.0f;
+			shared_ptr<PPC> ppc = make_shared<PPC>(w, h, fovf);
+			shared_ptr<FrameBuffer> bbFB = make_shared<FrameBuffer>(0, 0, w, h);
+			ppc->PositionAndOrient(rCenter, otherTmCenter, V3(0.0f, 1.0f, 0.0f));
+
+			// render it into the currFB
+			RenderBBGPU(ppc.get(), bbFB.get(), otherTM);
+
+			// Save the result 
+			bb->fbTexture = bbFB;
+			bb->mesh->PositionAndSize(otherTmCenter, rSize);
+
+			// commit the new billboard for the reflector
+			r->reflectorBB.push_back(bb);
+		}
+	}
+}
+
+void Scene::RenderBBGPU(PPC* curPPC, FrameBuffer* curFB, shared_ptr<TM> reflector)
+{
+	// todo
+	curFB->ClearBGRZ(0x00999999, 0.0f);
+	reflector->RenderFill(curPPC, curFB);
+	curFB->redraw();
 }
 
 V3 Scene::GetSceneCenter()
@@ -772,30 +818,29 @@ void Scene::InitDemo()
 	bb->PositionAndSize(tmC + V3(0.0f,0.0f,-1.0f) * tmSize, tmSize);
 	cubemap->PositionAndSize(V3(0.0f), tmSize * 10.0);
 
-	meshes.push_back(teapot);
 	meshes.push_back(cubemap);
-	reflectors.push_back(bb);
+	reflectors.push_back(teapot);
 
 	// Light
 	ka = 0.5f;
 	mf = 0.0f;
 	int w = 640, h = 480;
-	V3 LightC = meshes[0]->GetCenter() + V3(0.0f, 50.0f, 50.0f);
+	V3 LightC = reflectors[0]->GetCenter() + V3(0.0f, 50.0f, 50.0f);
 	shared_ptr<PPC> l0ppc = make_shared<PPC>(w, h, 55.0f);
-	l0ppc->PositionAndOrient(LightC, meshes[0]->GetCenter(), V3(0.0f, 1.0f, 0.0f));
+	l0ppc->PositionAndOrient(LightC, reflectors[0]->GetCenter(), V3(0.0f, 1.0f, 0.0f));
 	lightPPCs.push_back(l0ppc);
 
 	// PPC setting
-	ppc->PositionAndOrient(V3(0.0f, 0.0f, -5.0f), meshes[0]->GetCenter(), V3(0.0f, 1.0f, 0.0f));
+	ppc->PositionAndOrient(V3(0.0f, 0.0f, -5.0f), reflectors[0]->GetCenter(), V3(0.0f, 1.0f, 0.0f));
 }
 
 void Scene::Demonstration()
 {
 	{
-		ReloadCG();
+		// ReloadCG();
 		PPC ppc0 = *ppc, ppc1 = *ppc;
 		ppc1.C = ppc1.C + V3(30.0f, 60.0f, 0.0f);
-		ppc1.PositionAndOrient(ppc1.C, meshes[0]->GetCenter(), V3(0.0f, 1.0f, 0.0f));
+		ppc1.PositionAndOrient(ppc1.C, reflectors[0]->GetCenter(), V3(0.0f, 1.0f, 0.0f));
 		ppc1 = *ppc;
 		int framesN = 1;
 		for(int i = 0; i < framesN; ++i)

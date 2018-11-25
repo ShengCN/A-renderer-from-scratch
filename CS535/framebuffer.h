@@ -67,6 +67,7 @@ public:
 	void DrawTexture(const std::string texFile, int LoD = 0);
 	void DrawCubeMap(PPC* ppc, CubeMap *cubemap);
 
+	// DEBUG PPC
 	void DrawPPC(PPC* wPPC, PPC* tPPC, float vf);	// visualize target PPC using wPPC
 	void VisualizeCurrView(PPC *ppc0, float currf, PPC *ppc1, FrameBuffer *fb1);
 	void VisualizeCurrView3D(PPC *ppc0, PPC *ppc1, FrameBuffer *fb1); 
@@ -83,6 +84,7 @@ public:
 	void SetupGPU();
 	void SaveGPU2CPU() { glReadPixels(0, 0, w, h, GL_RGBA, GL_UNSIGNED_BYTE, pix); };
 	void SaveGPUAsTiff(const string saveFile);
+	GLuint SaveCPU2GPUtexture();
 
 private:
 	void Set(int u, int v, int color);

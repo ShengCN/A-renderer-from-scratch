@@ -116,7 +116,7 @@ bool ShaderOneInterface::PerSessionInit(CGInterface* cgi, const std::string shad
 	return true;
 }
 
-void ShaderOneInterface::PerFrameInit(int hasST, int isCubemap, const std::string tex0File)
+void ShaderOneInterface::PerFrameInit(int hasST, int isCubemap, const std::string tex0File, TM &curTM)
 {
 	//set parameters
 	if(isCubemap)
@@ -149,13 +149,10 @@ void ShaderOneInterface::PerFrameInit(int hasST, int isCubemap, const std::strin
 	cgSetParameter1i(fragmentIsCubemap, isCubemap);
 	
 	// BB matrix, dirty way to do it
-	auto bb = GlobalVariables::Instance()->curScene->reflectors[0];
-
-	M33 bbinfo;
-	bbinfo[0] = bb->verts[0];	// left top
-	bbinfo[1] = bb->verts[1];	// left bot
-	bbinfo[2] = bb->verts[3];	// right top
-	cgSetMatrixParameterfr(fragmentBB, reinterpret_cast<float*>(&bbinfo));
+	// auto bb = curTM.reflectorBB[0];
+	//
+	// M33 bbinfo = bb->GetCorners();
+	// cgSetMatrixParameterfr(fragmentBB, reinterpret_cast<float*>(&bbinfo));
 
 	if(hasST)
 	{

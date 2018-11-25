@@ -44,7 +44,7 @@ TRIANGLE void GeometryMain(AttribArray<VertexDataOutput> tverts,
 
 }
 
-bool IntersectBB(float3x3 bb, inout float3 ro, inout float3 rd, inout float2 uv)
+bool IntersectBB(float3x3 bb, float3 ro, float3 rd, out float2 uv)
 {
 	// ray bb intersection
 	float3 p0 = bb[0];
@@ -63,7 +63,7 @@ bool IntersectBB(float3x3 bb, inout float3 ro, inout float3 rd, inout float2 uv)
 		return false;
 
 	uv[0] = u;
-	uv[1] = 1.0 - v;
+	uv[1] = 1.0 - v;	// OpenGL uv 
 	return true;
 }
 

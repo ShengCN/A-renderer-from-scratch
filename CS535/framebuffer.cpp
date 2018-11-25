@@ -1079,3 +1079,27 @@ void FrameBuffer::SaveGPUAsTiff(const string saveFile)
 	SaveGPU2CPU();
 	SaveAsTiff(saveFile.c_str());
 }
+
+GLuint FrameBuffer::SaveCPU2GPUtexture()
+{
+	GLuint texID = 0;
+	glEnable(GL_TEXTURE_2D);
+	glGenTextures(1, &texID);
+	glBindTexture(GL_TEXTURE_2D, texID);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, pix);
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	// Check errors
+	GLenum error = glGetError();
+	if (error != GL_NO_ERROR)
+	{
+		cerr << "Error saving texture from gpu \n";
+		return -1;
+	}
+
+	return texID;
+}

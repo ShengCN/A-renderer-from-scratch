@@ -49,7 +49,9 @@ public:
 	// https://www.cs.purdue.edu/cgvlab/papers/popescu/popescuGemEG06.pdf
 	// Render all other tm except id mesh to id's billboards
 	void UpdateBBs();
-	void RenderBB(PPC *ppc, FrameBuffer *fb, shared_ptr<TM> reflectors);
+	void RenderBB(PPC *curPPC, FrameBuffer *curFB, shared_ptr<TM> reflectors);
+	void UpdateBBsGPU();
+	void RenderBBGPU(PPC *curPPC, FrameBuffer *curFB, shared_ptr<TM> reflector);
 
 	V3 GetSceneCenter();
 	~Scene();

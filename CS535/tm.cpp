@@ -618,7 +618,7 @@ void TM::RenderBB(PPC* ppc, FrameBuffer* fb, FrameBuffer* bbTexture)
 	}
 }
 
-void TM::RenderHW(FrameBuffer *curfb)
+void TM::RenderHW(PPC *ppc, FrameBuffer *curfb)
 {
 	if (cgi == nullptr && soi == nullptr)
 	{
@@ -632,9 +632,12 @@ void TM::RenderHW(FrameBuffer *curfb)
 			gv->curScene->gpufb->LoadTextureGPU(tex);
 	}
 
+	ppc->SetIntrinsicsHW();
+	ppc->SetExtrinsicsHW();
+
 	// per frame initialization
 	cgi->EnableProfiles();
-	soi->PerFrameInit(hasST, isCubemap, tex);
+	soi->PerFrameInit(hasST, isCubemap, tex, *this);
 	soi->BindPrograms();
 
 	glEnableClientState(GL_VERTEX_ARRAY);
@@ -651,13 +654,11 @@ void TM::RenderHW(FrameBuffer *curfb)
 		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 		glTexCoordPointer(2, GL_FLOAT, 0, &vertST[0]);
 	}
-	// glBindTexture(GL_TEXTURE_CUBE_MAP, FrameBuffer::gpuTexID.at(GlobalVariables::Instance()->cubemapFiles[0]));
 
 	// cubemap
-	// glBindTexture(GL_TEXTURE_CUBE_MAP, FrameBuffer::gpuTexID.at(GlobalVariables::Instance()->cubemapFiles[0]));
-
 	glDrawElements(GL_TRIANGLES, 3 * trisN, GL_UNSIGNED_INT, &tris[0]);
-	
+	curfb->SaveGPU2CPU();
+
 	glDisableClientState(GL_VERTEX_ARRAY);
 	glDisableClientState(GL_COLOR_ARRAY);
 	glDisableClientState(GL_NORMAL_ARRAY);
@@ -679,7 +680,7 @@ void TM::RenderHWWireframe()
 
 	// per frame initialization
 	cgi->EnableProfiles();
-	soi->PerFrameInit(hasST, isCubemap, tex);
+	soi->PerFrameInit(hasST, isCubemap, tex, *this);
 	soi->BindPrograms();
 
 	glEnableClientState(GL_VERTEX_ARRAY);

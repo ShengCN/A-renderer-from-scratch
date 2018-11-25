@@ -59,7 +59,7 @@ public:
 	void RenderFillZ(PPC *ppc, FrameBuffer *fb); // only draw z buffer
 	void RenderAABB(PPC *ppc, FrameBuffer *fb);
 	void RenderBB(PPC *ppc, FrameBuffer *fb, FrameBuffer *bbTexture);
-	void RenderHW(FrameBuffer *curfb);
+	void RenderHW(PPC *ppc, FrameBuffer *curfb);
 	void RenderHWWireframe();
 
 	// Transformation
