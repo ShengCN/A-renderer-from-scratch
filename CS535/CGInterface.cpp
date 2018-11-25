@@ -2,6 +2,7 @@
 
 #include "CGInterface.h"
 #include "v3.h"
+#include "m33.h"
 #include "scene.h"
 
 #include <iostream>
@@ -146,6 +147,13 @@ void ShaderOneInterface::PerFrameInit(int hasST, int isCubemap, const std::strin
 	cgSetParameter3fv(fragmentPPCC, (float*)&(curScene->ppc->C));
 	cgSetParameter1i(fragmentIsST, hasST);
 	cgSetParameter1i(fragmentIsCubemap, isCubemap);
+	
+	// BB matrix
+	M33 bbinfo;
+	bbinfo[0] = 
+	bbinfo[1] =
+	bbinfo[2] =
+	cgSetMatrixParameterfr(fragmentBB, );
 
 	if(hasST)
 	{

@@ -194,6 +194,9 @@ void Scene::RenderGPU()
 	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+	ppc->SetIntrinsicsHW();
+	ppc->SetExtrinsicsHW();
+
 	// Cube map
 	auto cubemapFile = GlobalVariables::Instance()->cubemapFiles;
 	if (FrameBuffer::gpuTexID.find(cubemapFile[0]) == FrameBuffer::gpuTexID.end())
@@ -205,10 +208,12 @@ void Scene::RenderGPU()
 	BeginCountingTime();
 	for (auto t : meshes)
 	{
-		ppc->SetIntrinsicsHW();
-		ppc->SetExtrinsicsHW();
-
 		t->RenderHW(gpufb);
+	}
+
+	for (auto r : reflectors)
+	{
+		r->RenderHW(gpufb);
 	}
 	PrintTime("GPU render ", gpufb);
 }
@@ -229,6 +234,7 @@ void Scene::RenderGPUWireframe()
 	{
 		t->RenderHWWireframe();
 	}
+
 	PrintTime("GPU render ", gpufb);
 }
 
