@@ -232,6 +232,25 @@ void TM::Allocate()
 	tris.resize(3 * trisN); // each triangle has three topological indexs
 }
 
+void TM::SetColor(V3 color)
+{
+	for(auto &c:colors)
+	{
+		c = color;
+	}
+}
+
+// Only for Box
+tuple<V3, V3, V3, V3> TM::GetCornerAndAxis()
+{
+	V3 corner, x, y, z;
+	corner = verts[6];				// back, left, bot in unit box
+	x = verts[2] - verts[6];
+	y = verts[5] - verts[6];
+	z = verts[7] - verts[6];
+	return tuple<V3, V3, V3, V3>(corner, x, y, z);
+}
+
 void TM::RenderPoints(PPC* ppc, FrameBuffer* fb)
 {
 	for (int vi = 0; vi < vertsN; ++vi)
@@ -637,7 +656,23 @@ void TM::RenderHW(PPC *ppc, FrameBuffer *curfb)
 
 	// per frame initialization
 	cgi->EnableProfiles();
-	soi->PerFrameInit(hasST, isCubemap, tex, *this);
+	uniformVariables uniforms;
+	uniforms.hasST = hasST;
+	uniforms.isCubemap = isCubemap;
+	uniforms.isBox = isBox;
+	uniforms.tex0File = tex;
+	vector<shared_ptr<TM>> otherTMs;
+	for(auto t:GlobalVariables::Instance()->curScene->meshes)
+	{
+		if(t->id == id || t->isBox == 0)
+			continue;
+		otherTMs.push_back(t);
+	}
+	uniforms.box0 = otherTMs[0];
+	uniforms.box1 = otherTMs[1];
+	if (isGround)
+		uniforms.box2 = otherTMs[2];
+	soi->PerFrameInit(uniforms);
 	soi->BindPrograms();
 
 	glEnableClientState(GL_VERTEX_ARRAY);
@@ -657,7 +692,8 @@ void TM::RenderHW(PPC *ppc, FrameBuffer *curfb)
 
 	// cubemap
 	glDrawElements(GL_TRIANGLES, 3 * trisN, GL_UNSIGNED_INT, &tris[0]);
-	curfb->SaveGPU2CPU();
+	if(GlobalVariables::Instance()->isRecording)
+		curfb->SaveGPU2CPU();
 
 	glDisableClientState(GL_VERTEX_ARRAY);
 	glDisableClientState(GL_COLOR_ARRAY);
@@ -668,39 +704,11 @@ void TM::RenderHW(PPC *ppc, FrameBuffer *curfb)
 	cgi->DisableProfiles();
 }
 
-void TM::RenderHWWireframe()
+void TM::RenderHWWireframe(PPC *ppc, FrameBuffer *curfb)
 {
-	if (cgi == nullptr)
-	{
-		cgi = make_shared<CGInterface>();
-		cgi->PerSessionInit();
-		soi = make_shared<ShaderOneInterface>();
-		soi->PerSessionInit(cgi.get(), shaderOneFile);
-	}
-
-	// per frame initialization
-	cgi->EnableProfiles();
-	soi->PerFrameInit(hasST, isCubemap, tex, *this);
-	soi->BindPrograms();
-
-	glEnableClientState(GL_VERTEX_ARRAY);
-	glEnableClientState(GL_COLOR_ARRAY);
-	glEnableClientState(GL_NORMAL_ARRAY);
-
-	glVertexPointer(3, GL_FLOAT, 0, &verts[0]);
-	glColorPointer(3, GL_FLOAT, 0, &colors[0]);
-	glNormalPointer(GL_FLOAT, 0, &normals[0]);
-
 	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-	glDrawElements(GL_TRIANGLES, 3 * trisN, GL_UNSIGNED_INT, &tris[0]);
+	RenderHW(ppc, curfb);
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
-	glDisableClientState(GL_COLOR_ARRAY);
-	glDisableClientState(GL_VERTEX_ARRAY);
-	glDisableClientState(GL_NORMAL_ARRAY);
-
-	soi->PerFrameDisable();
-	cgi->DisableProfiles();
 }
 
 void TM::RotateAboutArbitraryAxis(V3 O, V3 a, float angled)

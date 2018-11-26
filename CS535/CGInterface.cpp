@@ -111,15 +111,17 @@ bool ShaderOneInterface::PerSessionInit(CGInterface* cgi, const std::string shad
 	fragmentTex0 = cgGetNamedParameter(fragmentProgram, "tex");
 	fragmentCubemapTex = cgGetNamedParameter(fragmentProgram, "env");
 	fragmentIsCubemap = cgGetNamedParameter(fragmentProgram, "isCubemap");
-	fragmentBB = cgGetNamedParameter(fragmentProgram, "bbpos");
+	fragmentBox0 = cgGetNamedParameter(fragmentProgram, "box0");
+	fragmentBox1 = cgGetNamedParameter(fragmentProgram, "box1");
+	fragmentBox2 = cgGetNamedParameter(fragmentProgram, "box2");
 
 	return true;
 }
 
-void ShaderOneInterface::PerFrameInit(int hasST, int isCubemap, const std::string tex0File, TM &curTM)
+void ShaderOneInterface::PerFrameInit(uniformVariables &uniforms)
 {
 	//set parameters
-	if(isCubemap)
+	if(uniforms.isCubemap)
 	{
 		cgGLSetStateMatrixParameter(vertexModelViewProj,
 			CG_GL_MODELVIEW_PROJECTION_MATRIX, CG_GL_MATRIX_IDENTITY);
@@ -145,18 +147,35 @@ void ShaderOneInterface::PerFrameInit(int hasST, int isCubemap, const std::strin
 	auto curScene = GlobalVariables::Instance()->curScene;
 	cgSetParameter3fv(fragmentLightPos, reinterpret_cast<float*>(&curScene->lightPPCs[0]->C));
 	cgSetParameter3fv(fragmentPPCC, reinterpret_cast<float*>(&curScene->ppc->C));
-	cgSetParameter1i(fragmentIsST, hasST);
-	cgSetParameter1i(fragmentIsCubemap, isCubemap);
-	
-	// BB matrix, dirty way to do it
-	// auto bb = curTM.reflectorBB[0];
-	//
-	// M33 bbinfo = bb->GetCorners();
-	// cgSetMatrixParameterfr(fragmentBB, reinterpret_cast<float*>(&bbinfo));
+	cgSetParameter1i(fragmentIsST, uniforms.hasST);
+	cgSetParameter1i(fragmentIsCubemap, uniforms.isCubemap);
 
-	if(hasST)
+	auto[corner0, x0, y0, z0] = uniforms.box0->GetCornerAndAxis();
+	auto[corner1, x1, y1, z1] = uniforms.box1->GetCornerAndAxis();
+	vector<float> box0Info{ corner0.x(), corner0.y(), corner0.z(), 0.0f,
+							x0.x(), x0.y(), x0.z(),0.0f,
+							y0.x(), y0.y(), y0.z(),0.0f,
+							z0.x(), z0.y(), z0.z(),0.0f };
+	vector<float> box1Info{ corner1.x(), corner1.y(), corner1.z(), 0.0f,
+						x1.x(), x1.y(), x1.z(),0.0f,
+						y1.x(), y1.y(), y1.z(),0.0f,
+						z1.x(), z1.y(), z1.z(),0.0f };
+
+	cgSetMatrixParameterfr(fragmentBox0, &box0Info[0]);
+	cgSetMatrixParameterfr(fragmentBox1, &box1Info[0]);
+	if(uniforms.box2 != nullptr)
 	{
-		cgGLSetTextureParameter(fragmentTex0, FrameBuffer::gpuTexID.at(tex0File));
+		auto[corner2, x2, y2, z2] = uniforms.box2->GetCornerAndAxis();
+		vector<float> box2Info{ corner2.x(), corner2.y(), corner2.z(), 0.0f,
+							x2.x(), x2.y(), x2.z(), 0.0f,
+							y2.x(), y2.y(), y2.z(), 0.0f,
+							z2.x(), z2.y(), z2.z(), 0.0f };
+		cgSetMatrixParameterfr(fragmentBox2, reinterpret_cast<float*>(&box2Info));
+	}
+
+	if(uniforms.hasST)
+	{
+		cgGLSetTextureParameter(fragmentTex0, FrameBuffer::gpuTexID.at(uniforms.tex0File));
 		cgGLEnableTextureParameter(fragmentTex0);
 	}
 

@@ -3,11 +3,22 @@
 #include <Cg/cgGL.h>
 #include <Cg/cg.h>
 #include <string>
-
-// two classes defining the interface between the CPU and GPU
+#include <vector>
 
 class TM;
 
+struct uniformVariables
+{
+	int hasST;
+	int isCubemap;
+	int isBox;
+	std::string tex0File;
+	std::shared_ptr<TM> box0;		// hard coded here, other boxes
+	std::shared_ptr<TM> box1;
+	std::shared_ptr<TM> box2;		// if ground, there are three boxes
+};
+
+// two classes defining the interface between the CPU and GPU
 // models part of the CPU-GPU interface that is independent of specific shaders
 class CGInterface
 {
@@ -44,15 +55,19 @@ class ShaderOneInterface
 	CGparameter fragmentCubemapTex;
 	CGparameter fragmentIsCubemap;
 
-	// Render reflection using bb
-	CGparameter fragmentBB;
+	// Hard coded
+	// The other two boxes
+	CGparameter fragmentBox0;
+	CGparameter fragmentBox1;
+	CGparameter fragmentBox2;
+
 public:
 	ShaderOneInterface()
 	{
 	};
 	bool PerSessionInit(CGInterface* cgi, const std::string shaderOneFile); // per session initialization
 	void BindPrograms(); // enable geometryProgram, vertexProgram, fragmentProgram
-	void PerFrameInit(int hasST, int isCubemap, const std::string tex0File, TM &curTM); // set uniform parameter values, etc.
+	void PerFrameInit(uniformVariables &uniforms); // set uniform parameter values, etc.
 
 	void PerFrameDisable(); // disable programs
 };

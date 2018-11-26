@@ -28,6 +28,8 @@ public:
 	vector<shared_ptr<BillBoard>> reflectorBB;	// all the possible reflections
 	int hasST;
 	int isCubemap;
+	int isBox;
+	int isGround;
 
 	// Shadder files
 	shared_ptr<CGInterface> cgi;
@@ -40,7 +42,9 @@ public:
 	bool isShowObjColor;
 	bool isRefraction;
 
-	TM() :vertsN(0), trisN(0), pixelSz(0), isEnvMapping(false), isShowObjColor(true),id(tmIDCounter++), isRefraction(false), hasST(0), isCubemap(0) {};
+	TM() :vertsN(0), trisN(0), pixelSz(0), isEnvMapping(false), 
+		isShowObjColor(true),id(tmIDCounter++), isRefraction(false),
+		hasST(0), isCubemap(0), isGround(0) {};
 	void SetRectangle(V3 O, float rw, float rh);
 	void SetTriangle(PointProperty p0, PointProperty p1, PointProperty p2);
 	void SetQuad(PointProperty p0, PointProperty p1, PointProperty p2, PointProperty p3);
@@ -51,6 +55,8 @@ public:
 	void Allocate();
 	void SetAllPointsColor(V3 color);	// set color to verts
 	void SetShaderOne(const string shaderFile) { shaderOneFile = shaderFile; };
+	void SetColor(V3 color);
+	tuple<V3, V3, V3, V3> GetCornerAndAxis();
 
 	// Rasterization
 	void RenderPoints(PPC *ppc, FrameBuffer *fb);
@@ -60,7 +66,7 @@ public:
 	void RenderAABB(PPC *ppc, FrameBuffer *fb);
 	void RenderBB(PPC *ppc, FrameBuffer *fb, FrameBuffer *bbTexture);
 	void RenderHW(PPC *ppc, FrameBuffer *curfb);
-	void RenderHWWireframe();
+	void RenderHWWireframe(PPC *ppc, FrameBuffer *curfb);
 
 	// Transformation
 	void RotateAboutArbitraryAxis(V3 O, V3 a, float angled);

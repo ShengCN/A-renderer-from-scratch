@@ -22,7 +22,7 @@ GlobalVariables::GlobalVariables()
 	isRayTracing = false;
 	isDBGRaytracing = true;
 	isUseSBB = true;
-	isPrintFPS = false;
+	isPrintFPS = true;
 
 	tmAnimationID = 0;
 	dbgParameter = 10.0f;

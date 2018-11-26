@@ -197,9 +197,12 @@ void Scene::RenderGPU()
 
 	// Render geometry
 	BeginCountingTime();
-	for (auto t : meshes){	t->RenderHW(ppc, gpufb); }
-	for (auto r : reflectors) { r->RenderHW(ppc, gpufb); }
-
+	for (auto t : meshes)
+	{
+		// BeginCountingTime();
+		t->RenderHW(ppc, gpufb);
+		// PrintTime(to_string(t->id) + " rendering time: ");
+	}
 	PrintTime("GPU render ", gpufb);
 }
 
@@ -217,7 +220,7 @@ void Scene::RenderGPUWireframe()
 	BeginCountingTime();
 	for (auto t : meshes)
 	{
-		t->RenderHWWireframe();
+		t->RenderHWWireframe(ppc, gpufb);
 	}
 
 	PrintTime("GPU render ", gpufb);
@@ -795,52 +798,72 @@ void Scene::PrintTime(const string fbname, FrameBuffer* curfb)
 
 void Scene::InitDemo()
 {
-	shared_ptr<TM> teapot = make_shared<TM>();
-	shared_ptr<TM> bb = make_shared<TM>();
 	shared_ptr<TM> cubemap = make_shared<TM>();
-	teapot->LoadModelBin("geometry/teapot57K.bin");
-	teapot->SetShaderOne("CG/shaderOne.cg");
-	teapot->hasST = 0;
-
-	bb->SetBillboard(V3(0.0f), V3(0.0f, 0.0f, 1.0f), V3(0.0f, 1.0f, 0.0f), 5.0f);
-	bb->SetShaderOne("CG/shaderOne.cg");
-	bb->hasST = 1;
-	bb->tex = "images/jojo.tiff";
+	shared_ptr<TM> box0 = make_shared<TM>();
+	shared_ptr<TM> box1 = make_shared<TM>();
+	shared_ptr<TM> box2 = make_shared<TM>();
+	shared_ptr<TM> ground = make_shared<TM>();
 
 	cubemap->SetUnitBox();
 	cubemap->SetShaderOne("CG/shaderOne.cg");
 	cubemap->hasST = 0;
 	cubemap->isCubemap = 1;
 
-	V3 tmC = ppc->C + ppc->GetVD() * 100.0f;
-	float tmSize = 100.0f;
-	teapot->PositionAndSize(tmC, tmSize);
-	bb->PositionAndSize(tmC + V3(0.0f,0.0f,-1.0f) * tmSize, tmSize);
-	cubemap->PositionAndSize(V3(0.0f), tmSize * 10.0);
+	box0->SetUnitBox();
+	box1->SetUnitBox();
+	box2->SetUnitBox();
+	box0->SetShaderOne("CG/shaderOne.cg");
+	box1->SetShaderOne("CG/shaderOne.cg");
+	box2->SetShaderOne("CG/shaderOne.cg");
+	box0->isBox = 1;
+	box1->isBox = 1;
+	box2->isBox = 1;
 
+	ground->SetQuad(V3(0.0f), V3(0.0f, 1.0f, 0.0f), V3(0.0f,0.0f,-1.0f), 1.0f);
+	ground->SetShaderOne("CG/groundShaderOne.cg");
+	ground->isGround = 1;
+
+	V3 tmC = ppc->C + ppc->GetVD() * 200.0f;
+	float tmSize = 100.0f;
+	float boxFract = 0.5f;
+	cubemap->PositionAndSize(V3(0.0f), tmSize * 15.0f);
+	box0->PositionAndSize(tmC, tmSize * boxFract);
+	box1->PositionAndSize(tmC + V3(-1.0f,0.0f,-1.0f) * tmSize * boxFract * 0.85f, tmSize* boxFract);
+	box2->PositionAndSize(tmC + V3(1.0f, 0.0f, -1.0f) * tmSize* boxFract * 0.85f, tmSize* boxFract);
+	ground->PositionAndSize(tmC + V3(0.0f,-1.0f,0.0f) * tmSize* boxFract * 0.3f, tmSize * 5.0f);
+
+	box0->SetColor(V3(1.0f, 0.0f, 0.0f));
+	box1->SetColor(V3(0.0f, 1.0f, 0.0f));
+	box2->SetColor(V3(0.0f, 0.0f, 1.0f));
+	ground->SetColor(V3(0.75f));
+
+	meshes.push_back(box0);
+	meshes.push_back(box1);
+	meshes.push_back(box2);
+	meshes.push_back(ground);
 	meshes.push_back(cubemap);
-	reflectors.push_back(teapot);
 
 	// Light
 	ka = 0.5f;
 	mf = 0.0f;
 	int w = 640, h = 480;
-	V3 LightC = reflectors[0]->GetCenter() + V3(0.0f, 50.0f, 50.0f);
+	V3 LightC = meshes[0]->GetCenter() + V3(0.0f, 50.0f, 50.0f);
 	shared_ptr<PPC> l0ppc = make_shared<PPC>(w, h, 55.0f);
-	l0ppc->PositionAndOrient(LightC, reflectors[0]->GetCenter(), V3(0.0f, 1.0f, 0.0f));
+	l0ppc->PositionAndOrient(LightC, meshes[0]->GetCenter(), V3(0.0f, 1.0f, 0.0f));
 	lightPPCs.push_back(l0ppc);
 
 	// PPC setting
-	ppc->PositionAndOrient(V3(0.0f, 0.0f, -5.0f), reflectors[0]->GetCenter(), V3(0.0f, 1.0f, 0.0f));
+	ppc->PositionAndOrient(V3(0.0f, tmSize, -5.0f), meshes[0]->GetCenter(), V3(0.0f, 1.0f, 0.0f));
+	ppc->RevolveH(meshes[0]->GetCenter(), 90.0f);
 }
 
 void Scene::Demonstration()
 {
 	{
-		// ReloadCG();
+		ReloadCG();
 		PPC ppc0 = *ppc, ppc1 = *ppc;
 		ppc1.C = ppc1.C + V3(30.0f, 60.0f, 0.0f);
-		ppc1.PositionAndOrient(ppc1.C, reflectors[0]->GetCenter(), V3(0.0f, 1.0f, 0.0f));
+		ppc1.PositionAndOrient(ppc1.C, meshes[0]->GetCenter(), V3(0.0f, 1.0f, 0.0f));
 		ppc1 = *ppc;
 		int framesN = 1;
 		for(int i = 0; i < framesN; ++i)
