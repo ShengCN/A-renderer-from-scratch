@@ -55,5 +55,6 @@ GlobalVariables::GlobalVariables()
 	isCubemapMipmap = false;
 
 	isRecording = false;
+	recordName = "bug";
 	isOpenMP = true;
 }

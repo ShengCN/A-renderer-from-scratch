@@ -760,18 +760,18 @@ void TM::RenderHW(PPC *ppc, FrameBuffer *curfb)
 	uniforms.hasST = hasST;
 	uniforms.isCubemap = isCubemap;
 	uniforms.isBox = isBox;
+	uniforms.isGround = isGround;
 	uniforms.tex0File = tex;
 	vector<shared_ptr<TM>> otherTMs;
 	for(auto t:GlobalVariables::Instance()->curScene->meshes)
 	{
-		if(t->id == id || t->isBox == 0)
+		if(t->isBox == 0)
 			continue;
 		otherTMs.push_back(t);
 	}
 	uniforms.box0 = otherTMs[0];
 	uniforms.box1 = otherTMs[1];
-	if (isGround)
-		uniforms.box2 = otherTMs[2];
+	uniforms.box2 = otherTMs[2];
 	soi->PerFrameInit(uniforms);
 	soi->BindPrograms();
 

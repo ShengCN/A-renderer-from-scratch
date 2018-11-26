@@ -826,7 +826,7 @@ void Scene::InitDemo()
 	box2->tex = "images/top.tiff";
 
 	ground->SetQuad(V3(0.0f), V3(0.0f, 1.0f, 0.0f), V3(0.0f,0.0f,-1.0f), 1.0f);
-	ground->SetShaderOne("CG/groundShaderOne.cg");
+	ground->SetShaderOne("CG/shaderOne.cg");
 	ground->isGround = 1;
 
 	V3 tmC = ppc->C + ppc->GetVD() * 150.0f;
@@ -913,7 +913,7 @@ void Scene::Demonstration()
 			if(GlobalVariables::Instance()->isRecording)
 			{
 				char buffer[50];
-				sprintf_s(buffer,"images/Recording/BB-%03d.tiff", i);
+				sprintf_s(buffer,"images/Recording/%s-%03d.tiff", GlobalVariables::Instance()->recordName.c_str(), i);
 				gpufb->SaveGPUAsTiff(buffer);
 			}
 		}

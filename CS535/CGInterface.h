@@ -12,6 +12,7 @@ struct uniformVariables
 	int hasST;
 	int isCubemap;
 	int isBox;
+	int isGround;
 	std::string tex0File;
 	std::shared_ptr<TM> box0;		// hard coded here, other boxes
 	std::shared_ptr<TM> box1;
@@ -60,8 +61,9 @@ class ShaderOneInterface
 	CGparameter fragmentBox0;
 	CGparameter fragmentBox1;
 	CGparameter fragmentBox2;
+	CGparameter fragmentIsGround;
+	CGparameter fragmetGroundHeight;
 	CGparameter fragmentTopTex;
-	CGparameter fragmentSideTex;
 
 public:
 	ShaderOneInterface()

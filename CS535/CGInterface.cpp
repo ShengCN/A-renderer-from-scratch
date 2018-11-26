@@ -111,11 +111,12 @@ bool ShaderOneInterface::PerSessionInit(CGInterface* cgi, const std::string shad
 	fragmentTex0 = cgGetNamedParameter(fragmentProgram, "tex");
 	fragmentCubemapTex = cgGetNamedParameter(fragmentProgram, "env");
 	fragmentIsCubemap = cgGetNamedParameter(fragmentProgram, "isCubemap");
+	fragmentIsGround = cgGetNamedParameter(fragmentProgram, "isGround");
 	fragmentBox0 = cgGetNamedParameter(fragmentProgram, "box0");
 	fragmentBox1 = cgGetNamedParameter(fragmentProgram, "box1");
 	fragmentBox2 = cgGetNamedParameter(fragmentProgram, "box2");
 	fragmentTopTex = cgGetNamedParameter(fragmentProgram, "topTex");
-	fragmentSideTex = cgGetNamedParameter(fragmentProgram, "sideTex");
+	fragmetGroundHeight = cgGetNamedParameter(fragmentProgram, "groundHeight");
 
 	return true;
 }
@@ -151,9 +152,12 @@ void ShaderOneInterface::PerFrameInit(uniformVariables &uniforms)
 	cgSetParameter3fv(fragmentPPCC, reinterpret_cast<float*>(&curScene->ppc->C));
 	cgSetParameter1i(fragmentIsST, uniforms.hasST);
 	cgSetParameter1i(fragmentIsCubemap, uniforms.isCubemap);
+	cgSetParameter1i(fragmentIsGround, uniforms.isGround);
 
 	auto[corner0, x0, y0, z0] = uniforms.box0->GetCornerAndAxis();
 	auto[corner1, x1, y1, z1] = uniforms.box1->GetCornerAndAxis();
+	auto[corner2, x2, y2, z2] = uniforms.box2->GetCornerAndAxis();
+
 	vector<float> box0Info{ corner0.x(), corner0.y(), corner0.z(), 0.0f,
 							x0.x(), x0.y(), x0.z(),0.0f,
 							y0.x(), y0.y(), y0.z(),0.0f,
@@ -162,18 +166,15 @@ void ShaderOneInterface::PerFrameInit(uniformVariables &uniforms)
 						x1.x(), x1.y(), x1.z(),0.0f,
 						y1.x(), y1.y(), y1.z(),0.0f,
 						z1.x(), z1.y(), z1.z(),0.0f };
+	vector<float> box2Info{ corner2.x(), corner2.y(), corner2.z(), 0.0f,
+							x2.x(), x2.y(), x2.z(), 0.0f,
+							y2.x(), y2.y(), y2.z(), 0.0f,
+							z2.x(), z2.y(), z2.z(), 0.0f };
 
 	cgSetMatrixParameterfr(fragmentBox0, &box0Info[0]);
 	cgSetMatrixParameterfr(fragmentBox1, &box1Info[0]);
-	if(uniforms.box2 != nullptr)
-	{
-		auto[corner2, x2, y2, z2] = uniforms.box2->GetCornerAndAxis();
-		vector<float> box2Info{ corner2.x(), corner2.y(), corner2.z(), 0.0f,
-								x2.x(), x2.y(), x2.z(), 0.0f,
-								y2.x(), y2.y(), y2.z(), 0.0f,
-								z2.x(), z2.y(), z2.z(), 0.0f };
-		cgSetMatrixParameterfr(fragmentBox2, &box2Info[0]);
-	}
+	cgSetMatrixParameterfr(fragmentBox2, &box2Info[0]);
+	cgSetParameter1f(fragmetGroundHeight, GlobalVariables::Instance()->curScene->meshes[3]->verts[0].y());	// hard coded ground plane
 
 	if(uniforms.hasST)
 	{
@@ -186,9 +187,6 @@ void ShaderOneInterface::PerFrameInit(uniformVariables &uniforms)
 
 	cgGLSetTextureParameter(fragmentTopTex, FrameBuffer::gpuTexID.at("images/top.tiff"));
 	cgGLEnableTextureParameter(fragmentTopTex);
-
-	cgGLSetTextureParameter(fragmentSideTex, FrameBuffer::gpuTexID.at("images/side.tiff"));
-	cgGLEnableTextureParameter(fragmentSideTex);
 }
 
 void ShaderOneInterface::PerFrameDisable()

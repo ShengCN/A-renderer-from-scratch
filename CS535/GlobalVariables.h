@@ -37,6 +37,7 @@ public:
 	bool isRefraction;
 	float refractRatio;
 	string checkerBoxTexName;
+	string recordName;
 	bool isShadow;
 	int tmAnimationID;
 	bool isDBGRaytracing;

@@ -116,14 +116,23 @@ sixFaces GetFaces(float4x4 box)
 	return boxFace;
 }
 
+// -----------------------
+// Global Variables:
+// Ground plane (float)
+// Box0, Box1, Box2 (float3)
+// -----------------------
+float groundPlaneH;
+float4x4 gb_box0, gb_box1, gb_box2;
+
+
+
 // Hard coded rectangle light
-float PointLightSoftShadow(float3 lightPos, float3 curPos, float4x4 box0, float4x4 box1, float4x4 box2)
+float PointLightSoftShadow(float3 lightPos, float3 curPos)
 {
 	sixFaces box0Faces, box1Faces, box2Faces;
-	box0Faces = GetFaces(box0);
-	box1Faces = GetFaces(box1);
-	box2Faces = GetFaces(box2);
-
+	box0Faces = GetFaces(gb_box0);
+	box1Faces = GetFaces(gb_box1);
+	box2Faces = GetFaces(gb_box2);
 	// light direction from light to curPos
 	float3 rd = curPos - lightPos;	
 	for(int i = 0; i < 6; ++i)
@@ -140,7 +149,7 @@ float PointLightSoftShadow(float3 lightPos, float3 curPos, float4x4 box0, float4
 	return 1.0f;
 }
 
-float RectLightSoftShadow(float3 lightPos, float3 curPos, float4x4 box0, float4x4 box1, float4x4 box2)
+float RectLightSoftShadow(float3 lightPos, float3 curPos)
 {
 	// Assumption: axis aligned with x and z axis
 	float3 dx = float3(1.0, 0.0, 0.0);
@@ -156,7 +165,7 @@ float RectLightSoftShadow(float3 lightPos, float3 curPos, float4x4 box0, float4x
 			// light position vector
 			float3 lpv = dx * r + dz * c;
 			float3 curLightPos = lightPos + lpv;
-			shadowEffect += PointLightSoftShadow(curLightPos, curPos, box0, box1, box2);
+			shadowEffect += PointLightSoftShadow(curLightPos, curPos);
 		}
 	}
 	return shadowEffect / ((float)samples * (float)samples);
@@ -168,11 +177,17 @@ PixelDataOutput FragmentMain(VertexDataOutput pdi,
   uniform float4x4 box0,	// The three boxes
   uniform float4x4 box1,
   uniform float4x4 box2,
+  uniform float groundHeight,	// hard coded 
   uniform int hasST,
   uniform int isCubemap,
   uniform sampler2D tex,
   uniform samplerCUBE env) {
 
+  // Pass in global variables
+  groundPlaneH = groundHeight;
+  gb_box0 = box0; 
+  gb_box1 = box1;
+  gb_box2 = box2;
 
   PixelDataOutput ret;
   
@@ -202,7 +217,7 @@ PixelDataOutput FragmentMain(VertexDataOutput pdi,
   }
 
   	float3 phongColor =  pc * (ka + (1.0f - ka) * kd + ks);
-	float shadowEffect = RectLightSoftShadow(light_position, pdi.vxyz, box0, box1, box2);
+	float shadowEffect = RectLightSoftShadow(light_position, pdi.vxyz);
 	phongColor = shadowEffect * phongColor;
   	ret.color = float4(clamp(phongColor ,0.0,1.0),alpha);	
 
