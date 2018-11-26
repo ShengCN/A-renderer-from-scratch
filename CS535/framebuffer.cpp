@@ -412,7 +412,6 @@ bool FrameBuffer::LoadTextureGPU(const std::string texFile)
 	TIFFClose(in);
 
 	GLuint texID = 0;
-	glEnable(GL_TEXTURE_2D);
 	glGenTextures(1, &texID);
 	glBindTexture(GL_TEXTURE_2D, texID);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);

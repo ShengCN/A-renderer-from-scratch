@@ -48,14 +48,14 @@ struct sixFaces{
 	float3x3 face[6];
 };
 
-bool IntersectBB(float3x3 bb, float3 ro, float3 rd, out float2 uv)
+bool IntersectBB(float3x3 bb, float3 ro, float3 rd, out float t,out float2 uv)
 {
 	// ray bb intersection
 	float3 p0 = bb[0];
 	float3 p1 = bb[1];
 	float3 p2 = bb[2];
 	float3 n = normalize(cross(p1-p0,p2-p0)); 
-	float t = -dot(ro - p0,n)/dot(rd,n);
+	t = -dot(ro - p0,n)/dot(rd,n);
 	float3 p = ro + t * rd - p0;
 	float3 x = p2 - p0;
 	float3 y = p1 - p0;
@@ -131,13 +131,13 @@ float PointLightSoftShadow(float3 lightPos, float3 curPos, float4x4 box0, float4
 		float t = 0;
 		if(IntersectBB(box0Faces.face[i], curPos, rd, t))
 		{
-			if(t < 0.2f)
+			if(length(curPos + rd * t - lightPos) < length(lightPos - curPos))
 				return 0.0f;
 		}
 		
 		if(IntersectBB(box1Faces.face[i], curPos, rd, t))
 		{
-			if(t < 0.2f)
+			if(length(curPos + rd * t - lightPos) < length(lightPos - curPos))
 				return 0.0f;
 		}
 	}
@@ -148,8 +148,8 @@ float PointLightSoftShadow(float3 lightPos, float3 curPos, float4x4 box0, float4
 float RectLightSoftShadow(float3 lightPos, float3 curPos, float4x4 box0, float4x4 box1)
 {
 	// Assumption: axis aligned with x and z axis
-	float3 dx = float3(1.0, 0.0, 0.0);
-	float3 dz = float3(0.0, 0.0, 1.0);
+	float3 dx = float3(1.0, 0.0, 0.0) * 2.0;
+	float3 dz = float3(0.0, 0.0, 1.0) * 2.0;
 	
 	// 16 x 16 samples
 	float shadowEffect = 0.0;
@@ -175,6 +175,8 @@ PixelDataOutput FragmentMain(VertexDataOutput pdi,
   uniform int hasST,
   uniform int isCubemap,
   uniform sampler2D tex,
+  uniform sampler2D topTex,
+  uniform sampler2D sideTex,
   uniform samplerCUBE env) {
 
 
@@ -183,7 +185,7 @@ PixelDataOutput FragmentMain(VertexDataOutput pdi,
   // Phong Lighting
   float3 viewdir = ppc_C - pdi.vxyz;
   float3 lightdir = light_position - pdi.vxyz;
-  float ka = 0.2f;
+  float ka = 0.3f;
   float kd = max(0.0f, dot(normalize(lightdir), normalize(pdi.normal)));
   float ks = 0.3 * pow(max(0.0f, dot(reflect(normalize(-lightdir),normalize(pdi.normal)) , normalize(viewdir))), 512);
   
@@ -192,7 +194,58 @@ PixelDataOutput FragmentMain(VertexDataOutput pdi,
   if(hasST > 0)
   {
 	  float4 texColor = tex2D(tex, pdi.vtexCoord);
-	  pc = texColor.rgb;
+
+	  if(texColor.r > 0.9)
+	  {
+	  	// White
+		sixFaces box0Faces = GetFaces(box0);
+		sixFaces box1Faces = GetFaces(box1);
+		
+		// Trace the color
+		float3 ro = pdi.vxyz;
+		float3 rd = pdi.vxyz - ppc_C;
+		float t = 1e9;
+		float2 uv;
+
+		for(int fi = 0; fi < 6; ++fi)
+		{
+			float tmpT;
+			float2 tmpUV;
+			if(IntersectBB(box0Faces.face[fi], ro, rd, tmpT, tmpUV))
+			{
+				if(tmpT < t && tmpT > 0.0)
+				{
+					t = tmpT;
+					uv = tmpUV;
+				}
+			}
+
+			if(IntersectBB(box1Faces.face[fi], ro, rd, tmpT, tmpUV))
+			{
+				if(tmpT < t && tmpT > 0.0)
+				{
+					t = tmpT;
+					uv = tmpUV;
+				}
+			}
+		}
+
+		// not intserct with any faces
+		// then it intersect with ground
+		if(t > 1e6)
+		{
+			pc = 1.0;
+		}
+		else
+		{
+			pc = tex2D(tex, uv).rgb;
+		}
+	  }
+	  else
+	  {
+		// Solid
+		pc = 0.0;
+	  }
 	  alpha = texColor.a;
   }
   else 
@@ -201,19 +254,19 @@ PixelDataOutput FragmentMain(VertexDataOutput pdi,
 	// float3 refractDir = refract(normalize(viewdir), normalize(pdi.normal), 1.0);
 	// float4 envColor = texCUBE(env, refractDir);
 
-	//   pc = 0.3;
+	  // pc = tex2D(topTex, pdi.vtexCoord);
+	  // pc = length(pdi.vtexCoord);
 	  alpha = 1.0;
   }
 
   	float3 phongColor =  pc * (ka + (1.0f - ka) * kd + ks);
-
 	float shadowEffect = RectLightSoftShadow(light_position, pdi.vxyz, box0, box1);
 	phongColor = shadowEffect * phongColor;
 
 	if(isCubemap)
 	{
 		// phongColor = texCUBE(env, float3(pdi.vxyz.x,-pdi.vxyz.y,pdi.vxyz.z));
-		phongColor = texCUBE(env, -pdi.vxyz);
+		phongColor = texCUBE(env, -pdi.vxyz).rgb;
 		alpha =1.0;
 	}
   	ret.color = float4(clamp(phongColor ,0.0,1.0),alpha);

@@ -135,18 +135,121 @@ void TM::SetBillboard(V3 O, V3 n, V3 up, float sz, float s, float t)
 
 void TM::SetUnitBox()
 {
-	vertsN = 8;
+	vertsN = 24;
 	trisN = 12;
 	Allocate();
 
-	verts[0] = V3(1.0f, 1.0f, 1.0f);
-	verts[1] = V3(1.0f, -1.0f, 1.0f);
-	verts[2] = V3(1.0f, -1.0f, -1.0f);
-	verts[3] = V3(1.0f, 1.0f, -1.0f);
-	verts[4] = V3(-1.0f, 1.0f, 1.0f);
-	verts[5] = V3(-1.0f, 1.0f, -1.0f);
-	verts[6] = V3(-1.0f, -1.0f, -1.0f);
-	verts[7] = V3(-1.0f, -1.0f, 1.0f);
+	V3 v0 = V3(1.0f, 1.0f, 1.0f);
+	V3 v1 = V3(1.0f, -1.0f, 1.0f);
+	V3 v2 = V3(1.0f, -1.0f, -1.0f);
+	V3 v3 = V3(1.0f, 1.0f, -1.0f);
+	V3 v4 = V3(-1.0f, 1.0f, 1.0f);
+	V3 v5 = V3(-1.0f, 1.0f, -1.0f);
+	V3 v6 = V3(-1.0f, -1.0f, -1.0f);
+	V3 v7 = V3(-1.0f, -1.0f, 1.0f);
+
+	int vertCount = 0;
+	// right
+	vertST[2 * vertCount + 0] = 0.0;
+	vertST[2 * vertCount + 1] = 1.0;
+	verts[vertCount++] = v0;
+
+	vertST[2 * vertCount + 0] = 0.0;
+	vertST[2 * vertCount + 1] = 0.0;
+	verts[vertCount++] = v1;
+	
+	vertST[2 * vertCount + 0] = 1.0;
+	vertST[2 * vertCount + 1] = 0.0;
+	verts[vertCount++] = v2;
+	
+	vertST[2 * vertCount + 0] = 1.0;
+	vertST[2 * vertCount + 1] = 1.0;
+	verts[vertCount++] = v3;
+
+	// left
+	vertST[2 * vertCount + 0] = 1.0;
+	vertST[2 * vertCount + 1] = 1.0;
+	verts[vertCount++] = v4;
+
+	vertST[2 * vertCount + 0] = 0.0;
+	vertST[2 * vertCount + 1] = 1.0;
+	verts[vertCount++] = v5;
+
+	vertST[2 * vertCount + 0] = 0.0;
+	vertST[2 * vertCount + 1] = 0.0;
+	verts[vertCount++] = v6;
+
+	vertST[2 * vertCount + 0] = 1.0;
+	vertST[2 * vertCount + 1] = 0.0;
+	verts[vertCount++] = v7;
+
+	// ground
+	vertST[2 * vertCount + 0] = 1.0;
+	vertST[2 * vertCount + 1] = 1.0;
+	verts[vertCount++] = v1;
+
+	vertST[2 * vertCount + 0] = 0.0;
+	vertST[2 * vertCount + 1] = 1.0;
+	verts[vertCount++] = v7;
+
+	vertST[2 * vertCount + 0] = 0.0;
+	vertST[2 * vertCount + 1] = 0.0;
+	verts[vertCount++] = v6;
+
+	vertST[2 * vertCount + 0] = 1.0;
+	vertST[2 * vertCount + 1] = 0.0;
+	verts[vertCount++] = v2;
+
+	// top
+	vertST[2 * vertCount + 0] = 1.0;
+	vertST[2 * vertCount + 1] = 0.0;
+	verts[vertCount++] = v0;
+
+	vertST[2 * vertCount + 0] = 1.0;
+	vertST[2 * vertCount + 1] = 1.0;
+	verts[vertCount++] = v3;
+
+	vertST[2 * vertCount + 0] = 0.0;
+	vertST[2 * vertCount + 1] = 1.0;
+	verts[vertCount++] = v5;
+
+	vertST[2 * vertCount + 0] = 0.0;
+	vertST[2 * vertCount + 1] = 0.0;
+	verts[vertCount++] = v4;
+
+	// front
+	vertST[2 * vertCount + 0] = 1.0;
+	vertST[2 * vertCount + 1] = 1.0;
+	verts[vertCount++] = v0;
+
+	vertST[2 * vertCount + 0] = 0.0;
+	vertST[2 * vertCount + 1] = 1.0;
+	verts[vertCount++] = v4;
+
+	vertST[2 * vertCount + 0] = 0.0;
+	vertST[2 * vertCount + 1] = 0.0;
+	verts[vertCount++] = v7;
+
+	vertST[2 * vertCount + 0] = 1.0;
+	vertST[2 * vertCount + 1] = 0.0;
+	verts[vertCount++] = v1;
+
+	// back
+	vertST[2 * vertCount + 0] = 1.0;
+	vertST[2 * vertCount + 1] = 1.0;
+	verts[vertCount++] = v3;
+
+	vertST[2 * vertCount + 0] = 1.0;
+	vertST[2 * vertCount + 1] = 0.0;
+	verts[vertCount++] = v2;
+
+	vertST[2 * vertCount + 0] = 0.0;
+	vertST[2 * vertCount + 1] = 0.0;
+	verts[vertCount++] = v6;
+
+	vertST[2 * vertCount + 0] = 0.0;
+	vertST[2 * vertCount + 1] = 1.0;
+	verts[vertCount++] = v5;
 
 	V3 color(0.0f);
 	colors[0] = color;
@@ -159,14 +262,8 @@ void TM::SetUnitBox()
 	colors[7] = color;
 
 	V3 origin(0.0f);
-	normals[0] = verts[0] - origin;
-	normals[1] = verts[1] - origin;
-	normals[2] = verts[2] - origin;
-	normals[3] = verts[3] - origin;
-	normals[4] = verts[4] - origin;
-	normals[5] = verts[5] - origin;
-	normals[6] = verts[6] - origin;
-	normals[7] = verts[7] - origin;
+	for (int vi = 0; vi < vertsN; ++vi)
+		normals[vi] = (verts[vi] - origin).UnitVector();
 
 	int trisCounter = 0;
 	// right
@@ -186,36 +283,36 @@ void TM::SetUnitBox()
 	tris[trisCounter++] = 4;
 
 	// ground
-	tris[trisCounter++] = 1;
-	tris[trisCounter++] = 7;
-	tris[trisCounter++] = 6;
-	tris[trisCounter++] = 6;
-	tris[trisCounter++] = 2;
-	tris[trisCounter++] = 1;
+	tris[trisCounter++] = 8;
+	tris[trisCounter++] = 9;
+	tris[trisCounter++] = 10;
+	tris[trisCounter++] = 10;
+	tris[trisCounter++] = 11;
+	tris[trisCounter++] = 8;
 
 	// top
-	tris[trisCounter++] = 3;
-	tris[trisCounter++] = 5;
-	tris[trisCounter++] = 0;
-	tris[trisCounter++] = 0;
-	tris[trisCounter++] = 5;
-	tris[trisCounter++] = 4;
+	tris[trisCounter++] = 12;
+	tris[trisCounter++] = 13;
+	tris[trisCounter++] = 14;
+	tris[trisCounter++] = 14;
+	tris[trisCounter++] = 15;
+	tris[trisCounter++] = 12;
 
 	// front
-	tris[trisCounter++] = 4;
-	tris[trisCounter++] = 7;
-	tris[trisCounter++] = 1;
-	tris[trisCounter++] = 1;
-	tris[trisCounter++] = 0;
-	tris[trisCounter++] = 4;
+	tris[trisCounter++] = 16;
+	tris[trisCounter++] = 17;
+	tris[trisCounter++] = 18;
+	tris[trisCounter++] = 18;
+	tris[trisCounter++] = 19;
+	tris[trisCounter++] = 16;
 
 	// back
-	tris[trisCounter++] = 5;
-	tris[trisCounter++] = 3;
-	tris[trisCounter++] = 2;
-	tris[trisCounter++] = 2;
-	tris[trisCounter++] = 6;
-	tris[trisCounter] = 5;
+	tris[trisCounter++] = 20;
+	tris[trisCounter++] = 21;
+	tris[trisCounter++] = 22;
+	tris[trisCounter++] = 22;
+	tris[trisCounter++] = 23;
+	tris[trisCounter] = 20;
 }
 
 void TM::SetText(string tf)
@@ -649,6 +746,9 @@ void TM::RenderHW(PPC *ppc, FrameBuffer *curfb)
 
 		if (!tex.empty())
 			gv->curScene->gpufb->LoadTextureGPU(tex);
+
+		curfb->LoadTextureGPU("images/top.tiff");
+		curfb->LoadTextureGPU("images/side.tiff");
 	}
 
 	ppc->SetIntrinsicsHW();

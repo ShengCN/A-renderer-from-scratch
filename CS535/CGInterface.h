@@ -60,6 +60,8 @@ class ShaderOneInterface
 	CGparameter fragmentBox0;
 	CGparameter fragmentBox1;
 	CGparameter fragmentBox2;
+	CGparameter fragmentTopTex;
+	CGparameter fragmentSideTex;
 
 public:
 	ShaderOneInterface()

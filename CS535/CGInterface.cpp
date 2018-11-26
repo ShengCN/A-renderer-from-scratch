@@ -114,6 +114,8 @@ bool ShaderOneInterface::PerSessionInit(CGInterface* cgi, const std::string shad
 	fragmentBox0 = cgGetNamedParameter(fragmentProgram, "box0");
 	fragmentBox1 = cgGetNamedParameter(fragmentProgram, "box1");
 	fragmentBox2 = cgGetNamedParameter(fragmentProgram, "box2");
+	fragmentTopTex = cgGetNamedParameter(fragmentProgram, "topTex");
+	fragmentSideTex = cgGetNamedParameter(fragmentProgram, "sideTex");
 
 	return true;
 }
@@ -181,6 +183,12 @@ void ShaderOneInterface::PerFrameInit(uniformVariables &uniforms)
 
 	cgGLSetTextureParameter(fragmentCubemapTex, FrameBuffer::gpuTexID.at(GlobalVariables::Instance()->cubemapFiles[0]));
 	cgGLEnableTextureParameter(fragmentCubemapTex);
+
+	cgGLSetTextureParameter(fragmentTopTex, FrameBuffer::gpuTexID.at("images/top.tiff"));
+	cgGLEnableTextureParameter(fragmentTopTex);
+
+	cgGLSetTextureParameter(fragmentSideTex, FrameBuffer::gpuTexID.at("images/side.tiff"));
+	cgGLEnableTextureParameter(fragmentSideTex);
 }
 
 void ShaderOneInterface::PerFrameDisable()

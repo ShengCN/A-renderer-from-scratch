@@ -47,9 +47,9 @@ Scene::Scene(): isRenderAABB(false)
 	gpufb->SetupGPU();
 	gpufb->show();
 
-	fb3 = new FrameBuffer(u0 + fb->w + 30, v0, w, h);
+	fb3 = new FrameBuffer(u0 + fb->w + 30, v0, 512, 512);
 	fb3->label("Third Person View");
-	// fb3->show();
+	fb3->show();
 
 	ppc = new PPC(fb->w, fb->h, fovf);
 	ppc3 = new PPC(fb3->w, fb3->h, 55.0f);
@@ -818,12 +818,18 @@ void Scene::InitDemo()
 	box0->isBox = 1;
 	box1->isBox = 1;
 	box2->isBox = 1;
+	box0->hasST = 1;
+	box1->hasST = 1;
+	box2->hasST = 1;
+	box0->tex = "images/top.tiff";
+	box1->tex = "images/top.tiff";
+	box2->tex = "images/top.tiff";
 
 	ground->SetQuad(V3(0.0f), V3(0.0f, 1.0f, 0.0f), V3(0.0f,0.0f,-1.0f), 1.0f);
 	ground->SetShaderOne("CG/groundShaderOne.cg");
 	ground->isGround = 1;
 
-	V3 tmC = ppc->C + ppc->GetVD() * 200.0f;
+	V3 tmC = ppc->C + ppc->GetVD() * 150.0f;
 	float tmSize = 100.0f;
 	float boxFract = 0.65f;
 	cubemap->PositionAndSize(V3(0.0f), tmSize * 17.0f);
@@ -847,22 +853,28 @@ void Scene::InitDemo()
 	ka = 0.5f;
 	mf = 0.0f;
 	int w = 640, h = 480;
-	V3 LightC = meshes[0]->GetCenter() + V3(0.0f, 50.0f, 100.0f);
+	V3 LightC = meshes[0]->GetCenter() + V3(0.0f, 75.0f, 100.0f) * 1.5f;
 	shared_ptr<PPC> l0ppc = make_shared<PPC>(w, h, 55.0f);
 	l0ppc->PositionAndOrient(LightC, meshes[0]->GetCenter(), V3(0.0f, 1.0f, 0.0f));
 	lightPPCs.push_back(l0ppc);
 
 	// PPC setting
 	ppc->PositionAndOrient(V3(0.0f, tmSize, -5.0f), meshes[0]->GetCenter(), V3(0.0f, 1.0f, 0.0f));
-	// ppc->RevolveH(meshes[0]->GetCenter(), 90.0f);
-	lightPPCs[0]->RevolveH(meshes[0]->GetCenter(), 340.0f);
+	ppc->RevolveH(meshes[0]->GetCenter(), 45.0f);
 
+	// save textures
+	int len = 50;
+	fb3->ClearBGRZ(0xFFFFFFFF,0.0f);
+	fb3->DrawRectangle(0, fb3->h / 2 - len, fb3->w, fb3->h / 2 + len, 0xFF000000);
+	fb3->DrawRectangle(fb3->w / 2 - len, 0, fb3->w / 2 + len, fb3->h, 0xFF000000);
+	fb3->redraw();
+	fb3->SaveAsTiff("images/top.tiff");
 }
 
 void Scene::Demonstration()
 {
 	{
-		// ReloadCG();
+		ReloadCG();
 		PPC ppc0 = *ppc, ppc1 = *ppc;
 		ppc1.C = ppc1.C + V3(30.0f, 60.0f, 0.0f);
 		ppc1.PositionAndOrient(ppc1.C, meshes[0]->GetCenter(), V3(0.0f, 1.0f, 0.0f));
@@ -883,17 +895,17 @@ void Scene::Demonstration()
 		int framesN = 360;
 		for(int i = 0; i < framesN; ++i)
 		{
-			// lightPPCs[0]->RevolveH(meshes[0]->GetCenter(), 1.0f);
+			lightPPCs[0]->RevolveH(meshes[0]->GetCenter(), 1.0f);
 			mf = static_cast<float>(i) / static_cast<float>(framesN - 1);
 			// ppc->SetInterpolated(&ppc0, &ppc1, static_cast<float>(i)/framesN);
 			// ppc->RevolveH(meshes[0]->GetCenter(), 1.0f);
 			
 			// Move meshes
-			for(auto m : meshes)
-			{
-				if (m->isBox)
-					m->RotateAboutArbitraryAxis(rotationCenter, V3(0.0f, 1.0f, 0.0f), 1.0f);
-			}
+			// for(auto m : meshes)
+			// {
+			// 	if (m->isBox)
+			// 		m->RotateAboutArbitraryAxis(rotationCenter, V3(0.0f, 1.0f, 0.0f), 1.0f);
+			// }
 
 			gpufb->redraw();
 			Fl::check();
