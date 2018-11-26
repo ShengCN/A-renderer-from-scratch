@@ -826,7 +826,7 @@ void Scene::InitDemo()
 	V3 tmC = ppc->C + ppc->GetVD() * 200.0f;
 	float tmSize = 100.0f;
 	float boxFract = 0.65f;
-	cubemap->PositionAndSize(V3(0.0f), tmSize * 15.0f);
+	cubemap->PositionAndSize(V3(0.0f), tmSize * 17.0f);
 	box0->PositionAndSize(tmC, tmSize * boxFract);
 	box1->PositionAndSize(tmC + V3(-1.0f,0.0f,-1.0f) * tmSize * boxFract * 0.7f, tmSize* boxFract);
 	box2->PositionAndSize(tmC + V3(1.0f, 0.0f, -1.0f) * tmSize* boxFract * 0.7f, tmSize* boxFract);
@@ -847,7 +847,7 @@ void Scene::InitDemo()
 	ka = 0.5f;
 	mf = 0.0f;
 	int w = 640, h = 480;
-	V3 LightC = meshes[0]->GetCenter() + V3(0.0f, 50.0f, 50.0f);
+	V3 LightC = meshes[0]->GetCenter() + V3(0.0f, 50.0f, 100.0f);
 	shared_ptr<PPC> l0ppc = make_shared<PPC>(w, h, 55.0f);
 	l0ppc->PositionAndOrient(LightC, meshes[0]->GetCenter(), V3(0.0f, 1.0f, 0.0f));
 	lightPPCs.push_back(l0ppc);
@@ -862,18 +862,39 @@ void Scene::InitDemo()
 void Scene::Demonstration()
 {
 	{
-		ReloadCG();
+		// ReloadCG();
 		PPC ppc0 = *ppc, ppc1 = *ppc;
 		ppc1.C = ppc1.C + V3(30.0f, 60.0f, 0.0f);
 		ppc1.PositionAndOrient(ppc1.C, meshes[0]->GetCenter(), V3(0.0f, 1.0f, 0.0f));
 		ppc1 = *ppc;
+		
+		V3 rotationCenter(0.0f);
+		int count = 0;
+		for (auto m : meshes)
+		{
+			if (m->isBox)
+			{
+				count++;
+				rotationCenter = rotationCenter + m->GetCenter();
+			}
+		}
+		rotationCenter = rotationCenter / static_cast<float>(count);
+
 		int framesN = 360;
 		for(int i = 0; i < framesN; ++i)
 		{
-			lightPPCs[0]->RevolveH(meshes[0]->GetCenter(), 1.0f);
+			// lightPPCs[0]->RevolveH(meshes[0]->GetCenter(), 1.0f);
 			mf = static_cast<float>(i) / static_cast<float>(framesN - 1);
 			// ppc->SetInterpolated(&ppc0, &ppc1, static_cast<float>(i)/framesN);
 			// ppc->RevolveH(meshes[0]->GetCenter(), 1.0f);
+			
+			// Move meshes
+			for(auto m : meshes)
+			{
+				if (m->isBox)
+					m->RotateAboutArbitraryAxis(rotationCenter, V3(0.0f, 1.0f, 0.0f), 1.0f);
+			}
+
 			gpufb->redraw();
 			Fl::check();
 

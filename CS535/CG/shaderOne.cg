@@ -118,7 +118,7 @@ sixFaces GetFaces(float4x4 box)
 }
 
 // Hard coded rectangle light
-float SoftShadows(float3 lightPos, float3 curPos, float4x4 box0, float4x4 box1)
+float PointLightSoftShadow(float3 lightPos, float3 curPos, float4x4 box0, float4x4 box1)
 {
 	sixFaces box0Faces, box1Faces;
 	box0Faces = GetFaces(box0);
@@ -141,9 +141,31 @@ float SoftShadows(float3 lightPos, float3 curPos, float4x4 box0, float4x4 box1)
 				return 0.0f;
 		}
 	}
+
 	return 1.0f;
 }
 
+float RectLightSoftShadow(float3 lightPos, float3 curPos, float4x4 box0, float4x4 box1)
+{
+	// Assumption: axis aligned with x and z axis
+	float3 dx = float3(1.0, 0.0, 0.0);
+	float3 dz = float3(0.0, 0.0, 1.0);
+	
+	// 16 x 16 samples
+	float shadowEffect = 0.0;
+	int samples = 16;
+	for(int r = 0; r < samples; ++r)
+	{
+		for(int c = 0; c < samples; ++c)
+		{
+			// light position vector
+			float3 lpv = dx * r + dz * c;
+			float3 curLightPos = lightPos + lpv;
+			shadowEffect += PointLightSoftShadow(curLightPos, curPos, box0, box1);
+		}
+	}
+	return shadowEffect / ((float)samples * (float)samples);
+}
 
 PixelDataOutput FragmentMain(VertexDataOutput pdi, 
   uniform float3 light_position,
@@ -185,7 +207,7 @@ PixelDataOutput FragmentMain(VertexDataOutput pdi,
 
   	float3 phongColor =  pc * (ka + (1.0f - ka) * kd + ks);
 
-	float shadowEffect = SoftShadows(light_position, pdi.vxyz, box0, box1);
+	float shadowEffect = RectLightSoftShadow(light_position, pdi.vxyz, box0, box1);
 	phongColor = shadowEffect * phongColor;
 
 	if(isCubemap)
@@ -212,6 +234,7 @@ PixelDataOutput FragmentMain(VertexDataOutput pdi,
 	// if no intersections, lookup reflected ray in environment mapping
 	// billboard is passed in as uniform parameter, e.g. float4x4
 	// EXTRA CREDIT: environment mapping is a uniform input parameter "cube sampler or something like that"
+
 
 	// SOFT SHADOWS CAST BY RECTANGULAR LIGHT SOURCE
 	// for all light sample rows
