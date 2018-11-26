@@ -167,10 +167,10 @@ void ShaderOneInterface::PerFrameInit(uniformVariables &uniforms)
 	{
 		auto[corner2, x2, y2, z2] = uniforms.box2->GetCornerAndAxis();
 		vector<float> box2Info{ corner2.x(), corner2.y(), corner2.z(), 0.0f,
-							x2.x(), x2.y(), x2.z(), 0.0f,
-							y2.x(), y2.y(), y2.z(), 0.0f,
-							z2.x(), z2.y(), z2.z(), 0.0f };
-		cgSetMatrixParameterfr(fragmentBox2, reinterpret_cast<float*>(&box2Info));
+								x2.x(), x2.y(), x2.z(), 0.0f,
+								y2.x(), y2.y(), y2.z(), 0.0f,
+								z2.x(), z2.y(), z2.z(), 0.0f };
+		cgSetMatrixParameterfr(fragmentBox2, &box2Info[0]);
 	}
 
 	if(uniforms.hasST)

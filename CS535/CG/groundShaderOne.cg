@@ -44,6 +44,10 @@ TRIANGLE void GeometryMain(AttribArray<VertexDataOutput> tverts,
 
 }
 
+struct sixFaces{
+	float3x3 face[6];
+};
+
 bool IntersectBB(float3x3 bb, float3 ro, float3 rd, out float2 uv)
 {
 	// ray bb intersection
@@ -88,22 +92,51 @@ bool IntersectBB(float3x3 bb, float3 ro, float3 rd)
 	return true;
 }
 
-// Hard coded rectangle light
-float SoftShadows(float3 lightPos, float3 curPos, float4x4 box0, float4x4 box1)
+sixFaces GetFaces(float4x4 box)
 {
-	float3 box0Corner = box0[0].xyz;
-	float3 box0X = box0[1].xyz;
-	float3 box0Y = box0[2].xyz;
-	float3 box0Z = box0[3].xyz;
+	float3 boxCorner = box[0].xyz;
+	float3 boxX = box[1].xyz;
+	float3 boxY = box[2].xyz;
+	float3 boxZ = box[3].xyz;
 
 	// each box has six faces
-	float3x3 box0BBs[6];
-	box0BBs[0] = float3x3(box0Corner, box0Corner + box0X, box0Corner + box0Y);
-	
+	sixFaces boxFace;
+	// back
+	boxFace.face[0] = float3x3(boxCorner, boxCorner + boxX, boxCorner + boxY);	
+	// front
+	boxFace.face[1] = float3x3(boxCorner + boxZ, boxCorner + boxX + boxZ, boxCorner + boxY + boxZ);	
+	// top
+	boxFace.face[2] = float3x3(boxCorner + boxY, boxCorner + boxY + boxZ, boxCorner + boxY + boxX);	
+	// bot
+	boxFace.face[3] = float3x3(boxCorner, boxCorner + boxZ, boxCorner + boxX);	
+	// left
+	boxFace.face[4] = float3x3(boxCorner, boxCorner + boxY, boxCorner + boxZ);	
+	// right
+	boxFace.face[5] = float3x3(boxCorner + boxX, boxCorner + boxY + boxX, boxCorner + boxZ + boxX);	
+	return boxFace;
+}
+
+// Hard coded rectangle light
+float SoftShadows(float3 lightPos, float3 curPos, float4x4 box0, float4x4 box1, float4x4 box2)
+{
+	sixFaces box0Faces, box1Faces, box2Faces;
+	box0Faces = GetFaces(box0);
+	box1Faces = GetFaces(box1);
+	box2Faces = GetFaces(box2);
+
 	// light direction from light to curPos
 	float3 rd = curPos - lightPos;	
-	if(IntersectBB(box0BBs[0], curPos, rd))
-		return 0.0f;
+	for(int i = 0; i < 6; ++i)
+	{
+		if(IntersectBB(box0Faces.face[i], curPos, rd))
+			return 0.0f;
+		
+		if(IntersectBB(box1Faces.face[i], curPos, rd))
+			return 0.0f;
+
+		if(IntersectBB(box2Faces.face[i], curPos, rd))
+			return 0.0f;
+	}
 	return 1.0f;
 }
 
@@ -149,7 +182,7 @@ PixelDataOutput FragmentMain(VertexDataOutput pdi,
   }
 
   	float3 phongColor =  pc * (ka + (1.0f - ka) * kd + ks);
-	float shadowEffect = SoftShadows(light_position, pdi.vxyz, box0, box1);
+	float shadowEffect = SoftShadows(light_position, pdi.vxyz, box0, box1, box2);
 	phongColor = shadowEffect * phongColor;
   	ret.color = float4(clamp(phongColor ,0.0,1.0),alpha);	
 
