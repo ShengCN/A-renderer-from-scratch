@@ -12,7 +12,8 @@ public:
 	sphere(V3 cen, float r, shared_ptr<material> mat) : center(cen), radius(r), mat_ptr(mat) {};
 
 	bool hit(ray& r, float tmin, float tmax, hit_record &rec) const;
-	
+
+	bool bounding_box(float t0, float t1, AABB& box) const override;
 };
 
 inline bool sphere::hit(ray& r, float tmin, float tmax, hit_record& rec) const
@@ -49,3 +50,8 @@ inline bool sphere::hit(ray& r, float tmin, float tmax, hit_record& rec) const
 	return false;
 }
 
+inline bool sphere::bounding_box(float t0, float t1, AABB& box) const
+{
+	box = AABB(center - V3(radius), center + V3(radius));
+	return true;
+}

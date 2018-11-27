@@ -15,21 +15,21 @@ public:
 	float Length();
 	void SetColor(unsigned int color);
 	unsigned int GetColor();
-	V3 cross(V3 v1);
+	V3 cross(V3 v1) const;
 	V3 Rotate(V3 a, float angled);    // Rotate in arbitrary axis 
 	V3 RotateThisPointAboutArbitraryAxis(V3 O, V3 a, float angled);
 	V3 Reflect(V3 n);
 	V3 Refract(V3 n, float ratio);
 	float& operator[](int i);
-	float operator*(V3 v1);
-	V3 operator*(float scf);
-	V3 operator/(float scf);
-	V3 operator+(V3 v1);
-	V3 operator+(float f);
-	V3 operator-(V3 v1);
-	V3 operator^(V3 v1);
-	bool operator==(V3 v1);
-	bool operator!=(V3 v1);
+	float operator*(V3 v1) const;
+	V3 operator*(float scf) const;
+	V3 operator/(float scf) const;
+	V3 operator+(V3 v1) const;
+	V3 operator+(float f) const;
+	V3 operator-(V3 v1) const;
+	V3 operator^(V3 v1) const;
+	bool operator==(V3 v1) const;
+	bool operator!=(V3 v1) const;
 	friend istream& operator>>(istream& ist, V3 &v);
 	friend ostream& operator<<(ostream& ost, V3 v);
 

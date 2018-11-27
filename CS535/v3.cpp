@@ -54,7 +54,7 @@ unsigned int V3::GetColor()
 }
 
 
-V3 V3::cross(V3 v1)
+V3 V3::cross(V3 v1) const
 {
 	V3 v0 = *this;
 	return V3(
@@ -126,25 +126,25 @@ float& V3::operator[](int i)
 	return xyz[i];
 }
 
-float V3::operator*(V3 v1)
+float V3::operator*(V3 v1) const
 {
 	V3 v0 = *this;
 	return v0[0] * v1[0] + v0[1] * v1[1] + v0[2] * v1[2];
 }
 
-V3 V3::operator*(float scf)
+V3 V3::operator*(float scf) const
 {
 	V3 v = *this;
 	return V3(v[0] * scf, v[1] * scf, v[2] * scf);
 }
 
-V3 V3::operator/(float scf)
+V3 V3::operator/(float scf) const
 {
 	V3 v = *this;
 	return V3(v[0] / scf, v[1] / scf, v[2] / scf);
 }
 
-V3 V3::operator+(V3 v1)
+V3 V3::operator+(V3 v1) const
 {
 	V3 v0 = *this, ret;
 	ret[0] = v0[0] + v1[0];
@@ -153,27 +153,27 @@ V3 V3::operator+(V3 v1)
 	return ret;
 }
 
-V3 V3::operator+(float f)
+V3 V3::operator+(float f) const
 {
-	V3 &v = *this;
+	V3 v = *this;
 	v[0] += f;
 	v[1] += f;
 	v[2] += f;
 	return v;
 }
 
-V3 V3::operator-(V3 v1)
+V3 V3::operator-(V3 v1) const
 {
 	V3 v0 = *this;
 	return V3(v0[0] - v1[0], v0[1] - v1[1], v0[2] - v1[2]);
 }
 
-V3 V3::operator^(V3 v1)
+V3 V3::operator^(V3 v1) const
 {
 	return cross(v1);
 }
-
-bool V3::operator==(V3 v1)
+ 
+bool V3::operator==(V3 v1) const
 {
 	auto FloatEqual = [&](float a, float b)
 	{
@@ -186,7 +186,7 @@ bool V3::operator==(V3 v1)
 		&& FloatEqual(v0[2], v1[2]);
 }
 
-bool V3::operator!=(V3 v1)
+bool V3::operator!=(V3 v1) const
 {
 	V3 v0 = *this;
 	return !(v0 == v1);
