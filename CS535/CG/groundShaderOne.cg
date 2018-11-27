@@ -183,11 +183,6 @@ PixelDataOutput FragmentMain(VertexDataOutput pdi,
   uniform sampler2D tex,
   uniform samplerCUBE env) {
 
-  // Pass in global variables
-  groundPlaneH = groundHeight;
-  gb_box0 = box0; 
-  gb_box1 = box1;
-  gb_box2 = box2;
 
   PixelDataOutput ret;
   

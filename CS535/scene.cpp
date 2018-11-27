@@ -892,10 +892,10 @@ void Scene::Demonstration()
 		}
 		rotationCenter = rotationCenter / static_cast<float>(count);
 
-		int framesN = 360;
+		int framesN = 1;
 		for(int i = 0; i < framesN; ++i)
 		{
-			lightPPCs[0]->RevolveH(meshes[0]->GetCenter(), 1.0f);
+			// lightPPCs[0]->RevolveH(meshes[0]->GetCenter(), 1.0f);
 			mf = static_cast<float>(i) / static_cast<float>(framesN - 1);
 			// ppc->SetInterpolated(&ppc0, &ppc1, static_cast<float>(i)/framesN);
 			// ppc->RevolveH(meshes[0]->GetCenter(), 1.0f);

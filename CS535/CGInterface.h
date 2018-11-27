@@ -64,6 +64,9 @@ class ShaderOneInterface
 	CGparameter fragmentIsGround;
 	CGparameter fragmetGroundHeight;
 	CGparameter fragmentTopTex;
+	CGparameter fragmentBox0Color;
+	CGparameter fragmentBox1Color;
+	CGparameter fragmentBox2Color;
 
 public:
 	ShaderOneInterface()

@@ -48,28 +48,38 @@ struct sixFaces{
 	float3x3 face[6];
 };
 
-bool IntersectBB(float3x3 bb, float3 ro, float3 rd, out float t,out float2 uv)
-{
-	// ray bb intersection
-	float3 p0 = bb[0];
-	float3 p1 = bb[1];
-	float3 p2 = bb[2];
-	float3 n = normalize(cross(p1-p0,p2-p0)); 
-	t = -dot(ro - p0,n)/dot(rd,n);
-	float3 p = ro + t * rd - p0;
-	float3 x = p2 - p0;
-	float3 y = p1 - p0;
-	float u = dot(p,normalize(x)) / length(x);
-	float v = dot(p,normalize(y)) / length(y);
-	
-	// not intersect
-	if(u<0.0 || u >1.0 || v < 0.0 || v > 1.0)
-		return false;
+// -----------------------
+// Global Variables:
+// Ground plane (float)
+// Box0, Box1, Box2 (float3)
+// -----------------------
+float groundPlaneH;
+float4x4 gb_box0, gb_box1, gb_box2;
+float3 gb_box0_color, gb_box1_color, gb_box2_color;
+sampler2D texture;
 
-	uv[0] = u;
-	uv[1] = 1.0 - v;	// OpenGL uv 
-	return true;
-}
+// bool IntersectBB(float3x3 bb, float3 ro, float3 rd, out float t,out float2 uv)
+// {
+// 	// ray bb intersection
+// 	float3 p0 = bb[0];
+// 	float3 p1 = bb[1];
+// 	float3 p2 = bb[2];
+// 	float3 n = normalize(cross(p1-p0,p2-p0)); 
+// 	t = -dot(ro - p0,n)/dot(rd,n);
+// 	float3 p = ro + t * rd - p0;
+// 	float3 x = p2 - p0;
+// 	float3 y = p1 - p0;
+// 	float u = dot(p,normalize(x)) / length(x);
+// 	float v = dot(p,normalize(y)) / length(y);
+	
+// 	// not intersect
+// 	if(u<0.0 || u >1.0 || v < 0.0 || v > 1.0)
+// 		return false;
+
+// 	uv[0] = u;
+// 	uv[1] = 1.0 - v;	// OpenGL uv 
+// 	return true;
+// }
 
 bool IntersectBB(float3x3 bb, float3 ro, float3 rd, out float ot)
 {
@@ -87,19 +97,17 @@ bool IntersectBB(float3x3 bb, float3 ro, float3 rd, out float ot)
 	
 	// not intersect
 	if(u<0.0 || u >1.0 || v < 0.0 || v > 1.0)
+	{
+		return false;
+	}
+
+	// texture not solid
+	if(tex2D(texture, float2(u,v)).r > 0.9)
 		return false;
 
 	ot = t;
 	return true;
 }
-
-// -----------------------
-// Global Variables:
-// Ground plane (float)
-// Box0, Box1, Box2 (float3)
-// -----------------------
-float groundPlaneH;
-float4x4 gb_box0, gb_box1, gb_box2;
 
 sixFaces GetFaces(float4x4 box)
 {
@@ -129,12 +137,45 @@ sixFaces GetFaces(float4x4 box)
 void map(float3 ro, float3 rd, out float t, out float3 color)
 {
 	sixFaces box0Faces, box1Faces, box2Faces;
-	box0Faces = GetFaces(box0);
-	box1Faces = GetFaces(box1);
-	box2Faces = GetFaces(box2);
+	box0Faces = GetFaces(gb_box0);
+	box1Faces = GetFaces(gb_box1);
+	box2Faces = GetFaces(gb_box2);
 
-	float tmpT;
-	float3 tmpColor;
+	// ground
+	t = (groundPlaneH - ro.y) / rd.y;
+	color = 0.75;
+	float eps = 1e-4;
+
+	for(int i = 0; i < 6; ++i)
+	{
+		float tmpT;
+		if(IntersectBB(box0Faces.face[i], ro, rd, tmpT))
+		{
+			if(tmpT > 0.0 && tmpT < t && tmpT > eps)
+			{
+				t = tmpT;
+				color = gb_box0_color;
+			}
+		}
+		
+		if(IntersectBB(box1Faces.face[i], ro, rd, tmpT))
+		{
+			if(tmpT > 0.0 && tmpT < t && tmpT > eps)
+			{
+				t = tmpT;
+				color = gb_box1_color;
+			}
+		}
+
+		if(IntersectBB(box2Faces.face[i], ro, rd, tmpT))
+		{
+			if(tmpT > 0.0 && tmpT < t && tmpT > eps)
+			{
+				t = tmpT;
+				color = gb_box2_color;
+			}
+		}
+	}
 }
 
 // Hard coded rectangle light
@@ -150,19 +191,20 @@ float PointLightSoftShadow(float3 lightPos, float3 curPos)
 	for(int i = 0; i < 6; ++i)
 	{
 		float t = 0;
-		if(IntersectBB(box0Faces.face[i], curPos, rd, t))
+		float eps = 1e-6;
+		if(IntersectBB(box0Faces.face[i], curPos - rd * eps, rd, t))
 		{
 			if(length(curPos + rd * t - lightPos) < length(lightPos - curPos))
 				return 0.0f;
 		}
 		
-		if(IntersectBB(box1Faces.face[i], curPos, rd, t))
+		if(IntersectBB(box1Faces.face[i], curPos - rd * eps, rd, t))
 		{
 			if(length(curPos + rd * t - lightPos) < length(lightPos - curPos))
 				return 0.0f;
 		}
 
-		if(IntersectBB(box2Faces.face[i], curPos, rd, t))
+		if(IntersectBB(box2Faces.face[i], curPos - rd * eps, rd, t))
 		{
 			if(length(curPos + rd * t - lightPos) < length(lightPos - curPos))
 				return 0.0f;
@@ -200,6 +242,9 @@ PixelDataOutput FragmentMain(VertexDataOutput pdi,
   uniform float4x4 box0,	// three boxes
   uniform float4x4 box1,
   uniform float4x4 box2,
+  uniform float3 box0Color,
+  uniform float3 box1Color,
+  uniform float3 box2Color,
   uniform float groundHeight,	// hard coded 
   uniform int hasST,
   uniform int isCubemap,
@@ -214,6 +259,10 @@ PixelDataOutput FragmentMain(VertexDataOutput pdi,
   gb_box0 = box0; 
   gb_box1 = box1;
   gb_box2 = box2;
+  texture = topTex;
+  gb_box0_color = box0Color;
+  gb_box1_color = box1Color;
+  gb_box2_color = box2Color;
 
   PixelDataOutput ret;
   
@@ -221,8 +270,8 @@ PixelDataOutput FragmentMain(VertexDataOutput pdi,
   float3 viewdir = ppc_C - pdi.vxyz;
   float3 lightdir = light_position - pdi.vxyz;
   float ka = 0.3f;
-  float kd = max(0.0f, dot(normalize(lightdir), normalize(pdi.normal)));
-  float ks = 0.3 * pow(max(0.0f, dot(reflect(normalize(-lightdir),normalize(pdi.normal)) , normalize(viewdir))), 512);
+  float kd = max(0.0f, dot(normalize(lightdir), isGround?float3(0.0,1.0,0.0):normalize(pdi.normal)));
+  // float ks = 0.3 * pow(max(0.0f, dot(reflect(normalize(-lightdir),normalize(pdi.normal)) , normalize(viewdir))), 512);
   
   float3 pc = pdi.color;
   float alpha = 1.0;
@@ -232,55 +281,24 @@ PixelDataOutput FragmentMain(VertexDataOutput pdi,
 
 	  if(texColor.r > 0.9)
 	  {
-	  	// White
-		sixFaces box0Faces = GetFaces(box0);
-		sixFaces box1Faces = GetFaces(box1);
-		
-		// Trace the color
-		float3 ro = pdi.vxyz;
-		float3 rd = pdi.vxyz - ppc_C;
-		float t = 1e9;
-		float2 uv;
-
-		for(int fi = 0; fi < 6; ++fi)
-		{
-			float tmpT;
-			float2 tmpUV;
-			if(IntersectBB(box0Faces.face[fi], ro, rd, tmpT, tmpUV))
-			{
-				if(tmpT < t && tmpT > 0.0)
-				{
-					t = tmpT;
-					uv = tmpUV;
-				}
-			}
-
-			if(IntersectBB(box1Faces.face[fi], ro, rd, tmpT, tmpUV))
-			{
-				if(tmpT < t && tmpT > 0.0)
-				{
-					t = tmpT;
-					uv = tmpUV;
-				}
-			}
-		}
-
-		// not intserct with any faces
-		// then it intersect with ground
-		if(t > 1e6)
-		{
-			pc = 1.0;
-		}
-		else
-		{
-			pc = tex2D(tex, uv).rgb;
-		}
+		  float3 ro = pdi.vxyz;
+		  float3 rd = pdi.vxyz - ppc_C;
+		  float t;
+		  float3 color;
+		  map(ro, rd, t,color);
+		  pc = color;
+		  
+		  // if it is ground
+		  // recalculate the ground shading color
+		  if(length(color - 0.75) < 1e-4)
+		  {
+			  ro = ro + rd * t;
+			  kd = max(0.0, dot(normalize(light_position - ro), float3(0.0,1.0,0.0)));
+			  float ksd = RectLightSoftShadow(light_position, ro);
+			  pc = ksd * pc;
+		  }		  
 	  }
-	  else
-	  {
-		// Solid
-		pc = 0.0;
-	  }
+
 	  alpha = texColor.a;
   }
   else 
@@ -294,8 +312,10 @@ PixelDataOutput FragmentMain(VertexDataOutput pdi,
 	  alpha = 1.0;
   }
 
-  	float3 phongColor =  pc * (ka + (1.0f - ka) * kd + ks);
-	float shadowEffect = RectLightSoftShadow(light_position, pdi.vxyz);
+  	float3 phongColor =  pc * (ka + (1.0f - ka) * kd);
+	
+	float shadowEffect = tex2D(tex, pdi.vtexCoord).r <0.9? RectLightSoftShadow(light_position, pdi.vxyz) : 1.0;
+	
 	phongColor = shadowEffect * phongColor;
 
 	if(isCubemap)
@@ -306,28 +326,4 @@ PixelDataOutput FragmentMain(VertexDataOutput pdi,
 	}
   	ret.color = float4(clamp(phongColor ,0.0,1.0),alpha);
   	return ret;
-
-	// BILLBOARD REFLECTIONS
-
-	// create reflected ray at this current pixel
-
-	// eye ray is eye-3D surface point at this current pixel
-	//		eye needs to be passed in as uniform float3
-	//		3D surface point is provided by pdi.vxyz
-	// normal is provided as pdi.normal
-	// reflect eye ray over normal to get reflected ray
-
-	// intersect reflected ray with billboards
-	// if multiple intersections, keep closest one
-	// if no intersections, lookup reflected ray in environment mapping
-	// billboard is passed in as uniform parameter, e.g. float4x4
-	// EXTRA CREDIT: environment mapping is a uniform input parameter "cube sampler or something like that"
-
-
-	// SOFT SHADOWS CAST BY RECTANGULAR LIGHT SOURCE
-	// for all light sample rows
-	//		for all light samples in current row
-	//			define light ray = light sample - 3D surface point
-	//			intersect light ray with all box faces
-	//			if no intersection, increment fragment light counter
 }

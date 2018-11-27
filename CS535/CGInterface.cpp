@@ -117,6 +117,9 @@ bool ShaderOneInterface::PerSessionInit(CGInterface* cgi, const std::string shad
 	fragmentBox2 = cgGetNamedParameter(fragmentProgram, "box2");
 	fragmentTopTex = cgGetNamedParameter(fragmentProgram, "topTex");
 	fragmetGroundHeight = cgGetNamedParameter(fragmentProgram, "groundHeight");
+	fragmentBox0Color = cgGetNamedParameter(fragmentProgram, "box0Color");
+	fragmentBox1Color = cgGetNamedParameter(fragmentProgram, "box1Color");
+	fragmentBox2Color = cgGetNamedParameter(fragmentProgram, "box2Color");
 
 	return true;
 }
@@ -170,6 +173,13 @@ void ShaderOneInterface::PerFrameInit(uniformVariables &uniforms)
 							x2.x(), x2.y(), x2.z(), 0.0f,
 							y2.x(), y2.y(), y2.z(), 0.0f,
 							z2.x(), z2.y(), z2.z(), 0.0f };
+
+	V3 box0Color = uniforms.box0->colors[0];
+	V3 box1Color = uniforms.box1->colors[1];
+	V3 box2Color = uniforms.box2->colors[2];
+	cgSetParameter3fv(fragmentBox0Color, &box0Color[0]);
+	cgSetParameter3fv(fragmentBox1Color, &box1Color[0]);
+	cgSetParameter3fv(fragmentBox2Color, &box2Color[0]);
 
 	cgSetMatrixParameterfr(fragmentBox0, &box0Info[0]);
 	cgSetMatrixParameterfr(fragmentBox1, &box1Info[0]);
