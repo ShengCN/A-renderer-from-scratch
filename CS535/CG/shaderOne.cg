@@ -58,28 +58,32 @@ float4x4 gb_box0, gb_box1, gb_box2;
 float3 gb_box0_color, gb_box1_color, gb_box2_color;
 sampler2D texture;
 
-// bool IntersectBB(float3x3 bb, float3 ro, float3 rd, out float t,out float2 uv)
-// {
-// 	// ray bb intersection
-// 	float3 p0 = bb[0];
-// 	float3 p1 = bb[1];
-// 	float3 p2 = bb[2];
-// 	float3 n = normalize(cross(p1-p0,p2-p0)); 
-// 	t = -dot(ro - p0,n)/dot(rd,n);
-// 	float3 p = ro + t * rd - p0;
-// 	float3 x = p2 - p0;
-// 	float3 y = p1 - p0;
-// 	float u = dot(p,normalize(x)) / length(x);
-// 	float v = dot(p,normalize(y)) / length(y);
+bool IntersectBB(float3x3 bb, float3 ro, float3 rd, out float t, out float2 uv)
+{
+	// ray bb intersection
+	float3 p0 = bb[0];
+	float3 p1 = bb[1];
+	float3 p2 = bb[2];
+	float3 n = normalize(cross(p1-p0,p2-p0)); 
+	t = -dot(ro - p0,n)/dot(rd,n);
+	float3 p = ro + t * rd - p0;
+	float3 x = p2 - p0;
+	float3 y = p1 - p0;
+	float u = dot(p,normalize(x)) / length(x);
+	float v = dot(p,normalize(y)) / length(y);
 	
-// 	// not intersect
-// 	if(u<0.0 || u >1.0 || v < 0.0 || v > 1.0)
-// 		return false;
+	// not intersect
+	if(u<0.0 || u > 1.0 || v < 0.0 || v > 1.0)
+		return false;
 
-// 	uv[0] = u;
-// 	uv[1] = 1.0 - v;	// OpenGL uv 
-// 	return true;
-// }
+	// texture not solid
+	if(tex2D(texture, float2(u , v)).r > 0.9)
+		return false;
+
+	uv[0] = u;
+	uv[1] = 1.0 - v;	// OpenGL uv 
+	return true;
+}
 
 bool IntersectBB(float3x3 bb, float3 ro, float3 rd, out float ot)
 {
@@ -96,7 +100,7 @@ bool IntersectBB(float3x3 bb, float3 ro, float3 rd, out float ot)
 	float v = dot(p,normalize(y)) / length(y);
 	
 	// not intersect
-	if(u<0.0 || u >1.0 || v < 0.0 || v > 1.0)
+	if(u < 0.0 || u > 1.0 || v < 0.0 || v > 1.0)
 	{
 		return false;
 	}
@@ -144,7 +148,7 @@ void map(float3 ro, float3 rd, out float t, out float3 color)
 	// ground
 	t = (groundPlaneH - ro.y) / rd.y;
 	color = 0.75;
-	float eps = 1e-4;
+	float eps = 1e-2;
 
 	for(int i = 0; i < 6; ++i)
 	{
@@ -277,7 +281,7 @@ PixelDataOutput FragmentMain(VertexDataOutput pdi,
   float alpha = 1.0;
   if(hasST > 0)
   {
-	  float4 texColor = tex2D(tex, pdi.vtexCoord);
+	  float4 texColor = tex2D(topTex, pdi.vtexCoord);
 
 	  if(texColor.r > 0.9)
 	  {
@@ -285,7 +289,7 @@ PixelDataOutput FragmentMain(VertexDataOutput pdi,
 		  float3 rd = pdi.vxyz - ppc_C;
 		  float t;
 		  float3 color;
-		  map(ro, rd, t,color);
+		  map(ro, rd, t, color);
 		  pc = color;
 		  
 		  // if it is ground

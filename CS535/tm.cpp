@@ -150,105 +150,105 @@ void TM::SetUnitBox()
 
 	int vertCount = 0;
 	// right
-	vertST[2 * vertCount + 0] = 0.0;
-	vertST[2 * vertCount + 1] = 1.0;
+	vertST[2 * vertCount + 0] = 0.0f;
+	vertST[2 * vertCount + 1] = 1.0f;
 	verts[vertCount++] = v0;
 
-	vertST[2 * vertCount + 0] = 0.0;
-	vertST[2 * vertCount + 1] = 0.0;
+	vertST[2 * vertCount + 0] = 0.0f;
+	vertST[2 * vertCount + 1] = 0.0f;
 	verts[vertCount++] = v1;
 	
-	vertST[2 * vertCount + 0] = 1.0;
-	vertST[2 * vertCount + 1] = 0.0;
+	vertST[2 * vertCount + 0] = 1.0f;
+	vertST[2 * vertCount + 1] = 0.0f;
 	verts[vertCount++] = v2;
 	
-	vertST[2 * vertCount + 0] = 1.0;
-	vertST[2 * vertCount + 1] = 1.0;
+	vertST[2 * vertCount + 0] = 1.0f;
+	vertST[2 * vertCount + 1] = 1.0f;
 	verts[vertCount++] = v3;
 
 	// left
-	vertST[2 * vertCount + 0] = 1.0;
-	vertST[2 * vertCount + 1] = 1.0;
+	vertST[2 * vertCount + 0] = 1.0f;
+	vertST[2 * vertCount + 1] = 1.0f;
 	verts[vertCount++] = v4;
 
-	vertST[2 * vertCount + 0] = 0.0;
-	vertST[2 * vertCount + 1] = 1.0;
+	vertST[2 * vertCount + 0] = 0.0f;
+	vertST[2 * vertCount + 1] = 1.0f;
 	verts[vertCount++] = v5;
 
-	vertST[2 * vertCount + 0] = 0.0;
-	vertST[2 * vertCount + 1] = 0.0;
+	vertST[2 * vertCount + 0] = 0.0f;
+	vertST[2 * vertCount + 1] = 0.0f;
 	verts[vertCount++] = v6;
 
-	vertST[2 * vertCount + 0] = 1.0;
-	vertST[2 * vertCount + 1] = 0.0;
+	vertST[2 * vertCount + 0] = 1.0f;
+	vertST[2 * vertCount + 1] = 0.0f;
 	verts[vertCount++] = v7;
 
 	// ground
-	vertST[2 * vertCount + 0] = 1.0;
-	vertST[2 * vertCount + 1] = 1.0;
+	vertST[2 * vertCount + 0] = 1.0f;
+	vertST[2 * vertCount + 1] = 1.0f;
 	verts[vertCount++] = v1;
 
-	vertST[2 * vertCount + 0] = 0.0;
-	vertST[2 * vertCount + 1] = 1.0;
+	vertST[2 * vertCount + 0] = 0.0f;
+	vertST[2 * vertCount + 1] = 1.0f;
 	verts[vertCount++] = v7;
 
-	vertST[2 * vertCount + 0] = 0.0;
-	vertST[2 * vertCount + 1] = 0.0;
+	vertST[2 * vertCount + 0] = 0.0f;
+	vertST[2 * vertCount + 1] = 0.0f;
 	verts[vertCount++] = v6;
 
-	vertST[2 * vertCount + 0] = 1.0;
-	vertST[2 * vertCount + 1] = 0.0;
+	vertST[2 * vertCount + 0] = 1.0f;
+	vertST[2 * vertCount + 1] = 0.0f;
 	verts[vertCount++] = v2;
 
 	// top
-	vertST[2 * vertCount + 0] = 1.0;
-	vertST[2 * vertCount + 1] = 0.0;
+	vertST[2 * vertCount + 0] = 1.0f;
+	vertST[2 * vertCount + 1] = 0.0f;
 	verts[vertCount++] = v0;
 
-	vertST[2 * vertCount + 0] = 1.0;
-	vertST[2 * vertCount + 1] = 1.0;
+	vertST[2 * vertCount + 0] = 1.0f;
+	vertST[2 * vertCount + 1] = 1.0f;
 	verts[vertCount++] = v3;
 
-	vertST[2 * vertCount + 0] = 0.0;
-	vertST[2 * vertCount + 1] = 1.0;
+	vertST[2 * vertCount + 0] = 0.0f;
+	vertST[2 * vertCount + 1] = 1.0f;
 	verts[vertCount++] = v5;
 
-	vertST[2 * vertCount + 0] = 0.0;
-	vertST[2 * vertCount + 1] = 0.0;
+	vertST[2 * vertCount + 0] = 0.0f;
+	vertST[2 * vertCount + 1] = 0.0f;
 	verts[vertCount++] = v4;
 
 	// front
-	vertST[2 * vertCount + 0] = 1.0;
-	vertST[2 * vertCount + 1] = 1.0;
+	vertST[2 * vertCount + 0] = 1.0f;
+	vertST[2 * vertCount + 1] = 1.0f;
 	verts[vertCount++] = v0;
 
-	vertST[2 * vertCount + 0] = 0.0;
-	vertST[2 * vertCount + 1] = 1.0;
+	vertST[2 * vertCount + 0] = 0.0f;
+	vertST[2 * vertCount + 1] = 1.0f;
 	verts[vertCount++] = v4;
 
-	vertST[2 * vertCount + 0] = 0.0;
-	vertST[2 * vertCount + 1] = 0.0;
+	vertST[2 * vertCount + 0] = 0.0f;
+	vertST[2 * vertCount + 1] = 0.0f;
 	verts[vertCount++] = v7;
 
-	vertST[2 * vertCount + 0] = 1.0;
-	vertST[2 * vertCount + 1] = 0.0;
+	vertST[2 * vertCount + 0] = 1.0f;
+	vertST[2 * vertCount + 1] = 0.0f;
 	verts[vertCount++] = v1;
 
 	// back
-	vertST[2 * vertCount + 0] = 1.0;
-	vertST[2 * vertCount + 1] = 1.0;
+	vertST[2 * vertCount + 0] = 1.0f;
+	vertST[2 * vertCount + 1] = 1.0f;
 	verts[vertCount++] = v3;
 
-	vertST[2 * vertCount + 0] = 1.0;
-	vertST[2 * vertCount + 1] = 0.0;
+	vertST[2 * vertCount + 0] = 1.0f;
+	vertST[2 * vertCount + 1] = 0.0f;
 	verts[vertCount++] = v2;
 
-	vertST[2 * vertCount + 0] = 0.0;
-	vertST[2 * vertCount + 1] = 0.0;
+	vertST[2 * vertCount + 0] = 0.0f;
+	vertST[2 * vertCount + 1] = 0.0f;
 	verts[vertCount++] = v6;
 
-	vertST[2 * vertCount + 0] = 0.0;
-	vertST[2 * vertCount + 1] = 1.0;
+	vertST[2 * vertCount + 0] = 0.0f;
+	vertST[2 * vertCount + 1] = 1.0f;
 	verts[vertCount++] = v5;
 
 	V3 color(0.0f);
