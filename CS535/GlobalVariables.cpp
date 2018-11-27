@@ -38,7 +38,7 @@ GlobalVariables::GlobalVariables()
 	isLight = true;
 	isShadow = false;
 	isRefraction = false;
-	isWireFrame = true;
+	isWireFrame = false;
 	refractRatio = 1.15f;
 	
 	string cubemapFolder = "images/cubemaps/";
@@ -54,7 +54,7 @@ GlobalVariables::GlobalVariables()
 
 	isCubemapMipmap = false;
 
-	isRecording = true;
+	isRecording = false;
 	recordName = "Crave";
 	isOpenMP = true;
 }

@@ -14,9 +14,6 @@ struct uniformVariables
 	int isBox;
 	int isGround;
 	std::string tex0File;
-	std::shared_ptr<TM> box0;		// hard coded here, other boxes
-	std::shared_ptr<TM> box1;
-	std::shared_ptr<TM> box2;		// if ground, there are three boxes
 };
 
 // two classes defining the interface between the CPU and GPU
@@ -50,7 +47,7 @@ class ShaderOneInterface
 
 	CGparameter geometryModelViewProj; // geometry shader
 	CGparameter fragmentKa; // ambient coefficient for fragment shader
-	CGparameter fragmentLightPos, fragmentPPCC;
+	CGparameter fragmentPPCC;
 	CGparameter fragmentIsST;
 	CGparameter fragmentTex0;
 	CGparameter fragmentCubemapTex;
@@ -58,15 +55,8 @@ class ShaderOneInterface
 
 	// Hard coded
 	// The other two boxes
-	CGparameter fragmentBox0;
-	CGparameter fragmentBox1;
-	CGparameter fragmentBox2;
 	CGparameter fragmentIsGround;
 	CGparameter fragmetGroundHeight;
-	CGparameter fragmentTopTex;
-	CGparameter fragmentBox0Color;
-	CGparameter fragmentBox1Color;
-	CGparameter fragmentBox2Color;
 
 public:
 	ShaderOneInterface()

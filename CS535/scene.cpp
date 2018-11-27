@@ -49,7 +49,7 @@ Scene::Scene(): isRenderAABB(false)
 
 	fb3 = new FrameBuffer(u0 + fb->w + 30, v0, 512, 512);
 	fb3->label("Third Person View");
-	fb3->show();
+	// fb3->show();
 
 	ppc = new PPC(fb->w, fb->h, fovf);
 	ppc3 = new PPC(fb3->w, fb3->h, 55.0f);
@@ -185,7 +185,7 @@ void Scene::RenderGPU()
 	// Clear the framebuffer
 	glEnable(GL_DEPTH_TEST | GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	// Cube map
@@ -787,9 +787,7 @@ void Scene::PrintTime(const string fbname, FrameBuffer* curfb)
 void Scene::InitDemo()
 {
 	shared_ptr<TM> cubemap = make_shared<TM>();
-	shared_ptr<TM> box0 = make_shared<TM>();
-	shared_ptr<TM> box1 = make_shared<TM>();
-	shared_ptr<TM> box2 = make_shared<TM>();
+	shared_ptr<TM> quadLight = make_shared<TM>();
 	shared_ptr<TM> ground = make_shared<TM>();
 
 	cubemap->SetUnitBox();
@@ -797,21 +795,8 @@ void Scene::InitDemo()
 	cubemap->hasST = 0;
 	cubemap->isCubemap = 1;
 
-	box0->SetUnitBox();
-	box1->SetUnitBox();
-	box2->SetUnitBox();
-	box0->SetShaderOne("CG/shaderOne.cg");
-	box1->SetShaderOne("CG/shaderOne.cg");
-	box2->SetShaderOne("CG/shaderOne.cg");
-	box0->isBox = 1;
-	box1->isBox = 1;
-	box2->isBox = 1;
-	box0->hasST = 1;
-	box1->hasST = 1;
-	box2->hasST = 1;
-	box0->tex = "images/top.tiff";
-	box1->tex = "images/top.tiff";
-	box2->tex = "images/top.tiff";
+	quadLight->SetQuad(V3(0.0f), V3(0.0f,0.0f,1.0f), V3(0.0f,1.0,0.0f),1.0f);
+	quadLight->SetShaderOne("CG/shaderOne.cg");
 
 	ground->SetQuad(V3(0.0f), V3(0.0f, 1.0f, 0.0f), V3(0.0f,0.0f,-1.0f), 1.0f);
 	ground->SetShaderOne("CG/shaderOne.cg");
@@ -821,75 +806,35 @@ void Scene::InitDemo()
 	float tmSize = 100.0f;
 	float boxFract = 0.65f;
 	cubemap->PositionAndSize(V3(0.0f), tmSize * 17.0f);
-	box0->PositionAndSize(tmC, tmSize * boxFract);
-	box1->PositionAndSize(tmC + V3(-1.0f,0.0f,-1.0f) * tmSize * boxFract * 0.7f, tmSize* boxFract);
-	box2->PositionAndSize(tmC + V3(1.0f, 0.0f, -1.0f) * tmSize* boxFract * 0.7f, tmSize* boxFract);
+	quadLight->PositionAndSize(tmC, tmSize * boxFract);
 	ground->PositionAndSize(tmC + V3(0.0f,-1.0f,0.0f) * tmSize* boxFract * 0.3f, tmSize * 10.0f);
 
-	box0->SetColor(V3(1.0f, 0.0f, 0.0f));
-	box1->SetColor(V3(0.0f, 1.0f, 0.0f));
-	box2->SetColor(V3(0.0f, 0.0f, 1.0f));
-	ground->SetColor(V3(0.75f));
+	quadLight->SetColor(V3(1.0f));
+	ground->SetColor(V3(0.25f));
 
-	meshes.push_back(box0);
-	meshes.push_back(box1);
-	meshes.push_back(box2);
+	meshes.push_back(quadLight);
 	meshes.push_back(ground);
-	meshes.push_back(cubemap);
 
-	// Light
+
 	ka = 0.5f;
 	mf = 0.0f;
-	int w = 640, h = 480;
-	V3 LightC = meshes[0]->GetCenter() + V3(0.0f, 75.0f, 100.0f) * 1.5f;
-	shared_ptr<PPC> l0ppc = make_shared<PPC>(w, h, 55.0f);
-	l0ppc->PositionAndOrient(LightC, meshes[0]->GetCenter(), V3(0.0f, 1.0f, 0.0f));
-	lightPPCs.push_back(l0ppc);
-
 	// PPC setting
-	ppc->PositionAndOrient(V3(0.0f, tmSize, -5.0f), GetSceneCenter(), V3(0.0f, 1.0f, 0.0f));
-
-	// save textures
-	int len = 50;
-	fb3->ClearBGRZ(0xFF000000,0.0f);
-	// fb3->DrawRectangle(0, fb3->h / 2 - len, fb3->w, fb3->h / 2 + len, 0xFF000000);
-	// fb3->DrawRectangle(fb3->w / 2 - len, 0, fb3->w / 2 + len, fb3->h, 0xFF000000);
-	fb3->redraw();
-	fb3->SaveAsTiff("images/top.tiff");
+	ppc->PositionAndOrient(V3(0.0f, 0.0f, -5.0f), GetSceneCenter(), V3(0.0f, 1.0f, 0.0f));
 }
 
 void Scene::Demonstration()
 {
 	{
-		// ReloadCG();
-		V3 rotationCenter(0.0f);
-		int count = 0;
-		for (auto m : meshes)
-		{
-			if (m->isBox)
-			{
-				count++;
-				rotationCenter = rotationCenter + m->GetCenter();
-			}
-		}
-		rotationCenter = rotationCenter / static_cast<float>(count);
-
+		ReloadCG();
 		PPC ppc0 = *ppc, ppc1 = *ppc;
 		// ppc1.C = ppc1.C;
-		ppc1.RevolveH(rotationCenter, 45.0f);
 		// ppc1 = *ppc;
-		
-		float r0 = 0;
-		float r1 = fb3->w / 2;
 
-		int framesN = 360;
+		int framesN = 1;
 		for(int i = 0; i < framesN; ++i)
 		{
-			lightPPCs[0]->RevolveH(meshes[0]->GetCenter(), 1.0f);
 			mf = static_cast<float>(i) / static_cast<float>(framesN - 1);
-			ppc->SetInterpolated(&ppc0, &ppc1, static_cast<float>(i)/framesN);
-
-			fb3->ClearBGRZ(0xFF000000, 0.0f);
+			// ppc->SetInterpolated(&ppc0, &ppc1, static_cast<float>(i)/framesN);
 
 			gpufb->redraw();
 			Fl::check();
