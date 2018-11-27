@@ -208,22 +208,10 @@ void Scene::RenderGPU()
 
 void Scene::RenderGPUWireframe()
 {
-	// Clear the framebuffer
-	glEnable(GL_DEPTH_TEST);
-	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	RenderGPU();
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
-	ppc->SetIntrinsicsHW();
-	ppc->SetExtrinsicsHW();
-
-	// Render geometry
-	BeginCountingTime();
-	for (auto t : meshes)
-	{
-		t->RenderHWWireframe(ppc, gpufb);
-	}
-
-	PrintTime("GPU render ", gpufb);
 }
 
 void Scene::ReloadCG()
@@ -860,13 +848,12 @@ void Scene::InitDemo()
 
 	// PPC setting
 	ppc->PositionAndOrient(V3(0.0f, tmSize, -5.0f), GetSceneCenter(), V3(0.0f, 1.0f, 0.0f));
-	ppc->RevolveH(meshes[0]->GetCenter(), 45.0f);
 
 	// save textures
 	int len = 50;
-	fb3->ClearBGRZ(0xFFFFFFFF,0.0f);
-	fb3->DrawRectangle(0, fb3->h / 2 - len, fb3->w, fb3->h / 2 + len, 0xFF000000);
-	fb3->DrawRectangle(fb3->w / 2 - len, 0, fb3->w / 2 + len, fb3->h, 0xFF000000);
+	fb3->ClearBGRZ(0xFF000000,0.0f);
+	// fb3->DrawRectangle(0, fb3->h / 2 - len, fb3->w, fb3->h / 2 + len, 0xFF000000);
+	// fb3->DrawRectangle(fb3->w / 2 - len, 0, fb3->w / 2 + len, fb3->h, 0xFF000000);
 	fb3->redraw();
 	fb3->SaveAsTiff("images/top.tiff");
 }
@@ -874,12 +861,7 @@ void Scene::InitDemo()
 void Scene::Demonstration()
 {
 	{
-		ReloadCG();
-		PPC ppc0 = *ppc, ppc1 = *ppc;
-		ppc1.C = ppc1.C + V3(30.0f, 60.0f, 0.0f);
-		ppc1.PositionAndOrient(ppc1.C, meshes[0]->GetCenter(), V3(0.0f, 1.0f, 0.0f));
-		ppc1 = *ppc;
-		
+		// ReloadCG();
 		V3 rotationCenter(0.0f);
 		int count = 0;
 		for (auto m : meshes)
@@ -892,20 +874,22 @@ void Scene::Demonstration()
 		}
 		rotationCenter = rotationCenter / static_cast<float>(count);
 
+		PPC ppc0 = *ppc, ppc1 = *ppc;
+		// ppc1.C = ppc1.C;
+		ppc1.RevolveH(rotationCenter, 45.0f);
+		// ppc1 = *ppc;
+		
+		float r0 = 0;
+		float r1 = fb3->w / 2;
+
 		int framesN = 360;
 		for(int i = 0; i < framesN; ++i)
 		{
 			lightPPCs[0]->RevolveH(meshes[0]->GetCenter(), 1.0f);
 			mf = static_cast<float>(i) / static_cast<float>(framesN - 1);
-			// ppc->SetInterpolated(&ppc0, &ppc1, static_cast<float>(i)/framesN);
-			// ppc->RevolveH(meshes[0]->GetCenter(), 1.0f);
-			
-			// Move meshes
-			// for(auto m : meshes)
-			// {
-			// 	if (m->isBox)
-			// 		m->RotateAboutArbitraryAxis(rotationCenter, V3(0.0f, 1.0f, 0.0f), 1.0f);
-			// }
+			ppc->SetInterpolated(&ppc0, &ppc1, static_cast<float>(i)/framesN);
+
+			fb3->ClearBGRZ(0xFF000000, 0.0f);
 
 			gpufb->redraw();
 			Fl::check();

@@ -804,13 +804,6 @@ void TM::RenderHW(PPC *ppc, FrameBuffer *curfb)
 	cgi->DisableProfiles();
 }
 
-void TM::RenderHWWireframe(PPC *ppc, FrameBuffer *curfb)
-{
-	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-	RenderHW(ppc, curfb);
-	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-}
-
 void TM::RotateAboutArbitraryAxis(V3 O, V3 a, float angled)
 {
 	for (int vi = 0; vi < vertsN; ++vi)

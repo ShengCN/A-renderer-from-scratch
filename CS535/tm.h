@@ -66,7 +66,6 @@ public:
 	void RenderAABB(PPC *ppc, FrameBuffer *fb);
 	void RenderBB(PPC *ppc, FrameBuffer *fb, FrameBuffer *bbTexture);
 	void RenderHW(PPC *ppc, FrameBuffer *curfb);
-	void RenderHWWireframe(PPC *ppc, FrameBuffer *curfb);
 
 	// Transformation
 	void RotateAboutArbitraryAxis(V3 O, V3 a, float angled);

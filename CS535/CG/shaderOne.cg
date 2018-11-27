@@ -303,7 +303,7 @@ PixelDataOutput FragmentMain(VertexDataOutput pdi,
 		  }		  
 	  }
 
-	  alpha = texColor.a;
+	  alpha = 1.0;
   }
   else 
   {
