@@ -859,7 +859,7 @@ void Scene::InitDemo()
 	lightPPCs.push_back(l0ppc);
 
 	// PPC setting
-	ppc->PositionAndOrient(V3(0.0f, tmSize, -5.0f), meshes[0]->GetCenter(), V3(0.0f, 1.0f, 0.0f));
+	ppc->PositionAndOrient(V3(0.0f, tmSize, -5.0f), GetSceneCenter(), V3(0.0f, 1.0f, 0.0f));
 	ppc->RevolveH(meshes[0]->GetCenter(), 45.0f);
 
 	// save textures
@@ -892,10 +892,10 @@ void Scene::Demonstration()
 		}
 		rotationCenter = rotationCenter / static_cast<float>(count);
 
-		int framesN = 1;
+		int framesN = 360;
 		for(int i = 0; i < framesN; ++i)
 		{
-			// lightPPCs[0]->RevolveH(meshes[0]->GetCenter(), 1.0f);
+			lightPPCs[0]->RevolveH(meshes[0]->GetCenter(), 1.0f);
 			mf = static_cast<float>(i) / static_cast<float>(framesN - 1);
 			// ppc->SetInterpolated(&ppc0, &ppc1, static_cast<float>(i)/framesN);
 			// ppc->RevolveH(meshes[0]->GetCenter(), 1.0f);

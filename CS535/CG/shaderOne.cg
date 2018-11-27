@@ -77,7 +77,7 @@ bool IntersectBB(float3x3 bb, float3 ro, float3 rd, out float t, out float2 uv)
 		return false;
 
 	// texture not solid
-	if(tex2D(texture, float2(u , v)).r > 0.9)
+	if(tex2D(texture, float2(u , v)).r > 0.5)
 		return false;
 
 	uv[0] = u;
@@ -106,7 +106,7 @@ bool IntersectBB(float3x3 bb, float3 ro, float3 rd, out float ot)
 	}
 
 	// texture not solid
-	if(tex2D(texture, float2(u,v)).r > 0.9)
+	if(tex2D(texture, float2(u,v)).r > 0.0)
 		return false;
 
 	ot = t;
@@ -283,7 +283,7 @@ PixelDataOutput FragmentMain(VertexDataOutput pdi,
   {
 	  float4 texColor = tex2D(topTex, pdi.vtexCoord);
 
-	  if(texColor.r > 0.9)
+	  if(texColor.r > 0.0)
 	  {
 		  float3 ro = pdi.vxyz;
 		  float3 rd = pdi.vxyz - ppc_C;
