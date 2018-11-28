@@ -54,7 +54,7 @@ GlobalVariables::GlobalVariables()
 
 	isCubemapMipmap = false;
 
-	isRecording = false;
+	isRecording = true;
 	recordName = "Crave";
 	isOpenMP = true;
 }

@@ -57,8 +57,6 @@ Scene::Scene(): isRenderAABB(false)
 	gui->uiw->position(u0, v0 + fb->h + 60);
 
 	InitDemo();
-
-	// RenderGPU();
 }
 
 void Scene::Render()
@@ -184,8 +182,7 @@ void Scene::RenderGPU()
 {
 	// Global OpenGL settings
 	// Clear the framebuffer
-	glEnable(GL_DEPTH_TEST | GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glEnable(GL_DEPTH_TEST);
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -803,12 +800,12 @@ void Scene::InitDemo()
 	ground->SetShaderOne("CG/shaderOne.cg");
 	ground->isGround = 1;
 
-	V3 tmC = ppc->C + ppc->GetVD() * 150.0f;
-	float tmSize = 100.0f;
-	float boxFract = 0.65f;
+	V3 tmC = ppc->C + ppc->GetVD() * 10.0f;
+	float tmSize = 10.0f;
+	float boxFract = 0.35f;
 	cubemap->PositionAndSize(V3(0.0f), tmSize * 17.0f);
 	quadLight->PositionAndSize(tmC, tmSize * boxFract);
-	ground->PositionAndSize(tmC + V3(0.0f,-1.0f,0.0f) * tmSize* boxFract * 0.3f, tmSize * 10.0f);
+	ground->PositionAndSize(tmC + V3(0.0f,-1.5f,0.0f) * tmSize* boxFract * 0.3f, tmSize * 100.0f);
 
 	quadLight->SetColor(V3(1.0f));
 	ground->SetColor(V3(0.25f));
@@ -820,7 +817,7 @@ void Scene::InitDemo()
 	ka = 0.5f;
 	mf = 0.0f;
 	// PPC setting
-	ppc->PositionAndOrient(V3(0.0f, 0.0f, -5.0f), GetSceneCenter(), V3(0.0f, 1.0f, 0.0f));
+	ppc->PositionAndOrient(V3(0.0f, 1.0f, 0.0f), meshes[1]->GetCenter(), V3(0.0f, 1.0f, 0.0f));
 }
 
 void Scene::Demonstration()
@@ -831,11 +828,13 @@ void Scene::Demonstration()
 		// ppc1.C = ppc1.C;
 		// ppc1 = *ppc;
 
-		int framesN = 1;
+		int framesN = 360;
 		for(int i = 0; i < framesN; ++i)
 		{
 			mf = static_cast<float>(i) / static_cast<float>(framesN - 1);
 			// ppc->SetInterpolated(&ppc0, &ppc1, static_cast<float>(i)/framesN);
+
+			meshes[0]->RotateAboutArbitraryAxis(meshes[0]->GetCenter(), V3(0.0f, 1.0f, 0.0f), 1.0f);
 
 			gpufb->redraw();
 			Fl::check();

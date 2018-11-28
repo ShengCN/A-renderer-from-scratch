@@ -19,8 +19,7 @@ struct PixelDataOutput {
 };
 
 VertexDataOutput VertexMain(VertexDataInput vdi, 
-  uniform float4x4 modelViewProj,
-  uniform float Mf) {
+  uniform float4x4 modelViewProj) {
 
   VertexDataOutput ret;
 
@@ -51,18 +50,26 @@ float3 ToLinear(float3 color)
 	return pow(color,gamma);
 }
 
+float saturate(float v)
+{
+    return clamp(v, 0.0, 1.0);
+}
+
 // -----------------------
 // Global Variables:
 // Ground plane (float)
 // Box0, Box1, Box2 (float3)
 // -----------------------
 float groundPlaneH;
-float roughness = 0.25;
+float roughness = 0.9;
+float intensity = 6.0;
 float3 dcolor = float3(1.0);
-float3 scolor = float3(0.23);
+float3 scolor = float3(1.0);
 float LUT_SIZE  = 64.0;
 float LUT_SCALE;
 float LUT_BIAS;
+sampler2D ltc1;
+sampler2D ltc2;
 
 bool IntersectBB(float3x3 bb, float3 ro, float3 rd, out float t, out float2 uv)
 {
@@ -120,7 +127,8 @@ float3 IntegrateEdgeVec(float3 v1, float3 v2)
     float b = 3.4175940 + (4.1616724 + y)*y;
     float v = a / b;
 
-    float theta_sintheta = (x > 0.0) ? v : 0.5*inversesqrt(1.0 - x*x) - v;
+    // float theta_sintheta = (x > 0.0) ? v : 0.5*inversesqrt(1.0 - x*x) - v;
+	float theta_sintheta = (x > 0.0) ? v : 0.5*inversesqrt(1.0 - x*x) - v;
 
     return cross(v1, v2)*theta_sintheta;
 }
@@ -258,28 +266,37 @@ float3 LTC_Evaluate(float3 N, float3 V, float3 P, float3x3 Minv, float4x4 points
 	L[3] = mul(Minv, points[3].xyz - P);
 
 	float sum = 0.0;
-	int n;
-	ClipQuadToHorizon(L, n);
+    float3 dir = points[0].xyz - P;
+    float3 lightNormal = cross((points[1] - points[0]).xyz, (points[3] - points[0]).xyz);
+    bool behind = (dot(dir, lightNormal) < 0.0);
 
-	if(n == 0)
-		return float3(0.0);
+    L[0] = normalize(L[0]);
+    L[1] = normalize(L[1]);
+    L[2] = normalize(L[2]);
+    L[3] = normalize(L[3]);
+    
+    float3 vsum = float3(0.0);
+    
+    vsum += IntegrateEdgeVec(L[0], L[1]);
+    vsum += IntegrateEdgeVec(L[1], L[2]);
+    vsum += IntegrateEdgeVec(L[2], L[3]);
+    vsum += IntegrateEdgeVec(L[3], L[0]);
 
-	L[0] = normalize(L[0]);
-	L[1] = normalize(L[1]);
-	L[2] = normalize(L[2]);
-	L[3] = normalize(L[3]);
-	L[4] = normalize(L[4]);
+    float len = length(vsum);
+    float z = vsum.z/len;
+    
+    if (behind)
+        z = -z;
+    
+    vec2 uv = vec2(z*0.5 + 0.5, len);
+    uv = uv*LUT_SCALE + LUT_BIAS;
+    
+    float scale = tex2D(ltc2, uv).w;
 
-	// integrate
-	sum += IntegrateEdge(L[0], L[1]);
-	sum += IntegrateEdge(L[1], L[2]);
-	sum += IntegrateEdge(L[2], L[3]);
-	if( n>= 4)
-		sum += IntegrateEdge(L[3], L[4]);
-	if( n == 5)
-		sum += IntegrateEdge(L[4], L[0]);
-	
-	sum = isTwoSided ? abs(sum) : max(0.0, sum);
+    sum = len*scale;
+    
+    if (behind && !isTwoSided)
+        sum = 0.0;
 
 	return float3(sum);
 }
@@ -287,6 +304,7 @@ float3 LTC_Evaluate(float3 N, float3 V, float3 P, float3x3 Minv, float4x4 points
 PixelDataOutput FragmentMain(VertexDataOutput pdi, 
   uniform float3 ppc_C,
   uniform float groundHeight,	// hard coded 
+  uniform float Mf,
   uniform int hasST,
   uniform int isCubemap,
   uniform int isGround,
@@ -298,25 +316,28 @@ PixelDataOutput FragmentMain(VertexDataOutput pdi,
 
 	// Pass in global variables
 	groundPlaneH = groundHeight;
-	LUT_SCALE = (LUT_SIZE - 1.0)/LUT_SIZE;
-	LUT_BIAS  = 0.5/LUT_SIZE;
-
+    LUT_SIZE  = 64.0;
+    LUT_SCALE = (LUT_SIZE - 1.0)/LUT_SIZE;
+    LUT_BIAS  = 0.5/LUT_SIZE;
 	PixelDataOutput ret;
 	
 	// floor normal
 	float4 floorPlane = float4(0.0,1.0,0.0,0.0); 
-
+    intensity = intensity * sin(Mf * 3.1415 * 0.5);
+    float3 lcol = intensity;
 	float3 col = float3(0.0);
 	float3 pc = ToLinear(pdi.color);
 	float alpha = 1.0;
-	bool isTwoSided = false;
+	bool isTwoSided = true;
+    ltc1 = ltc_1;
+    ltc2 = ltc_2;
 
 	if(isGround)
 	{
 		float3 pos = pdi.vxyz;
-		float3 N = floorPlane.xyz;
-		float3 V = normalize(ppc_C - pdi.vxyz);
-		float ndotv = clamp(dot(N,V), 0.0, 1.0);
+		float3 N = normalize(floorPlane.xyz);
+		float3 V = normalize(ppc_C - pos);
+		float ndotv = saturate(dot(N,V));
 		float2 uv = float2(roughness, sqrt(1.0 - ndotv));
 		uv = uv * LUT_SCALE + LUT_BIAS;
 
@@ -324,20 +345,22 @@ PixelDataOutput FragmentMain(VertexDataOutput pdi,
 		float4 t2 = tex2D(ltc_2, uv);
 
 		float3x3 Minv = float3x3(
-			float3(t1.x, 0, t1.y),
-			float3(0, t1.z, 0),
-			float3(t1.w, 0, t2.x));
+            float3(t1.x,  0, t1.y),
+            float3(  0, t1.z,   0),
+            float3(t1.w,  0, t2.x)
+            );
 
 		float3 spec = LTC_Evaluate(N, V, pos, Minv, recPoints, isTwoSided);
 		spec *= scolor * t2.y + (1.0 - scolor) * t2.z;
 
-		float3 diff = LTC_Evaluate(N, V, pos, float3x3(1), recPoints, isTwoSided); 
+		float3 diff = LTC_Evaluate(N, V, pos, float3x3(1,0,0,0,1,0,0,0,1), recPoints, isTwoSided); 
 
-		col = float3(1.0) * (diff);
+        // bug for spec.
+        col = lcol *(spec + dcolor * diff);
 	}
 	else
 	{
-		col = pc;
+		col = lcol;
 	}
 	
   	ret.color = float4(clamp(col ,0.0,1.0),alpha);
