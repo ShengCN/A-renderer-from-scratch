@@ -49,7 +49,7 @@ Scene::Scene(): isRenderAABB(false)
 
 	fb3 = new FrameBuffer(u0 + fb->w + 30, v0, 64, 64);
 	fb3->label("Third Person View");
-	fb3->show();
+	// fb3->show();
 
 	ppc = new PPC(fb->w, fb->h, fovf);
 	ppc3 = new PPC(fb3->w, fb3->h, 55.0f);
