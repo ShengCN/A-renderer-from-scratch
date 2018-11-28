@@ -60,6 +60,9 @@ float groundPlaneH;
 float roughness = 0.25;
 float3 dcolor = float3(1.0);
 float3 scolor = float3(0.23);
+float LUT_SIZE  = 64.0;
+float LUT_SCALE;
+float LUT_BIAS;
 
 bool IntersectBB(float3x3 bb, float3 ro, float3 rd, out float t, out float2 uv)
 {
@@ -108,6 +111,49 @@ bool IntersectBB(float3x3 bb, float3 ro, float3 rd, out float ot)
 	return true;
 }
 
+float3 IntegrateEdgeVec(float3 v1, float3 v2)
+{
+    float x = dot(v1, v2);
+    float y = abs(x);
+
+    float a = 0.8543985 + (0.4965155 + 0.0145206*y)*y;
+    float b = 3.4175940 + (4.1616724 + y)*y;
+    float v = a / b;
+
+    float theta_sintheta = (x > 0.0) ? v : 0.5*inversesqrt(1.0 - x*x) - v;
+
+    return cross(v1, v2)*theta_sintheta;
+}
+
+float IntegrateEdge(float3 v1, float3 v2)
+{
+	return IntergrateEdgeVec(v1, v2).z;
+}
+
+float3 LTC_Evaluate(float3 N, float3 V, float3 P, float3x3 Minv, float4x4 points, bool isTwoSided)
+{
+	// construct orthonomal basis around N
+	float3 T1, T2;
+	T1 = normalize(V - N * dot(V,N));
+	T2 = cross(N, T1);
+
+	Minv = mul(Minv, transpose(float3x3(T1, T2, N)));
+
+	// polygon
+	float3 L[5];
+	L[0] = mul(Minv, points[0].xyz - P);
+	L[1] = mul(Minv, points[1].xyz - P);
+	L[2] = mul(Minv, points[2].xyz - P);
+	L[3] = mul(Minv, points[3].xyz - P);
+
+	float3 vsum = float3(0.0);
+	vsum += IntegrateEdgeVec(L[0], L[1]);
+	vsum += IntegrateEdgeVec(L[1], L[2]);
+	vsum += IntegrateEdgeVec(L[2], L[3]);
+	vsum += IntegrateEdgeVec(L[3], L[0]);
+
+	return float3(0.0);
+}
 
 PixelDataOutput FragmentMain(VertexDataOutput pdi, 
   uniform float3 ppc_C,
@@ -115,20 +161,26 @@ PixelDataOutput FragmentMain(VertexDataOutput pdi,
   uniform int hasST,
   uniform int isCubemap,
   uniform int isGround,
+  uniform float4x4 recPoints,
   uniform sampler2D tex,
+  uniform sampler2D ltc_1,
+  uniform sampler2D ltc_2,
   uniform samplerCUBE env) {
 
 	// Pass in global variables
 	groundPlaneH = groundHeight;
+	LUT_SCALE = (LUT_SIZE - 1.0)/LUT_SIZE;
+	LUT_BIAS  = 0.5/LUT_SIZE;
 
 	PixelDataOutput ret;
 	
 	// floor normal
-	float3 floorPlane = float4(0.0,1.0,0.0,0.0); 
+	float4 floorPlane = float4(0.0,1.0,0.0,0.0); 
 
 	float3 col = float3(0.0);
 	float3 pc = ToLinear(pdi.color);
 	float alpha = 1.0;
+	bool isTwoSided = false;
 
 	if(isGround)
 	{
@@ -136,7 +188,20 @@ PixelDataOutput FragmentMain(VertexDataOutput pdi,
 		float3 N = floorPlane.xyz;
 		float3 V = normalize(ppc_C - pdi.vxyz);
 		float ndotv = clamp(dot(N,V), 0.0, 1.0);
-		col = ndotv;
+		float2 uv = float2(roughness, sqrt(1.0 - ndotv));
+		uv = uv * LUT_SCALE + LUT_BIAS;
+
+		float4 t1 = tex2D(ltc_1, uv);
+		float4 t2 = tex2D(ltc_2, uv);
+
+		float3x3 Minv = float3x3(
+			float3(t1.x, 0, t1.y),
+			float3(0, t1.z, 0),
+			float3(t1.w, 0, t2.x));
+
+		float3 spec = LTC_Evaluate(N,V, pdi.vxyz, Minv, recPoints, isTwoSided);
+
+		col = t1.rgb;
 	}
 	else
 	{

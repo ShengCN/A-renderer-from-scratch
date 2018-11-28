@@ -112,6 +112,9 @@ bool ShaderOneInterface::PerSessionInit(CGInterface* cgi, const std::string shad
 	fragmentIsCubemap = cgGetNamedParameter(fragmentProgram, "isCubemap");
 	fragmentIsGround = cgGetNamedParameter(fragmentProgram, "isGround");
 	fragmetGroundHeight = cgGetNamedParameter(fragmentProgram, "groundHeight");
+	fragmentBRDF_ltc1 = cgGetNamedParameter(fragmentProgram, "ltc_1");
+	fragmentBRDF_ltc2 = cgGetNamedParameter(fragmentProgram, "ltc_2");
+	fragmentPoints = cgGetNamedParameter(fragmentProgram, "recPoints");
 
 	return true;
 }
@@ -147,8 +150,17 @@ void ShaderOneInterface::PerFrameInit(uniformVariables &uniforms)
 	cgSetParameter1i(fragmentIsST, uniforms.hasST);
 	cgSetParameter1i(fragmentIsCubemap, uniforms.isCubemap);
 	cgSetParameter1i(fragmentIsGround, uniforms.isGround);
-
 	cgSetParameter1f(fragmetGroundHeight, GlobalVariables::Instance()->curScene->meshes.back()->verts[0].y());	// hard coded ground plane
+
+	auto rec = GlobalVariables::Instance()->curScene->meshes[0];
+	float points[] = {
+		rec->verts[0].x(),rec->verts[0].y(),rec->verts[0].z(), 0.0,
+		rec->verts[1].x(),rec->verts[1].y(),rec->verts[1].z(), 0.0,
+		rec->verts[2].x(),rec->verts[2].y(),rec->verts[2].z(), 0.0,
+		rec->verts[3].x(),rec->verts[3].y(),rec->verts[3].z(), 0.0,
+	};
+
+	cgSetMatrixParameterfr(fragmentPoints, points);
 
 	if(uniforms.hasST)
 	{
@@ -159,6 +171,11 @@ void ShaderOneInterface::PerFrameInit(uniformVariables &uniforms)
 	cgGLSetTextureParameter(fragmentCubemapTex, FrameBuffer::gpuTexID.at(GlobalVariables::Instance()->cubemapFiles[0]));
 	cgGLEnableTextureParameter(fragmentCubemapTex);
 
+	// ltc_1 ltc_2
+	cgGLSetTextureParameter(fragmentBRDF_ltc1, FrameBuffer::gpuTexID.at(uniforms.ltc_1));
+	cgGLEnableTextureParameter(fragmentBRDF_ltc1);
+	cgGLSetTextureParameter(fragmentBRDF_ltc2, FrameBuffer::gpuTexID.at(uniforms.ltc_2));
+	cgGLEnableTextureParameter(fragmentBRDF_ltc2);
 }
 
 void ShaderOneInterface::PerFrameDisable()

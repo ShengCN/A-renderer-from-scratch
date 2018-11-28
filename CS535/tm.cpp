@@ -736,6 +736,9 @@ void TM::RenderBB(PPC* ppc, FrameBuffer* fb, FrameBuffer* bbTexture)
 
 void TM::RenderHW(PPC *ppc, FrameBuffer *curfb)
 {
+	string ltc_1 = "images/ltc_1.tiff";
+	string ltc_2 = "images/ltc_2.tiff";
+
 	if (cgi == nullptr && soi == nullptr)
 	{
 		auto gv = GlobalVariables::Instance();
@@ -747,8 +750,15 @@ void TM::RenderHW(PPC *ppc, FrameBuffer *curfb)
 		if (!tex.empty())
 			gv->curScene->gpufb->LoadTextureGPU(tex);
 
-		curfb->LoadTextureGPU("images/top.tiff");
-		curfb->LoadTextureGPU("images/side.tiff");
+		if (FrameBuffer::gpuTexID.find(ltc_1) == FrameBuffer::gpuTexID.end())
+		{
+			curfb->LoadTextureGPU(ltc_1);
+		}
+
+		if (FrameBuffer::gpuTexID.find(ltc_2) == FrameBuffer::gpuTexID.end())
+		{
+			curfb->LoadTextureGPU(ltc_2);
+		}
 	}
 
 	ppc->SetIntrinsicsHW();
@@ -762,6 +772,8 @@ void TM::RenderHW(PPC *ppc, FrameBuffer *curfb)
 	uniforms.isBox = isBox;
 	uniforms.isGround = isGround;
 	uniforms.tex0File = tex;
+	uniforms.ltc_1 = ltc_1;
+	uniforms.ltc_2 = ltc_2;
 
 	soi->PerFrameInit(uniforms);
 	soi->BindPrograms();

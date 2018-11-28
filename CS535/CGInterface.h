@@ -14,6 +14,8 @@ struct uniformVariables
 	int isBox;
 	int isGround;
 	std::string tex0File;
+	std::string ltc_1;
+	std::string ltc_2;
 };
 
 // two classes defining the interface between the CPU and GPU
@@ -57,6 +59,9 @@ class ShaderOneInterface
 	// The other two boxes
 	CGparameter fragmentIsGround;
 	CGparameter fragmetGroundHeight;
+	CGparameter fragmentBRDF_ltc1;	// ltc1 texture
+	CGparameter fragmentBRDF_ltc2;	// ltc2 texture
+	CGparameter fragmentPoints;		// rectangular points
 
 public:
 	ShaderOneInterface()
