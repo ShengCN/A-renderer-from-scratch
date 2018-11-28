@@ -835,6 +835,7 @@ void Scene::Demonstration()
 			// ppc->SetInterpolated(&ppc0, &ppc1, static_cast<float>(i)/framesN);
 
 			meshes[0]->RotateAboutArbitraryAxis(meshes[0]->GetCenter(), V3(0.0f, 1.0f, 0.0f), 1.0f);
+			meshes[0]->PositionAndSize(meshes[0]->GetCenter(), 2.0 * (0.5 + sin(mf * 3.1415926)));
 
 			gpufb->redraw();
 			Fl::check();
