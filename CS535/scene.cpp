@@ -36,6 +36,8 @@ Scene::Scene(): isRenderAABB(false)
 	int w = gv->isHighResolution ? gv->highResoW : gv->resoW;
 	int h = gv->isHighResolution ? gv->highResoH : gv->resoH;
 
+	w = 1000;
+	h = 600;
 	int fovf = 105.0f;
 	fb = make_shared<FrameBuffer>(u0, v0, w, h);
 	fb->label("SW Framebuffer");
@@ -56,18 +58,18 @@ Scene::Scene(): isRenderAABB(false)
 
 	gui->uiw->position(u0, v0 + fb->h + 60);
 
-	leftfb = make_shared<FrameBuffer>(30, 40, 10, 10);
+	leftfb = make_shared<FrameBuffer>(30 + w, 40, 10, 10);
 	leftfb->LoadTiff("images/left.tif");
 	leftfb->label("Left");
 	leftfb->show();
 
-	rightfb = make_shared<FrameBuffer>(30 + 30 + leftfb->w, 40, 10, 10);
+	rightfb = make_shared<FrameBuffer>(30 + 30 + w + leftfb->w, 40, 10, 10);
 	rightfb->LoadTiff("images/right.tif");
 	rightfb->label("Right");
 	rightfb->show();
 
-	leftppc  = make_shared<PPC>(55.0f, 640, 480);
-	rightppc = make_shared<PPC>(55.0f, 640, 480);
+	leftppc  = make_shared<PPC>(640, 480, 55.0f);
+	rightppc = make_shared<PPC>(640, 480, 55.0f);
 	rightppc->Pan(-20.0f);
 
 	InitDemo();
