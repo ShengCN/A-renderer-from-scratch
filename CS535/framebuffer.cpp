@@ -1102,3 +1102,62 @@ GLuint FrameBuffer::SaveCPU2GPUtexture()
 
 	return texID;
 }
+
+void FrameBuffer::Resample(shared_ptr<PPC> ppc0, shared_ptr<FrameBuffer> fb1, shared_ptr<PPC> ppc1)
+{
+	for (int v = 0; v < h; ++v)
+	{
+		for(int u = 0; u < w; ++u)
+		{
+			float uf = 0.5f + (float)u;
+			float vf = 0.5f + (float)v;
+			V3 P = ppc0->UnprojectPixel(uf, vf, 100.0f);
+			V3 PP;
+			if(!ppc1->Project(P,PP))
+				continue;
+			
+			unsigned int c1 = fb1->Get((int)PP[0], (int)PP[1]);
+			if(c1 == 0XFF000000)
+				continue;;
+			V3 c1v; c1v.SetColor(c1);
+			unsigned int c0 = Get(u, v);
+			if(c0 != 0xFF000000)
+			{
+				V3 c0v; c0v.SetColor(c0);
+				V3 cv = (c1v + c0v) * 0.5f;
+				c1 = cv.GetColor();
+			}
+			Set(u, v, c1);
+		}
+	}
+}
+
+float FrameBuffer::ColorDifference(shared_ptr<PPC> ppc0, shared_ptr<FrameBuffer> fb1, shared_ptr<PPC> ppc1)
+{
+	float ret = 0.0f;
+	int opn = 0;
+	for(int v = 0; v < h; ++v)
+	{
+		for(int u = 0; u < w; ++u)
+		{
+			auto[uf, vf] = GetPixelCenter(u,v);
+			V3 P = ppc0->UnprojectPixel(uf, vf, 100.0f);
+			V3 PP;
+			if(!ppc1->Project(P, PP))
+				continue;
+			unsigned int c1 = fb1->Get(static_cast<int>(PP[0]), static_cast<int>(PP[1]));
+			if(c1 == 0xFF000000)
+				continue;
+			V3 c1v; c1v.SetColor(c1);
+			unsigned int c0 = Get(u, v);
+			V3 c0v; c0v.SetColor(c0);
+			ret += (c1v - c0v) * (c1v - c0v);
+			opn++;
+		}
+	}
+
+	ret /= opn * 3;
+	ret = sqrt(ret);
+	ret *= 255.0f;
+	return ret;
+}

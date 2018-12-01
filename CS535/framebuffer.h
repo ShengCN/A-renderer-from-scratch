@@ -86,7 +86,11 @@ public:
 	void SaveGPUAsTiff(const string saveFile);
 	GLuint SaveCPU2GPUtexture();
 
+	void Resample(shared_ptr<PPC> ppc0, shared_ptr<FrameBuffer> fb1, shared_ptr<PPC> ppc1);
+	float ColorDifference(shared_ptr<PPC> ppc0, shared_ptr<FrameBuffer> fb1, shared_ptr<PPC> ppc1);
+
 private:
 	void Set(int u, int v, int color);
+	tuple<float, float> GetPixelCenter(int u, int v) { return tuple<float, float>(0.5f + static_cast<float>(u), 0.5f + static_cast<float>(v)); }
 };
 

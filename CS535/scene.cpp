@@ -36,16 +36,16 @@ Scene::Scene(): isRenderAABB(false)
 	int w = gv->isHighResolution ? gv->highResoW : gv->resoW;
 	int h = gv->isHighResolution ? gv->highResoH : gv->resoH;
 
-	int fovf = 70.0f;
+	int fovf = 105.0f;
 	fb = make_shared<FrameBuffer>(u0, v0, w, h);
 	fb->label("SW Framebuffer");
-	// fb->show();
+	fb->show();
 
 	gpufb = make_shared<FrameBuffer>(u0, v0, w, h);
 	gpufb->label("GPU Framebuffer");
 	// gpufb->isgpu = true;
 	gpufb->SetupGPU();
-	gpufb->show();
+	// gpufb->show();
 
 	fb3 = make_shared<FrameBuffer>(u0 + fb->w + 30, v0, 64, 64);
 	fb3->label("Third Person View");
@@ -55,6 +55,20 @@ Scene::Scene(): isRenderAABB(false)
 	ppc3 = make_shared<PPC>(fb3->w, fb3->h, 55.0f);
 
 	gui->uiw->position(u0, v0 + fb->h + 60);
+
+	leftfb = make_shared<FrameBuffer>(30, 40, 10, 10);
+	leftfb->LoadTiff("images/left.tif");
+	leftfb->label("Left");
+	leftfb->show();
+
+	rightfb = make_shared<FrameBuffer>(30 + 30 + leftfb->w, 40, 10, 10);
+	rightfb->LoadTiff("images/right.tif");
+	rightfb->label("Right");
+	rightfb->show();
+
+	leftppc  = make_shared<PPC>(55.0f, 640, 480);
+	rightppc = make_shared<PPC>(55.0f, 640, 480);
+	rightppc->Pan(-20.0f);
 
 	InitDemo();
 }
@@ -316,6 +330,24 @@ void Scene::RaytracingScene(shared_ptr<PPC> currPPC, shared_ptr<FrameBuffer> cur
 
 void Scene::ShowPano()
 {
+	float panRange = 50.0f;
+	float pan0 = -25.0f;
+	int sn = 21;
+	// leftfb = rightfb;
+	for(int si =0; si < sn; ++si)
+	{
+		*rightppc = *leftppc;
+		float curPan = pan0 - panRange / 2.0f + panRange * (float)si / (float)sn;
+		rightppc->Pan(curPan);
+
+		fb->ClearBGRZ(0xFF000000, 0.0f);
+		fb->Resample(ppc, leftfb, leftppc);
+		fb->Resample(ppc, rightfb, rightppc);
+		float colorDifference = leftfb->ColorDifference(leftppc, rightfb, rightppc);
+		cerr << "Color difference: " << colorDifference << " \t \r";
+		fb->redraw();
+		Fl::check();
+	}
 
 }
 
@@ -786,32 +818,5 @@ void Scene::InitDemo()
 
 void Scene::Demonstration()
 {
-	{
-		ReloadCG();
-		PPC ppc0 = *ppc, ppc1 = *ppc;
-		// ppc1.C = ppc1.C;
-		// ppc1 = *ppc;
-
-		int framesN = 360;
-		for(int i = 0; i < framesN; ++i)
-		{
-			mf = static_cast<float>(i) / static_cast<float>(framesN - 1);
-			// ppc->SetInterpolated(&ppc0, &ppc1, static_cast<float>(i)/framesN);
-
-			meshes[0]->RotateAboutArbitraryAxis(meshes[0]->GetCenter(), V3(0.0f, 1.0f, 0.0f), 1.0f);
-			meshes[0]->PositionAndSize(meshes[0]->GetCenter(), 2.0 * (0.5 + sin(mf * 3.1415926)));
-
-			gpufb->redraw();
-			Fl::check();
-
-			if(GlobalVariables::Instance()->isRecording)
-			{
-				char buffer[50];
-				sprintf_s(buffer,"images/Recording/%s-%03d.tiff", GlobalVariables::Instance()->recordName.c_str(), i);
-				gpufb->SaveGPUAsTiff(buffer);
-			}
-		}
-		*ppc = ppc0;
-		return;
-	}
+	ShowPano();
 }
