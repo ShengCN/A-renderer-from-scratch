@@ -37,22 +37,22 @@ Scene::Scene(): isRenderAABB(false)
 	int h = gv->isHighResolution ? gv->highResoH : gv->resoH;
 
 	int fovf = 70.0f;
-	fb = new FrameBuffer(u0, v0, w, h);
+	fb = make_shared<FrameBuffer>(u0, v0, w, h);
 	fb->label("SW Framebuffer");
 	// fb->show();
 
-	gpufb = new FrameBuffer(u0, v0, w, h);
+	gpufb = make_shared<FrameBuffer>(u0, v0, w, h);
 	gpufb->label("GPU Framebuffer");
 	// gpufb->isgpu = true;
 	gpufb->SetupGPU();
 	gpufb->show();
 
-	fb3 = new FrameBuffer(u0 + fb->w + 30, v0, 64, 64);
+	fb3 = make_shared<FrameBuffer>(u0 + fb->w + 30, v0, 64, 64);
 	fb3->label("Third Person View");
 	// fb3->show();
 
-	ppc = new PPC(fb->w, fb->h, fovf);
-	ppc3 = new PPC(fb3->w, fb3->h, 55.0f);
+	ppc = make_shared<PPC>(fb->w, fb->h, fovf);
+	ppc3 = make_shared<PPC>(fb3->w, fb3->h, 55.0f);
 
 	gui->uiw->position(u0, v0 + fb->h + 60);
 
@@ -99,7 +99,7 @@ void Scene::Render()
 	}
 }
 
-void Scene::Render(PPC* currPPC, FrameBuffer* currFB)
+void Scene::Render(shared_ptr<PPC> currPPC, shared_ptr<FrameBuffer> currFB)
 {
 	if (currFB)
 	{
@@ -108,7 +108,7 @@ void Scene::Render(PPC* currPPC, FrameBuffer* currFB)
 		if (!GlobalVariables::Instance()->isRayTracing)
 		{
 			if(cubemap)
-				currFB->DrawCubeMap(currPPC, cubemap.get());
+				currFB->DrawCubeMap(currPPC, cubemap);
 			
 			for (auto t : meshes)
 			{
@@ -150,7 +150,7 @@ void Scene::RenderWireFrame()
 	fb->redraw();
 }
 
-void Scene::RenderZbuffer(PPC* currPPC, FrameBuffer* currFB)
+void Scene::RenderZbuffer(shared_ptr<PPC> currPPC, shared_ptr<FrameBuffer> currFB)
 {
 	if (currFB)
 	{
@@ -174,7 +174,7 @@ void Scene::UpdateSM()
 {
 	for (size_t li = 0; li < lightPPCs.size(); ++li)
 	{
-		RenderZbuffer(lightPPCs[li].get(), shadowMaps[li].get());
+		RenderZbuffer(lightPPCs[li], shadowMaps[li]);
 	}
 }
 
@@ -221,7 +221,7 @@ void Scene::ReloadCG()
 	}
 }
 
-void Scene::RaytracingScene(PPC* currPPC, FrameBuffer* currFB)
+void Scene::RaytracingScene(shared_ptr<PPC> currPPC, shared_ptr<FrameBuffer> currFB)
 {
 	for (int v = 0; v < currFB->h; ++v)
 	{
@@ -314,6 +314,11 @@ void Scene::RaytracingScene(PPC* currPPC, FrameBuffer* currFB)
 	}
 }
 
+void Scene::ShowPano()
+{
+
+}
+
 void Scene::UpdateBBs()
 {
 	for (auto r : reflectors)
@@ -350,7 +355,7 @@ void Scene::UpdateBBs()
 			ppc->PositionAndOrient(rCenter, otherTmCenter, V3(0.0f, 1.0f, 0.0f));
 
 			// render it into the currFB
-			RenderBB(ppc.get(), bbFB.get(), otherTM);
+			RenderBB(ppc, bbFB, otherTM);
 
 			// Save the result 
 			bb->fbTexture = bbFB;
@@ -363,7 +368,7 @@ void Scene::UpdateBBs()
 }
 
 // Only render the target
-void Scene::RenderBB(PPC* currPPC, FrameBuffer* currFB, shared_ptr<TM> reflector)
+void Scene::RenderBB(shared_ptr<PPC> currPPC, shared_ptr<FrameBuffer> currFB, shared_ptr<TM> reflector)
 {
 	if (currPPC && currFB && reflector)
 	{
@@ -409,7 +414,7 @@ void Scene::UpdateBBsGPU()
 			ppc->PositionAndOrient(rCenter, otherTmCenter, V3(0.0f, 1.0f, 0.0f));
 
 			// render it into the currFB
-			RenderBBGPU(ppc.get(), bbFB.get(), otherTM);
+			RenderBBGPU(ppc, bbFB, otherTM);
 
 			// Save the result 
 			bb->fbTexture = bbFB;
@@ -421,7 +426,7 @@ void Scene::UpdateBBsGPU()
 	}
 }
 
-void Scene::RenderBBGPU(PPC* curPPC, FrameBuffer* curFB, shared_ptr<TM> reflector)
+void Scene::RenderBBGPU(shared_ptr<PPC> curPPC, shared_ptr<FrameBuffer> curFB, shared_ptr<TM> reflector)
 {
 	// todo
 	curFB->ClearBGRZ(0x00999999, 0.0f);
@@ -442,14 +447,6 @@ V3 Scene::GetSceneCenter()
 
 Scene::~Scene()
 {
-	if (ppc != nullptr)
-		delete ppc;
-	if (ppc3 != nullptr)
-		delete ppc3;
-	if (fb != nullptr)
-		delete fb;
-	if (fb3 != nullptr)
-		delete fb3;
 }
 
 V3 Scene::RayTracingColor(ray r, hitable_list& obj_list, int depth)
@@ -772,7 +769,7 @@ void Scene::PrintTime(const string dbgInfo)
 	}
 }
 
-void Scene::PrintTime(const string fbname, FrameBuffer* curfb)
+void Scene::PrintTime(const string fbname, shared_ptr<FrameBuffer> curfb)
 {
 	endTime = Clock::now();
 	float duration = std::chrono::duration_cast<chrono::nanoseconds>(endTime - beginTime).count();
@@ -784,40 +781,7 @@ void Scene::PrintTime(const string fbname, FrameBuffer* curfb)
 
 void Scene::InitDemo()
 {
-	shared_ptr<TM> cubemap = make_shared<TM>();
-	shared_ptr<TM> quadLight = make_shared<TM>();
-	shared_ptr<TM> ground = make_shared<TM>();
-
-	cubemap->SetUnitBox();
-	cubemap->SetShaderOne("CG/shaderOne.cg");
-	cubemap->hasST = 0;
-	cubemap->isCubemap = 1;
-
-	quadLight->SetQuad(V3(0.0f), V3(0.0f,0.0f,1.0f), V3(0.0f,1.0,0.0f),1.0f);
-	quadLight->SetShaderOne("CG/shaderOne.cg");
-
-	ground->SetQuad(V3(0.0f), V3(0.0f, 1.0f, 0.0f), V3(0.0f,0.0f,-1.0f), 1.0f);
-	ground->SetShaderOne("CG/shaderOne.cg");
-	ground->isGround = 1;
-
-	V3 tmC = ppc->C + ppc->GetVD() * 10.0f;
-	float tmSize = 10.0f;
-	float boxFract = 0.35f;
-	cubemap->PositionAndSize(V3(0.0f), tmSize * 17.0f);
-	quadLight->PositionAndSize(tmC, tmSize * boxFract);
-	ground->PositionAndSize(tmC + V3(0.0f,-1.5f,0.0f) * tmSize* boxFract * 0.3f, tmSize * 100.0f);
-
-	quadLight->SetColor(V3(1.0f));
-	ground->SetColor(V3(0.25f));
-
-	meshes.push_back(quadLight);
-	meshes.push_back(ground);
-
-
-	ka = 0.5f;
-	mf = 0.0f;
-	// PPC setting
-	ppc->PositionAndOrient(V3(0.0f, 1.0f, 0.0f), meshes[1]->GetCenter(), V3(0.0f, 1.0f, 0.0f));
+	// leftfb = 
 }
 
 void Scene::Demonstration()

@@ -348,7 +348,7 @@ tuple<V3, V3, V3, V3> TM::GetCornerAndAxis()
 	return tuple<V3, V3, V3, V3>(corner, x, y, z);
 }
 
-void TM::RenderPoints(PPC* ppc, FrameBuffer* fb)
+void TM::RenderPoints(shared_ptr<PPC> ppc, shared_ptr<FrameBuffer> fb)
 {
 	for (int vi = 0; vi < vertsN; ++vi)
 	{
@@ -356,7 +356,7 @@ void TM::RenderPoints(PPC* ppc, FrameBuffer* fb)
 	}
 }
 
-void TM::RenderWireFrame(PPC* ppc, FrameBuffer* fb)
+void TM::RenderWireFrame(shared_ptr<PPC> ppc, shared_ptr<FrameBuffer> fb)
 {
 	for (int ti = 0; ti < trisN; ++ti)
 	{
@@ -370,7 +370,7 @@ void TM::RenderWireFrame(PPC* ppc, FrameBuffer* fb)
 	}
 }
 
-void TM::RenderFill(PPC* ppc, FrameBuffer* fb)
+void TM::RenderFill(shared_ptr<PPC> ppc, shared_ptr<FrameBuffer> fb)
 {
 	auto gv = GlobalVariables::Instance();
 
@@ -505,7 +505,7 @@ void TM::RenderFill(PPC* ppc, FrameBuffer* fb)
 	}
 }
 
-void TM::RenderFillZ(PPC* ppc, FrameBuffer* fb)
+void TM::RenderFillZ(shared_ptr<PPC> ppc, shared_ptr<FrameBuffer> fb)
 {
 	auto gv = GlobalVariables::Instance();
 	// Lod Level, use bbox to estimate how many pixels do we need
@@ -594,7 +594,7 @@ void TM::RenderFillZ(PPC* ppc, FrameBuffer* fb)
 	}
 }
 
-void TM::RenderAABB(PPC* ppc, FrameBuffer* fb)
+void TM::RenderAABB(shared_ptr<PPC> ppc, shared_ptr<FrameBuffer> fb)
 {
 	auto aabb = ComputeAABB();
 	V3 x(1.0f, 0.0f, 0.0f), y(0.0f, 1.0f, 0.0f), z(0.0f, 0.0f, 1.0f);
@@ -632,7 +632,7 @@ void TM::RenderAABB(PPC* ppc, FrameBuffer* fb)
 	fb->Draw3DSegment(ppc, p6, blue, p7, blue);
 }
 
-void TM::RenderBB(PPC* ppc, FrameBuffer* fb, FrameBuffer* bbTexture)
+void TM::RenderBB(shared_ptr<PPC> ppc, shared_ptr<FrameBuffer> fb, shared_ptr<FrameBuffer> bbTexture)
 {
 	auto gv = GlobalVariables::Instance();
 	for (int ti = 0; ti < trisN; ++ti)
@@ -734,7 +734,7 @@ void TM::RenderBB(PPC* ppc, FrameBuffer* fb, FrameBuffer* bbTexture)
 	}
 }
 
-void TM::RenderHW(PPC *ppc, FrameBuffer *curfb)
+void TM::RenderHW(shared_ptr<PPC> ppc, shared_ptr<FrameBuffer> curfb)
 {
 	string ltc_1 = "images/ltc_1.tiff";
 	string ltc_2 = "images/ltc_2.tiff";
@@ -943,7 +943,7 @@ V3 TM::GetCenter()
 	return aabb.GetCenter();
 }
 
-void TM::RayTracing(PPC* ppc, FrameBuffer* fb)
+void TM::RayTracing(shared_ptr<PPC> ppc, shared_ptr<FrameBuffer> fb)
 {
 	for (int v = 0; v < fb->h; ++v)
 	{
@@ -995,7 +995,7 @@ void TM::RayTracing(PPC* ppc, FrameBuffer* fb)
 	}
 }
 
-tuple<V3, float> TM::Shading(PPC* ppc, FrameBuffer* fb, int u, int v, float w, PointProperty& pp, V3 dn)
+tuple<V3, float> TM::Shading(shared_ptr<PPC> ppc, shared_ptr<FrameBuffer> fb, int u, int v, float w, PointProperty& pp, V3 dn)
 {
 	V3 color(0.0f); float alpha = 1.0f;
 	if (fb->textures.find(tex) != fb->textures.end())
@@ -1010,7 +1010,7 @@ tuple<V3, float> TM::Shading(PPC* ppc, FrameBuffer* fb, int u, int v, float w, P
 	// environment mapping
 	if (isEnvMapping)
 	{
-		auto [envColor, envEffect] = EnvMapping(ppc, fb, GlobalVariables::Instance()->curScene->cubemap.get(), pp.p, pp.n, dn);
+		auto [envColor, envEffect] = EnvMapping(ppc, fb, GlobalVariables::Instance()->curScene->cubemap, pp.p, pp.n, dn);
 
 		envEffect = isShowObjColor ? envEffect : 1.0f;
 		pp.c = ClampColor(pp.c * (1.0f - envEffect) + envColor * envEffect);
@@ -1033,7 +1033,7 @@ tuple<V3, float> TM::Shading(PPC* ppc, FrameBuffer* fb, int u, int v, float w, P
 	return tuple<V3, float>(color, alpha);
 }
 
-void TM::Light(V3 mc, V3 L, PPC* ppc)
+void TM::Light(V3 mc, V3 L, shared_ptr<PPC> ppc)
 {
 	for (int vi = 0; vi < vertsN; ++vi)
 	{
@@ -1046,7 +1046,7 @@ void TM::Light(V3 mc, V3 L, PPC* ppc)
 	}
 }
 
-V3 TM::Light(PPC* ppc, PointProperty& pp, int u, int v, float w)
+V3 TM::Light(shared_ptr<PPC> ppc, PointProperty& pp, int u, int v, float w)
 {
 	V3 ret(0.0f);
 	auto gv = GlobalVariables::Instance();
@@ -1070,7 +1070,7 @@ V3 TM::Light(PPC* ppc, PointProperty& pp, int u, int v, float w)
 		{
 			auto SM = gv->curScene->shadowMaps[li];
 			float uf = static_cast<float>(u), vf = static_cast<float>(v), z = w;
-			V3 v2 = HomographMapping(V3(uf, vf, z), ppc, ppc2.get());
+			V3 v2 = HomographMapping(V3(uf, vf, z), ppc, ppc2);
 			if (v2[2] < 0.0f)
 				continue;
 
@@ -1092,7 +1092,7 @@ V3 TM::Light(PPC* ppc, PointProperty& pp, int u, int v, float w)
 	return ret;
 }
 
-bool TM::ComputeShadowEffect(PPC* ppc, int u, int v, float z, float& sdEffect)
+bool TM::ComputeShadowEffect(shared_ptr<PPC> ppc, int u, int v, float z, float& sdEffect)
 {
 	bool isInSS = false;
 	sdEffect = 1.0f; // shadow effect
@@ -1108,7 +1108,7 @@ bool TM::ComputeShadowEffect(PPC* ppc, int u, int v, float z, float& sdEffect)
 		auto ppc2 = gv->curScene->lightPPCs[li];
 		auto SM = gv->curScene->shadowMaps[li];
 
-		V3 v2 = HomographMapping(V3(uf, vf, z), ppc1, ppc2.get());
+		V3 v2 = HomographMapping(V3(uf, vf, z), ppc1, ppc2);
 
 		if (v2[2] < 0.0f)
 			continue;
@@ -1164,7 +1164,7 @@ bool TM::IsPixelInProjection(int u, int v, float z, V3& color, float& alpha)
 
 // envEffect (0,1)
 // 1 means should igore point color
-tuple<V3, float> TM::EnvMapping(PPC* ppc, FrameBuffer* fb, CubeMap* cubemap, V3 p, V3 n, V3 dn)
+tuple<V3, float> TM::EnvMapping(shared_ptr<PPC> ppc, shared_ptr<FrameBuffer> fb, shared_ptr<CubeMap> cubemap, V3 p, V3 n, V3 dn)
 {
 	V3 c(0.0f);
 	float envEffect = 0.0f;
@@ -1244,7 +1244,7 @@ V3 TM::ClampColor(V3 color)
 	return ret;
 }
 
-V3 TM::HomographMapping(V3 uvw, PPC* ppc1, PPC* ppc2)
+V3 TM::HomographMapping(V3 uvw, shared_ptr<PPC> ppc1, shared_ptr<PPC> ppc2)
 {
 	// Current image plane ppc matrix
 	M33 abc1;

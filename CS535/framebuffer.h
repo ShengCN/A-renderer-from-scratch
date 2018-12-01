@@ -56,21 +56,21 @@ public:
 
 	// Draw something
 	void DrawSegment(V3 p0, V3 c0, V3 p1, V3 c1);
-	void Draw3DSegment(PPC *ppc, V3 p1, V3 c1, V3 p2, V3 c2);
+	void Draw3DSegment(shared_ptr<PPC> ppc, V3 p1, V3 c1, V3 p2, V3 c2);
 	void DrawRectangle(int u0, int v0, int u1, int v1, unsigned int color);
 	void DrawCircle(int u0, int v0, int r, unsigned int color);
 	void DrawEllipse(int u0, int v0, float r0, float r1, unsigned int color);
 	void DrawPoint(int u, int v, unsigned int color);
-	void Draw3DPoint(PPC* ppc, V3 p, unsigned int color, int pointSize);
+	void Draw3DPoint(shared_ptr<PPC> ppc, V3 p, unsigned int color, int pointSize);
 	void Draw3DTriangle(PPC* ppc, V3 p1, V3 p2, V3 p3, V3 color);
 	void Draw3DTriangle(PPC* ppc, V3 p0, V3 c0, V3 p1, V3 c1, V3 p2, V3 c2);
 	void DrawTexture(const std::string texFile, int LoD = 0);
-	void DrawCubeMap(PPC* ppc, CubeMap *cubemap);
+	void DrawCubeMap(shared_ptr<PPC> ppc, shared_ptr<CubeMap> cubemap);
 
 	// DEBUG PPC
-	void DrawPPC(PPC* wPPC, PPC* tPPC, float vf);	// visualize target PPC using wPPC
-	void VisualizeCurrView(PPC *ppc0, float currf, PPC *ppc1, FrameBuffer *fb1);
-	void VisualizeCurrView3D(PPC *ppc0, PPC *ppc1, FrameBuffer *fb1); 
+	void DrawPPC(shared_ptr<PPC> wPPC, shared_ptr<PPC> tPPC, float vf);	// visualize target PPC using wPPC
+	void VisualizeCurrView(shared_ptr<PPC> ppc0, float currf, shared_ptr<PPC> ppc1, shared_ptr<FrameBuffer> fb1);
+	void VisualizeCurrView3D(shared_ptr<PPC> ppc0, shared_ptr<PPC> ppc1, shared_ptr<FrameBuffer> fb1); 
 	V3 LookupColor(std::string texFile, float s, float t, float &alpha, int pixelSz = -1);
 	V3 BilinearLookupColor(float s, float t, float &alpha);
 	V3 BilinearLookupColor(shared_ptr<TextureInfo> tex, float s, float t);

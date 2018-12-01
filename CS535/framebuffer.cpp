@@ -524,7 +524,7 @@ void FrameBuffer::DrawSegment(V3 p0, V3 c0, V3 p1, V3 c1)
 	}
 }
 
-void FrameBuffer::Draw3DSegment(PPC* ppc, V3 p1, V3 c1, V3 p2, V3 c2)
+void FrameBuffer::Draw3DSegment(shared_ptr<PPC> ppc, V3 p1, V3 c1, V3 p2, V3 c2)
 {
 	V3 pp1, pp2;
 
@@ -589,7 +589,7 @@ void FrameBuffer::DrawPoint(int u, int v, unsigned color)
 	SetGuarded(u, v, color);
 }
 
-void FrameBuffer::Draw3DPoint(PPC* camera, V3 p, unsigned color, int pointSize)
+void FrameBuffer::Draw3DPoint(shared_ptr<PPC> camera, V3 p, unsigned color, int pointSize)
 {
 	V3 pp;
 	if (!camera->Project(p, pp) ||
@@ -755,7 +755,7 @@ void FrameBuffer::DrawTexture(const std::string texFile, int LoD)
 	copy(tex->texture.begin(), tex->texture.end(), pix);
 }
 
-void FrameBuffer::DrawCubeMap(PPC* ppc, CubeMap* cubemap)
+void FrameBuffer::DrawCubeMap(shared_ptr<PPC> ppc, shared_ptr<CubeMap> cubemap)
 {
 	for (int v = 0; v < h; ++v)
 	{
@@ -769,7 +769,7 @@ void FrameBuffer::DrawCubeMap(PPC* ppc, CubeMap* cubemap)
 }
 
 
-void FrameBuffer::DrawPPC(PPC* wPPC, PPC* tPPC, float vf)
+void FrameBuffer::DrawPPC(shared_ptr<PPC> wPPC, shared_ptr<PPC> tPPC, float vf)
 {
 	float f = tPPC->GetFocal();
 	float scf = vf / f;
@@ -792,7 +792,7 @@ void FrameBuffer::DrawPPC(PPC* wPPC, PPC* tPPC, float vf)
 	Draw3DSegment(wPPC, tC + tc + tb * h, c, tC + tc + ta * w + tb * h, c);
 }
 
-void FrameBuffer::VisualizeCurrView(PPC* ppc0, float currf, PPC* ppc1, FrameBuffer* fb1)
+void FrameBuffer::VisualizeCurrView(shared_ptr<PPC> ppc0, float currf, shared_ptr<PPC> ppc1, shared_ptr<FrameBuffer> fb1)
 {
 	// Iterate all the pixels drew by ppc0
 	// Unproject the pixel using z buffer
@@ -813,7 +813,7 @@ void FrameBuffer::VisualizeCurrView(PPC* ppc0, float currf, PPC* ppc1, FrameBuff
 	}
 }
 
-void FrameBuffer::VisualizeCurrView3D(PPC* ppc0, PPC* ppc1, FrameBuffer* fb1)
+void FrameBuffer::VisualizeCurrView3D(shared_ptr<PPC> ppc0, shared_ptr<PPC> ppc1, shared_ptr<FrameBuffer> fb1)
 {
 	// Iterate all the pixels drew by ppc0
 	// Unproject the pixel using z buffer

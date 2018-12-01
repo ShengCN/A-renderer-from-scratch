@@ -27,7 +27,7 @@ public:
 	V3 GetColor(FrameBuffer *fb, V3 p);
 	V3 GetColor(FrameBuffer *fb, V3 p, float &alpha);
 
-	void RenderBB(PPC *ppc, FrameBuffer *fb);
+	void RenderBB(shared_ptr<PPC> ppc, shared_ptr<FrameBuffer> fb);
 private:
 	void GetST(V3 p, float &s, float &t);
 };

@@ -59,13 +59,13 @@ public:
 	tuple<V3, V3, V3, V3> GetCornerAndAxis();
 
 	// Rasterization
-	void RenderPoints(PPC *ppc, FrameBuffer *fb);
-	void RenderWireFrame(PPC *ppc, FrameBuffer *fb);
-	void RenderFill(PPC *ppc, FrameBuffer *fb);
-	void RenderFillZ(PPC *ppc, FrameBuffer *fb); // only draw z buffer
-	void RenderAABB(PPC *ppc, FrameBuffer *fb);
-	void RenderBB(PPC *ppc, FrameBuffer *fb, FrameBuffer *bbTexture);
-	void RenderHW(PPC *ppc, FrameBuffer *curfb);
+	void RenderPoints(shared_ptr<PPC> ppc, shared_ptr<FrameBuffer> fb);
+	void RenderWireFrame(shared_ptr<PPC> ppc, shared_ptr<FrameBuffer> fb);
+	void RenderFill(shared_ptr<PPC> ppc, shared_ptr<FrameBuffer> fb);
+	void RenderFillZ(shared_ptr<PPC> ppc, shared_ptr<FrameBuffer> fb); // only draw z buffer
+	void RenderAABB(shared_ptr<PPC> ppc, shared_ptr<FrameBuffer> fb);
+	void RenderBB(shared_ptr<PPC> ppc, shared_ptr<FrameBuffer> fb, shared_ptr<FrameBuffer> bbTexture);
+	void RenderHW(shared_ptr<PPC> ppc, shared_ptr<FrameBuffer> curfb);
 
 	// Transformation
 	void RotateAboutArbitraryAxis(V3 O, V3 a, float angled);
@@ -78,21 +78,21 @@ public:
 	V3 GetCenter();
 
 	// Ray tracing
-	void RayTracing(PPC *ppc, FrameBuffer *fb);
+	void RayTracing(shared_ptr<PPC> ppc, shared_ptr<FrameBuffer> fb);
 	
 	// Shading
-	tuple<V3, float> Shading(PPC* ppc, FrameBuffer* fb, int u, int v, float w, PointProperty& pp, V3 dn = V3(0.0f));
+	tuple<V3, float> Shading(shared_ptr<PPC> ppc, shared_ptr<FrameBuffer> fb, int u, int v, float w, PointProperty& pp, V3 dn = V3(0.0f));
 
 	// Lighting 
-	void Light(V3 mc, V3 L, PPC *ppc);	  // Per vertex light
-	V3 Light(PPC *ppc, PointProperty& pp, int u, int v, float w); // Per pixel  light 
-	bool ComputeShadowEffect(PPC* ppc, int u, int v, float z, float &sdEffect);
+	void Light(V3 mc, V3 L, shared_ptr<PPC> ppc);	  // Per vertex light
+	V3 Light(shared_ptr<PPC> ppc, PointProperty& pp, int u, int v, float w); // Per pixel  light 
+	bool ComputeShadowEffect(shared_ptr<PPC> ppc, int u, int v, float z, float &sdEffect);
 	bool IsPixelInProjection(int u, int v, float z, V3 &color, float &alpha);
-	V3 HomographMapping(V3 uvw, PPC* ppc1, PPC* ppc2);
+	V3 HomographMapping(V3 uvw, shared_ptr<PPC> ppc1, shared_ptr<PPC> ppc2);
 	V3 ClampColor(V3 color);
 
 	// Env mapping
-	tuple<V3, float> EnvMapping(PPC *ppc, FrameBuffer *fb, CubeMap *cubemap, V3 p, V3 n, V3 dn = V3(0.0f));
+	tuple<V3, float> EnvMapping(shared_ptr<PPC> ppc, shared_ptr<FrameBuffer> fb, shared_ptr<CubeMap> cubemap, V3 p, V3 n, V3 dn = V3(0.0f));
 	int EnvBBIntersection(vector<shared_ptr<BillBoard>> bbs, V3 p, V3 viewDir, float &distance, V3 &color, float &alpha);
 
 	// Morphing

@@ -20,16 +20,17 @@ class Scene
 {
 public:
 	GUI* gui;
-	FrameBuffer* fb, *fb3, *fbp, *gpufb;
+	shared_ptr<FrameBuffer> fb, fb3, fbp, gpufb, leftfb, rightfb;
+	shared_ptr<PPC> ppc, ppc3, projectPPC, leftppc, rightppc;
+
 	std::vector<shared_ptr<FrameBuffer>> textures;
 	std::vector<shared_ptr<PPC>> lightPPCs;
 	std::vector<shared_ptr<FrameBuffer>> shadowMaps;
-	PPC* ppc, *ppc3, *projectPPC;
-	vector<shared_ptr<TM>> meshes;
-	vector<shared_ptr<TM>> reflectors;
-	vector<shared_ptr<BillBoard>> sceneBillboard;
-	shared_ptr<CubeMap> cubemap;
-	vector<shared_ptr<SBB>> raytracingSBB;	// Sphere BB
+	std::vector<shared_ptr<TM>> meshes;
+	std::vector<shared_ptr<TM>> reflectors;
+	std::vector<shared_ptr<BillBoard>> sceneBillboard;
+	std::shared_ptr<CubeMap> cubemap;
+	std::vector<shared_ptr<SBB>> raytracingSBB;	// Sphere BB
 	hitable_list obj_list;
 	float ka, mf;
 
@@ -37,9 +38,9 @@ public:
 	void DBG();
 	void DBGZBuffer(string outFile,FrameBuffer *curfb);
 	void Render();				// render all triangles in the scene
-	void Render(PPC *currPPC, FrameBuffer *currFB);
+	void Render(shared_ptr<PPC> currPPC, shared_ptr<FrameBuffer> currFB);
 	void RenderWireFrame();
-	void RenderZbuffer(PPC *currPPC, FrameBuffer *currFB);
+	void RenderZbuffer(shared_ptr<PPC> currPPC, shared_ptr<FrameBuffer> currFB);
 	void UpdateSM();
 	void RenderGPU();
 	void RenderGPUWireframe();
@@ -49,9 +50,9 @@ public:
 	// https://www.cs.purdue.edu/cgvlab/papers/popescu/popescuGemEG06.pdf
 	// Render all other tm except id mesh to id's billboards
 	void UpdateBBs();
-	void RenderBB(PPC *curPPC, FrameBuffer *curFB, shared_ptr<TM> reflectors);
+	void RenderBB(shared_ptr<PPC> curPPC, shared_ptr<FrameBuffer> curFB, shared_ptr<TM> reflectors);
 	void UpdateBBsGPU();
-	void RenderBBGPU(PPC *curPPC, FrameBuffer *curFB, shared_ptr<TM> reflector);
+	void RenderBBGPU(shared_ptr<PPC> curPPC, shared_ptr<FrameBuffer> curFB, shared_ptr<TM> reflector);
 
 	V3 GetSceneCenter();
 	~Scene();
@@ -60,7 +61,10 @@ public:
 	V3 RayTracingColor(ray r, hitable_list &obj_list, int depth);
 	void RenderRaytracing();
 	void RandomScene();
-	void RaytracingScene(PPC *ppc, FrameBuffer *fb);
+	void RaytracingScene(shared_ptr<PPC> ppc, shared_ptr<FrameBuffer> fb);
+
+	// panaroma
+	void ShowPano();
 
 private:
 	bool isRenderAABB;
@@ -76,7 +80,7 @@ private:
 
 	void BeginCountingTime() { beginTime = Clock::now(); };
 	void PrintTime(const string dbgInfo);
-	void PrintTime(const string fbname, FrameBuffer *curfb);
+	void PrintTime(const string fbname, shared_ptr<FrameBuffer> curfb);
 	chrono::time_point<chrono::steady_clock> beginTime;
 	chrono::time_point<chrono::steady_clock> endTime;
 };
