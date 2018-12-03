@@ -342,9 +342,12 @@ void Scene::ShowPano()
 		float curPan = pan0 - panRange / 2.0f + panRange * (float)si / (float)sn;
 		rightppc->Pan(curPan);
 
+		// Visualize results
 		fb->ClearBGRZ(0xFF000000, 0.0f);
 		fb->Resample(ppc, leftfb, leftppc);
 		fb->Resample(ppc, rightfb, rightppc);
+		
+		// Update color color diff
 		float colorDifference = leftfb->ColorDifference(leftppc, rightfb, rightppc);
 		cerr << "Color difference: " << colorDifference << " \t \r";
 		fb->redraw();
