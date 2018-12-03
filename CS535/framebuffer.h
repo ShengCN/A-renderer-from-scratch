@@ -86,6 +86,7 @@ public:
 	void SaveGPUAsTiff(const string saveFile);
 	GLuint SaveCPU2GPUtexture();
 
+	// Sample the pixels that projected by (ppc1, fb1)
 	void Resample(shared_ptr<PPC> ppc0, shared_ptr<FrameBuffer> fb1, shared_ptr<PPC> ppc1);
 	float ColorDifference(shared_ptr<PPC> ppc0, shared_ptr<FrameBuffer> fb1, shared_ptr<PPC> ppc1);
 

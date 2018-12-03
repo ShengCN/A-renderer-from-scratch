@@ -1115,12 +1115,17 @@ void FrameBuffer::Resample(shared_ptr<PPC> ppc0, shared_ptr<FrameBuffer> fb1, sh
 			V3 PP;
 			if(!ppc1->Project(P,PP))
 				continue;
-			
+
+			// Sample colors
 			unsigned int c1 = fb1->Get((int)PP[0], (int)PP[1]);
-			if(c1 == 0XFF000000)
-				continue;;
+			if(c1 == 0xFF000000)
+				continue;
+
 			V3 c1v; c1v.SetColor(c1);
 			unsigned int c0 = Get(u, v);
+
+			// Assumption: There are just two images
+			// If the pixel has color, blend the result to see two different image results
 			if(c0 != 0xFF000000)
 			{
 				V3 c0v; c0v.SetColor(c0);
