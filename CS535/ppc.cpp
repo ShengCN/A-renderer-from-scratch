@@ -289,3 +289,12 @@ void PPC::SetExtrinsicsHW()
 	gluLookAt(C[0], C[1], C[2], L[0], L[1], L[2], -b[0], -b[1], -b[2]);
 }
 
+void PPC::PrintPPC()
+{
+	cerr << "----------- PPC Info: ----------- \n";
+	cerr << "C: " << C;
+	cerr << "a: " << a;
+	cerr << "b: " << b;
+	cerr << "c: " << c;
+}
+

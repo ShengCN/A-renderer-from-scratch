@@ -53,5 +53,7 @@ public:
 
 	void SetIntrinsicsHW();
 	void SetExtrinsicsHW();
+
+	void PrintPPC();
 };
 

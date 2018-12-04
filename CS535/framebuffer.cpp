@@ -76,51 +76,57 @@ void FrameBuffer::KeyboardHandle()
 	case 'w':
 		{
 			gv->curScene->ppc->MoveForward(1.0f);
-			gv->curScene->gpufb->redraw();
+			gv->curScene->Render();
+
 			break;
 		}
 	case 'a':
 		{
 			gv->curScene->ppc->MoveLeft(-1.0f);
-			gv->curScene->gpufb->redraw();
+			gv->curScene->Render();
+
 			break;
 		}
 	case 's':
 		{
 			gv->curScene->ppc->MoveForward(-1.0f);
-			gv->curScene->gpufb->redraw();
+			gv->curScene->Render();
+
 			break;
 		}
 	case 'd':
 		{
 			gv->curScene->ppc->MoveLeft(1.0f);
-			gv->curScene->gpufb->redraw();
+			gv->curScene->Render();
+
 			break;
 		}
 	case 'z':
 		{
 			gv->curScene->ppc->MoveDown(-1.0f);
-			gv->curScene->gpufb->redraw();
+			gv->curScene->Render();
+
 			break;
 		}
 	case 'x':
 		{
 			gv->curScene->ppc->MoveDown(1.0f);
-			gv->curScene->gpufb->redraw();
+			gv->curScene->Render();
+
 			break;
 		}
-	case 'j':
+	case 'p':
 		{
-			// RevolveH 
-			gv->curScene->ppc->RevolveH(gv->curScene->GetSceneCenter(), 1.0f);
-			gv->curScene->gpufb->redraw();
+			// Pan
+			gv->curScene->ppc->Pan(1.0f);
+			gv->curScene->Render();
 			break;
 		}
-	case 'k':
+	case 't':
 		{
-			// RevolveV
-			gv->curScene->ppc->RevolveV(gv->curScene->GetSceneCenter(), 1.0f);
-			gv->curScene->gpufb->redraw();
+			// Tilt
+			gv->curScene->ppc->Tilt(1.0f);
+			gv->curScene->Render();
 			break;
 		}
 	default:
@@ -128,7 +134,7 @@ void FrameBuffer::KeyboardHandle()
 		break;
 	}
 
-	cerr << gv->curScene->ppc->C;
+	gv->curScene->ppc->PrintPPC();
 }
 
 

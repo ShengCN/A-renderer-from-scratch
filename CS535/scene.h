@@ -66,6 +66,9 @@ public:
 	// panaroma
 	void ShowPano();
 
+	// Cubemaps
+	void InitializeCubeMap();
+
 private:
 	bool isRenderAABB;
 

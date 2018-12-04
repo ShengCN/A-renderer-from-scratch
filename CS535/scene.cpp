@@ -43,12 +43,6 @@ Scene::Scene(): isRenderAABB(false)
 	fb->label("SW Framebuffer");
 	fb->show();
 
-	gpufb = make_shared<FrameBuffer>(u0, v0, w, h);
-	gpufb->label("GPU Framebuffer");
-	// gpufb->isgpu = true;
-	gpufb->SetupGPU();
-	// gpufb->show();
-
 	fb3 = make_shared<FrameBuffer>(u0 + fb->w + 30, v0, 64, 64);
 	fb3->label("Third Person View");
 	// fb3->show();
@@ -58,19 +52,6 @@ Scene::Scene(): isRenderAABB(false)
 
 	gui->uiw->position(u0, v0 + fb->h + 60);
 
-	leftfb = make_shared<FrameBuffer>(30 + w, 40, 10, 10);
-	leftfb->LoadTiff("images/left.tif");
-	leftfb->label("Left");
-	leftfb->show();
-
-	rightfb = make_shared<FrameBuffer>(30 + 30 + w + leftfb->w, 40, 10, 10);
-	rightfb->LoadTiff("images/right.tif");
-	rightfb->label("Right");
-	rightfb->show();
-
-	leftppc  = make_shared<PPC>(640, 480, 55.0f);
-	rightppc = make_shared<PPC>(640, 480, 55.0f);
-	rightppc->Pan(-20.0f);
 
 	InitDemo();
 }
@@ -133,16 +114,6 @@ void Scene::Render(shared_ptr<PPC> currPPC, shared_ptr<FrameBuffer> currFB)
 				PrintTime("SW render "+ to_string(t->id) + string(" spends: "));
 				if (isRenderAABB)
 					t->RenderAABB(currPPC, currFB);
-			}
-
-			for (auto r : reflectors)
-			{
-				BeginCountingTime();
-				r->RenderFill(currPPC, currFB);
-				PrintTime(string("Mesh ") + to_string(r->id) + string(" spends: "));
-
-				if (isRenderAABB)
-					r->RenderAABB(currPPC, currFB);
 			}
 		}
 		else
@@ -354,6 +325,28 @@ void Scene::ShowPano()
 		Fl::check();
 	}
 
+}
+
+void Scene::InitializeCubeMap()
+{
+	auto gv = GlobalVariables::Instance();
+	shared_ptr<PPC> ppcRight = make_shared<PPC>(1024, 1024, 90.0f);
+	shared_ptr<PPC> ppcLeft = make_shared<PPC>(1024, 1024, 90.0f);
+	shared_ptr<PPC> ppcGround = make_shared<PPC>(1024, 1024, 90.0f);
+	shared_ptr<PPC> ppcTop = make_shared<PPC>(1024, 1024, 90.0f);
+	shared_ptr<PPC> ppcFront = make_shared<PPC>(1024, 1024, 90.0f);
+	shared_ptr<PPC> ppcBack = make_shared<PPC>(1024, 1024, 90.0f);
+
+	ppcRight->PositionAndOrient(V3(0.0f), V3(1.0f, 0.0f, 0.0f), V3(0.0f, 1.0f, 0.0f));
+	ppcLeft->PositionAndOrient(V3(0.0f), V3(-1.0f, 0.0f, 0.0f), V3(0.0f, 1.0f, 0.0f));
+	ppcGround->PositionAndOrient(V3(0.0f), V3(0.0f, -1.0f, 0.0f), V3(0.0f, 0.0f, -1.0f));
+	ppcTop->PositionAndOrient(V3(0.0f), V3(0.0f, 1.0f, 0.0f), V3(0.0f, 0.0f, 1.0f));
+	ppcFront->PositionAndOrient(V3(0.0f), V3(0.0f, 0.0f, -1.0f), V3(0.0f, 1.0f, 0.0f));
+	ppcBack->PositionAndOrient(V3(0.0f), V3(0.0f, 0.0f, 1.0f), V3(0.0f, 1.0f, 0.0f));
+
+	vector<shared_ptr<PPC>> cubemapPPCs{ ppcRight, ppcLeft, ppcGround, ppcTop, ppcFront, ppcBack };
+	cubemap = make_shared<CubeMap>();
+	cubemap->LoadCubeMap(gv->cubemapFiles, cubemapPPCs);
 }
 
 void Scene::UpdateBBs()
@@ -818,10 +811,24 @@ void Scene::PrintTime(const string fbname, shared_ptr<FrameBuffer> curfb)
 
 void Scene::InitDemo()
 {
-	// leftfb = 
+	auto gv = GlobalVariables::Instance();
+
+	// Render Cubemapff
+	InitializeCubeMap();
+
+	// Render a sphere to visulize the result
+
+	Render();
 }
 
 void Scene::Demonstration()
 {
-	ShowPano();
+	int stepN = 360;
+	for(int stepi = 0; stepi < stepN; ++stepi)
+	{
+		ppc->Pan(1.0f);
+
+		Render();
+		Fl::check();
+	}
 }
