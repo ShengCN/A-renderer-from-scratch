@@ -11,4 +11,5 @@ Current features:
 
 ## Sample Result
 The implementation of the paper: (A billboard method for rendering reflections in rasterization pipeline)
+![Demo](2022-12-17_22-15.png)
 https://www.youtube.com/watch?v=iYsKDUyzpSc
