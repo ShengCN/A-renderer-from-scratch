@@ -1,9 +1,9 @@
 # A-renderer-from-scratch
-This is a c++ renderer from scratch. The codes start from the CS535 course, but extend with many features. There are some paper implementations as well. 
+This is a c++ renderer from scratch. The codes start from the CS535 course, but extend with many features. There is a paper implementation as well. 
 
 Current features: 
 
-* Basic Vector, matrices and transformations  
+* Basic Vector, matrices and transformations.
 * Rasterization, Raytracing, screen-space and model space interpolation. 
 * Multiple lightings and shadow maps. 
 * Texture mapping, Projective texture, Bilinear texture filter, Trilinear Lod texture, Environment mapping.
