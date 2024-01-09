@@ -1,5 +1,5 @@
 # A-renderer-from-scratch
-This is a c++ renderer from scratch. The codes start from the CS535 course, but extend with many features. There is a paper implementation as well. 
+This is a c++ renderer from scratch. The codes start from the CS535 course, but extend with many features. There are some paper implementations as well. 
 
 Current features: 
 
